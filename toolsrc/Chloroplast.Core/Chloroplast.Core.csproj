@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
+    <PackageReference Include="Markdig" Version="0.20.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\" />
+    <Folder Include="Rendering\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Config\" />
+  </ItemGroup>
+</Project>

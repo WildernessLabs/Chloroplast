@@ -11,8 +11,9 @@ description: >-
 templates_folder: Templates
 
 # main site folder
-source_folder: /Docs
-output_folder: /
+areas:
+  - source_folder: /Docs
+    output_folder: /
 
 # API doc sets 
 api_dirs:

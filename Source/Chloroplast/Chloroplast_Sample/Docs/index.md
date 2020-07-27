@@ -6,4 +6,4 @@ subtitle: Documentation site for Chloroplast.
 
 # Welcome!
 
-To the chloroplast docs.
+To the chloroplast docs. yay!
