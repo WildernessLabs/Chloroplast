@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Chloroplast.Core.Rendering
@@ -21,6 +22,10 @@ namespace Chloroplast.Core.Rendering
             };
 
             // parse front-matter
+            YamlRenderer yamlrenderer = new YamlRenderer ();
+            (var yaml, string markdown) = yamlrenderer.ParseDoc (parsed.Body);
+            parsed.Metadata = yaml;
+            parsed.Body = markdown;
 
             // convert markdown to html
 

@@ -34,14 +34,31 @@ namespace Chloroplast.Core.Config
         private readonly Stack<string> _context = new Stack<string> ();
         private string _currentPath;
 
+        public IDictionary<string, string> Parse (string input)
+        {
+            using (var stream = new MemoryStream ())
+            using (var writer = new StreamWriter (stream))
+            {
+                writer.Write (input);
+                writer.Flush ();
+                stream.Position = 0;
+                return Parse (stream);
+            }
+        }
+
         public IDictionary<string, string> Parse (Stream input)
+        {
+            return Parse (new StreamReader (input, detectEncodingFromByteOrderMarks: true));
+        }
+
+        public IDictionary<string, string> Parse (StreamReader input)
         {
             _data.Clear ();
             _context.Clear ();
 
             // https://dotnetfiddle.net/rrR2Bb
             var yaml = new YamlStream ();
-            yaml.Load (new StreamReader (input, detectEncodingFromByteOrderMarks: true));
+            yaml.Load (input);
 
             if (yaml.Documents.Any ())
             {

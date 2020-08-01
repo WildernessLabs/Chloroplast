@@ -1,0 +1,63 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Chloroplast.Core.Config;
+using Chloroplast.Core.Extensions;
+
+namespace Chloroplast.Core.Rendering
+{
+    public class YamlRenderer
+    {
+        public (IDictionary<string,string>,string) ParseDoc(string content)
+        {
+            (string yaml, string markdown) = Split (content);
+            SiteConfigurationFileParser configParser = new SiteConfigurationFileParser ();
+
+            return (configParser.Parse (yaml), markdown);
+        }
+
+        private (string yaml, string markdown) Split (string content)
+        {
+            // first normalize to neutralize git derpery
+            content = content.Replace ("\r\n", "\n");
+            var lines = content.Split ('\n');
+
+            bool markerStarter = content.StartsWith ("---");
+            int startdelimiter = markerStarter ? 1 : 0;
+            int enddelimiter = 0;
+            for (int i = startdelimiter; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+
+                if (markerStarter)
+                {
+                    // just look for the closing `---`
+                    if (line.StartsWith ("---"))
+                    {
+                        enddelimiter = i;
+                        break;
+                    }
+                }
+                else
+                {
+                    // there was no markerStarter ... just look for the
+                    // first empty line
+                    if (line.Length == 0)
+                    {
+                        enddelimiter = i;
+                        break;
+                    }
+                }
+            }
+
+            // if no end delimiter was found, just return content as is
+            // with no markdown
+            if (enddelimiter == 0)
+                return (string.Empty, content);
+
+            string parsedYaml = lines.StringJoinFromSubArray (Environment.NewLine, startdelimiter, enddelimiter);
+            string parsedMarkdown = lines.StringJoinFromSubArray (Environment.NewLine, enddelimiter+1, content.Length - enddelimiter+1);
+            return (parsedYaml, parsedMarkdown);
+        }
+    }
+}
