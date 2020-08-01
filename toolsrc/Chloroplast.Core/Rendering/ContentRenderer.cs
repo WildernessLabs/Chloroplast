@@ -28,8 +28,9 @@ namespace Chloroplast.Core.Rendering
             parsed.Body = markdown;
 
             // convert markdown to html
+            MarkdownRenderer mdRenderer = new MarkdownRenderer ();
+            parsed.Body = mdRenderer.Render (parsed.Body);
 
-            // TODO: better object model for content returned, to include metadata and content
             return parsed;
         }
 

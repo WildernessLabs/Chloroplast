@@ -10,6 +10,7 @@
     <PackageReference Include="Markdig" Version="0.20.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.6" />
+    <PackageReference Include="MiniRazor" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />

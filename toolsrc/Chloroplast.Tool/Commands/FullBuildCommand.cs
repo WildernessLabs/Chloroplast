@@ -30,9 +30,9 @@ namespace Chloroplast.Tool.Commands
                  {
                      Console.WriteLine ($"Processing area: {area.SourcePath}");
 
-                     foreach(var item in area.ContentNodes)
-                     {
-                         if (item.Source.LastUpdated <= item.Target.LastUpdated) {
+                    foreach (var item in area.ContentNodes)
+                    {
+                        if (config["force"] == string.Empty && item.Source.LastUpdated <= item.Target.LastUpdated) {
                             Console.WriteLine($"\tskipping: {item.Source.RootRelativePath}");
                             continue;
                          }
