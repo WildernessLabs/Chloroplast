@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -10,9 +11,22 @@ namespace Chloroplast.Core.Rendering
         public ContentNode Node {get;set;}
         public string Body {get;set;}
         public IDictionary<string,string> Metadata = new Dictionary<string,string>();
+        public string GetMeta(string key)
+        {
+            string value = string.Empty;
+            Metadata.TryGetValue (key, out value);
+            return value;
+        }
     }
     public static class ContentRenderer
     {
+        private static RazorRenderer razorRenderer;
+
+        public static async Task InitializeAsync(IConfigurationRoot config)
+        {
+            razorRenderer = new RazorRenderer ();
+            await razorRenderer.InitializeAsync (config);
+        }
         public static async Task<RenderedContent> FromMarkdownAsync(ContentNode node)
         {
             var parsed = new RenderedContent 
@@ -36,10 +50,8 @@ namespace Chloroplast.Core.Rendering
 
         public static async Task<RenderedContent> ToRazorAsync(RenderedContent content)
         {
-            // TODO: placeholder for razor rendering
-            content.Body = $"<html>{content.Body}</html>";
-            
-            return await Task.Factory.StartNew(() => content);
+            content.Body = await razorRenderer.RenderAsync (content);
+            return content;
         }
     }
 }

@@ -18,48 +18,46 @@ namespace Chloroplast.Tool.Commands
 
         public string Name => "Build";
 
-        public Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
+        public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
-            // start the task that will load the content area, and publish to the blocks
-            return Task.Factory.StartNew<IEnumerable<Task>> (() =>
-             {
-                 List<Task> tasks= new List<Task>();
+            await ContentRenderer.InitializeAsync (config);
 
-                // Start iterating over content
-                foreach (var area in ContentArea.LoadContentAreas (config))
-                 {
-                     Console.WriteLine ($"Processing area: {area.SourcePath}");
+            List<Task> tasks= new List<Task>();
 
-                    foreach (var item in area.ContentNodes)
-                    {
-                        if (config["force"] == string.Empty && item.Source.LastUpdated <= item.Target.LastUpdated) {
-                            Console.WriteLine($"\tskipping: {item.Source.RootRelativePath}");
-                            continue;
-                         }
+            // Start iterating over content
+            foreach (var area in ContentArea.LoadContentAreas (config))
+            {
+                Console.WriteLine ($"Processing area: {area.SourcePath}");
 
-                         // TODO: refactor this out to a build queue
-                         tasks.Add(Task.Factory.StartNew(async () =>
-                         {
-                            Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
+                foreach (var item in area.ContentNodes)
+                {
+                    if (config["force"] == string.Empty && item.Source.LastUpdated <= item.Target.LastUpdated) {
+                        Console.WriteLine($"\tskipping: {item.Source.RootRelativePath}");
+                        continue;
+                        }
 
-                            if (item.Source.RootRelativePath.EndsWith(".md"))
-                            {
-                                var r = await ContentRenderer.FromMarkdownAsync(item);
-                                r = await ContentRenderer.ToRazorAsync(r);
-                                await item.Target.WriteContentAsync(r.Body);
-                            }
-                            else
-                            {
+                        // TODO: refactor this out to a build queue
+                        tasks.Add(Task.Factory.StartNew(async () =>
+                        {
+                        Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
 
-                                item.Source.CopyTo(item.Target);
-                            }
-                         }));
-                     }
-                 }
+                        if (item.Source.RootRelativePath.EndsWith(".md"))
+                        {
+                            var r = await ContentRenderer.FromMarkdownAsync(item);
+                            r = await ContentRenderer.ToRazorAsync(r);
+                            await item.Target.WriteContentAsync(r.Body);
+                        }
+                        else
+                        {
 
-                 Task.WaitAll(tasks.ToArray());
-                 return tasks;
-             });
+                            item.Source.CopyTo(item.Target);
+                        }
+                    }));
+                }
+            }
+
+            Task.WaitAll(tasks.ToArray());
+            return tasks;
         }
     }
 }
