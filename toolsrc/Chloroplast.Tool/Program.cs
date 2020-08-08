@@ -36,6 +36,9 @@ namespace Chloroplast.Tool
                     case "watch":
                         command = new WatchCommand ();
                         break;
+                    case "host":
+                        command = new HostCommand ();
+                        break;
                     default:
                         throw new ChloroplastException ("usage: pass 'build', or 'watch'");
                 }
@@ -48,7 +51,10 @@ namespace Chloroplast.Tool
                 Task.WaitAll(childTasks.ToArray());
                 if (childTasks.Any(t=>t.Status == TaskStatus.Faulted))
                 {
-                    throw new ApplicationException("s");
+                    foreach(var t in childTasks.Select(ct => ct.Exception))
+                    {
+                        Console.WriteLine (t);
+                    }
                 }
                 stopwatch.Stop ();
                 string elapsedTime = GetElapsed (stopwatch);
