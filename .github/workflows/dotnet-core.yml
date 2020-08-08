@@ -31,4 +31,11 @@ jobs:
       with:
         name: chloroplast_tool
         path: toolsrc/Chloroplast.Tool/nupkg/*.nupkg
-
+    - name: Push Nupkg to GitHub Packages
+      uses: tanaka-takayoshi/nuget-publish-to-github-packages-action@v2.1
+      with:
+        nupkg-path: toolsrc/Chloroplast.Tool/nupkg/*.nupkg
+        repo-owner: wildernesslabs
+        gh-user: wildlingdev
+        token:  ${{ secrets.GITHUB_TOKEN }}
+        skip-duplicate: true
