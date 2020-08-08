@@ -11,6 +11,9 @@
     <Version>0.1.0</Version>
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
+    <PackageDescription>Markdown-based static site generator</PackageDescription>
+    <RepositoryUrl>https://github.com/wildernlesslabs/Chloroplast</RepositoryUrl>
+ 
   </PropertyGroup>
 
   <ItemGroup>
