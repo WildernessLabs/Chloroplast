@@ -9,6 +9,9 @@ namespace Chloroplast.Core.Extensions
 
         public static string NormalizePath(this string value)
         {
+            if (string.IsNullOrWhiteSpace (value))
+                return string.Empty;
+
             var slashed = value.Replace (OtherDirectorySeparator, Path.DirectorySeparatorChar);
 
             if (slashed.StartsWith ('~'))

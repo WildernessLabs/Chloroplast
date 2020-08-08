@@ -93,6 +93,7 @@ namespace Chloroplast.Tool
 
         private static IConfigurationRoot ParseConfig (string[] args)
         {
+            var subtask = args.First ();
             var subtaskargs = args.Skip (1).ToArray ();
 
             if (!subtaskargs.Any())
@@ -100,15 +101,19 @@ namespace Chloroplast.Tool
                 throw new ChloroplastException ("No path provided");
             }
 
-            var sitePath = subtaskargs.Skip(1).First ().NormalizePath ();
-            if (!System.IO.Directory.Exists(sitePath))
-            {
-                throw new ChloroplastException ("path doesn't exist: " + sitePath);
-            }
-
             var builder = new ConfigurationBuilder ()
-                .AddCommandLine (subtaskargs)
-                .AddChloroplastConfig(sitePath.CombinePath("SiteConfig.yml"));
+                .AddCommandLine (subtaskargs);
+
+            if (subtask == "build")
+            {
+                var sitePath = subtaskargs.Skip (1).First ().NormalizePath ();
+                if (!System.IO.Directory.Exists (sitePath))
+                {
+                    throw new ChloroplastException ("path doesn't exist: " + sitePath);
+                }
+
+                builder.AddChloroplastConfig (sitePath.CombinePath ("SiteConfig.yml"));
+            }
                 
             var config = builder.Build ();
             return config;
