@@ -24,7 +24,7 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
     - name: Pack
-      run: dotnet pack toolsrc
+      run: dotnet pack toolsrc/Chloroplast.Tool/
       
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.1.3
