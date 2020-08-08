@@ -21,8 +21,8 @@ namespace Chloroplast.Core.Rendering
 
         public async Task InitializeAsync (IConfigurationRoot config)
         {
-            string rootPath = config["root"];
-            string templatePath = config["templates_folder"];
+            string rootPath = config["root"].NormalizePath();
+            string templatePath = config["templates_folder"].NormalizePath();
             string fullTemplatePath = rootPath.CombinePath (templatePath);
 
             foreach (var razorPath in Directory.EnumerateFiles (fullTemplatePath, "*.cshtml", SearchOption.AllDirectories))
