@@ -15,6 +15,12 @@ namespace Chloroplast.Core
         {
         }
 
+        public ContentNode Parent { get; set; }
         public IList<ContentNode> Children { get; } = new List<ContentNode> ();
+
+        public override string ToString ()
+        {
+            return $"{Slug}, {Title}, {Source}->{Target}";
+        }
     }
 }

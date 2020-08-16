@@ -19,5 +19,14 @@ namespace Chloroplast.Core.Extensions
             var sub = lines.SubArray (from, to);
             return String.Join (separator, sub).Trim ();
         }
+
+        public static T Try<T>(this IDictionary<string, T> dict, string key)
+        {
+            T val;
+            if (dict.TryGetValue (key, out val))
+                return val;
+
+            return default (T);
+        }
     }
 }

@@ -1,4 +1,24 @@
-﻿<!DOCTYPE html>
+﻿@using System.Linq;
+@using System.Collections.Generic;
+@{
+    string RenderNodes(IEnumerable<Chloroplast.Core.ContentNode> nodes)
+    {
+        <ol>
+            @foreach(var item in nodes)
+            {
+                <li>
+                    <a href="/@item.Slug">@item.Title</a>
+                    @if (item.Children.Any())
+                    {
+                        @Raw(RenderNodes(item.Children))
+                    }
+                </li>
+            }
+        </ol>
+        return "";
+    }
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,6 +29,11 @@
 </head>
 <body>
     <h1>Wilderness Labs</h1>
+    <div style="float:left;width:50%">
+        @Raw(RenderNodes(Model.Tree))
+    </div>
+    <div class="maincontent">
     @Raw(Model.Body)
+    </div>
 </body>
 </html>

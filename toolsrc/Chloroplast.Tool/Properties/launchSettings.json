@@ -6,11 +6,12 @@
   "profiles": {
     "Chloroplast.Tool": {
       "commandName": "Project",
+      "commandLineArgs": "build --root ~/dev/meadow/Chloroplast/Source/Chloroplast/Chloroplast_Sample --out ~/dev/meadow/Chloroplast/out --force=true",
       "launchBrowser": true,
+      "applicationUrl": "http://localhost:55822",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http://localhost:55822"
+      }
     }
   }
 }

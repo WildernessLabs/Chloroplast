@@ -70,7 +70,7 @@ namespace Chloroplast.Tool.Commands
                     Console.WriteLine ("Error starting browser, " + ex.Message);
                 }
 
-                Console.ReadKey ();
+                Console.Read ();
                 return new Task[0];
             }
         }

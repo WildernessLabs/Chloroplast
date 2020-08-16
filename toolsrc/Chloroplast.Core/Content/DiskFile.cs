@@ -46,11 +46,32 @@ namespace Chloroplast.Core.Content
         public Task<string> ReadContentAsync () =>
             File.ReadAllTextAsync (this.FullPath);
 
-        public Task WriteContentAsync (string content)
+        public async Task WriteContentAsync (string content)
         {
-            this.FullPath.EnsureFileDirectory();
+            try
+            {
+                this.FullPath.EnsureFileDirectory ();
 
-            return File.WriteAllTextAsync (this.FullPath, content);
+                // This is extremely strange, but I was getting
+                // intermittent results (empty files) with the
+                // await version. So this sync workaround
+                // wfm
+                if (true)
+                    File.WriteAllText (this.FullPath, content);
+                else
+                    await File.WriteAllTextAsync (this.FullPath, content);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine (ex.ToString());
+                Console.ResetColor ();
+            }
+        }
+
+        public override string ToString ()
+        {
+            return this.FullPath;
         }
     }
 }

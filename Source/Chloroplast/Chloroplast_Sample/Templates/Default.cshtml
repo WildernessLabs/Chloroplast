@@ -1,5 +1,9 @@
 ﻿
 <h1>Default!</h1>
 
-    <h2>@Model.GetMeta("Title")</h2>
+    <h2>@Model.GetMeta("title")</h2>
+    @if (@Model.HasMeta("subtitle"))
+    {
+        <h3>@Model.GetMeta("subtitle")</h3>
+    }
     <div>@Raw(Model.Body)</div>
