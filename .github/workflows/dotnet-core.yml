@@ -16,7 +16,10 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.x
+        dotnet-version: 3.1.x,
+        source-url: https://nuget.pkg.github.com/wildernesslabs/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
     - name: Install dependencies
       run: dotnet restore toolsrc
     - name: Build
@@ -24,20 +27,12 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
     - name: Pack
-      run: dotnet pack toolsrc/Chloroplast.Tool/
-      
+      run: dotnet pack toolsrc/Chloroplast.Tool/    
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.1.3
       with:
         name: chloroplast_tool
         path: toolsrc/Chloroplast.Tool/nupkg/*.nupkg
+    - name: Push generated package to GitHub registry
+      run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --skip-duplicate --no-symbols true
 
-    - name: Push Nupkg to GitHub Packages
- #     if: github.event == 'push'
-      uses: tanaka-takayoshi/nuget-publish-to-github-packages-action@v2.1
-      with:
-        nupkg-path: './toolsrc/Chloroplast.Tool/nupkg/*.nupkg'
-        repo-owner: wildlingdev
-        gh-user: wildlingdev
-        token:  ${{ secrets.GITHUB_TOKEN }}
-        skip-duplicate: true
