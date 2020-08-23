@@ -13,7 +13,7 @@
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
     <PackageDescription>Markdown-based static site generator</PackageDescription>
-    <RepositoryUrl>https://github.com/wildernlesslabs/Chloroplast</RepositoryUrl>
+    <RepositoryUrl>https://github.com/WildernessLabs/Chloroplast</RepositoryUrl>
  
   </PropertyGroup>
 
