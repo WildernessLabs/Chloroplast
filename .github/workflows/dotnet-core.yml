@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1 
+
 jobs:
   build:
 
@@ -36,4 +40,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Push generated package to GitHub registry
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --skip-duplicate --no-symbols true
+      env:
+        DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
 
