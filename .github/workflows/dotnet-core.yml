@@ -35,5 +35,5 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Push generated package to GitHub registry
-      run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --skip-duplicate --no-symbols true
+      run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --skip-duplicate --no-symbols true
 
