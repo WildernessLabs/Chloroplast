@@ -35,10 +35,12 @@ jobs:
         name: chloroplast_tool
         path: toolsrc/Chloroplast.Tool/nupkg/*.nupkg
     - name: Add private GitHub registry to NuGet
+      if: github.ref == 'refs/heads/master'
       run: dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name "github" --username WildernessLabs --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Push generated package to GitHub registry
+      if: github.ref == 'refs/heads/master'
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --skip-duplicate --no-symbols true
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
