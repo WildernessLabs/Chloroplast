@@ -16,10 +16,10 @@ namespace Chloroplast.Test
         public void TopLevels ()
         {
             List<ContentNode> nodes = new List<ContentNode> ();
-            nodes.Add (MakeNode ("one"));
-            nodes.Add (MakeNode ($"one".CombinePath ("two")));
-            nodes.Add (MakeNode ($"one".CombinePath ("three")));
-            nodes.Add (MakeNode ($"one".CombinePath ("four")));
+            nodes.Add (MakeNode ("one".CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("two").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("three").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("four").CombinePath ("index.md")));
 
             ContentArea area = new ContentArea (nodes);
             var result = area.BuildHierarchy ();
@@ -31,14 +31,14 @@ namespace Chloroplast.Test
         public void MultipleLevels ()
         {
             List<ContentNode> nodes = new List<ContentNode> ();
-            nodes.Add (MakeNode ("one"));
-            nodes.Add (MakeNode ($"one".CombinePath ("two")));
-            nodes.Add (MakeNode ($"one".CombinePath ("two").CombinePath("one")));
-            nodes.Add (MakeNode ($"one".CombinePath ("three")));
-            nodes.Add (MakeNode ($"one".CombinePath ("three").CombinePath ("one")));
-            nodes.Add (MakeNode ($"one".CombinePath ("four")));
-            nodes.Add (MakeNode ($"one".CombinePath ("four").CombinePath ("one")));
-            nodes.Add (MakeNode ($"two"));
+            nodes.Add (MakeNode ("one".CombinePath("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("two").CombinePath("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("two").CombinePath("one").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("three").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("three").CombinePath ("one").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("four").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"one".CombinePath ("four").CombinePath ("one").CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"two".CombinePath("index.md")));
 
             ContentArea area = new ContentArea (nodes);
             var result = area.BuildHierarchy ().ToArray();
