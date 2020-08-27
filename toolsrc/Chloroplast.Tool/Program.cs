@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Chloroplast.Core;
@@ -17,8 +18,24 @@ namespace Chloroplast.Tool
 
             if (args.Length < 1)
             {
-                Console.Error.WriteLine ("No parameters");
-                return;
+                string configPath = Directory.GetCurrentDirectory ().CombinePath ("SiteConfig.yml");
+                Console.WriteLine ($"looking for {configPath}");
+                if (File.Exists(configPath))
+                {
+                    args = new string[]
+                    {
+                        "build",
+                        "--root",
+                        Directory.GetCurrentDirectory(),
+                        "--out",
+                        Directory.GetCurrentDirectory().CombinePath("out").EnsureDirectory()
+                    };
+                }
+                else
+                {
+                    Console.Error.WriteLine ("config not found");
+                    return;
+                }
             }
 
             var subtask = args.First ();

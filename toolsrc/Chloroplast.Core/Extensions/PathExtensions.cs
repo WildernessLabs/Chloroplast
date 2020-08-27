@@ -41,11 +41,20 @@ namespace Chloroplast.Core.Extensions
             return Path.Combine (value, combinedPaths);
         }
 
-        public static void EnsureFileDirectory(this string value)
+        /// <returns>The directory path</returns>
+        public static string EnsureDirectory(this string dir)
+        {
+            if (!Directory.Exists (dir))
+                Directory.CreateDirectory (dir);
+
+            return dir;
+        }
+
+        /// <returns>The directory path</returns>
+        public static string EnsureFileDirectory(this string value)
         {
             string dir = Path.GetDirectoryName(value);
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
+            return dir.EnsureDirectory ();
         }
     }
 }
