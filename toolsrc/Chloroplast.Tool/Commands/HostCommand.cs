@@ -37,8 +37,14 @@ namespace Chloroplast.Tool.Commands
             }                
             else
             {
-                Console.WriteLine ("Can't start server, please provide `out` or `root` parameter to static files");
-                return new Task[0];
+                string potentialPath = Directory.GetCurrentDirectory ().CombinePath ("out");
+                if (Directory.Exists (potentialPath))
+                    pathToUse = potentialPath;
+                else
+                {
+                    Console.WriteLine ("Can't start server, please provide `out` or `root` parameter to static files");
+                    return new Task[0];
+                }
             }
 
             var host = Host.CreateDefaultBuilder ()
@@ -70,7 +76,7 @@ namespace Chloroplast.Tool.Commands
                     Console.WriteLine ("Error starting browser, " + ex.Message);
                 }
 
-                Console.ReadKey ();
+                Console.Read ();
                 return new Task[0];
             }
         }

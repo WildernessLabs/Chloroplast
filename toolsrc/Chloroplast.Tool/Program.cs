@@ -14,9 +14,15 @@ namespace Chloroplast.Tool
     {
         static async Task Main (string[] args)
         {
-            Console.WriteLine (Constants.Logo);
+            string versionString = typeof (Program).Assembly.GetName ().Version.ToString ();
 
-            if (args.Length < 1)
+            Console.WriteLine (Constants.Logo.Replace("0.0.0.0", versionString));
+
+            // if the only thing the user wanted to know is the version, leave it at this
+            if (args.Length == 1 && args[0].EndsWith ("version", StringComparison.CurrentCultureIgnoreCase))
+                return;
+
+            if (args.Length < 1 || args.Length == 1 && args[0] == "build")
             {
                 string configPath = Directory.GetCurrentDirectory ().CombinePath ("SiteConfig.yml");
                 Console.WriteLine ($"looking for {configPath}");
@@ -43,6 +49,7 @@ namespace Chloroplast.Tool
 
             ICliCommand command = new ConfigCommand ();
 
+            Console.WriteLine ($"sub command: {subtask}");
             try
             {
                 switch (subtask)
@@ -55,6 +62,9 @@ namespace Chloroplast.Tool
                         break;
                     case "host":
                         command = new HostCommand ();
+                        break;
+                    case "init":
+                        command = new InitCommand ();
                         break;
                     default:
                         throw new ChloroplastException ("usage: pass 'build', or 'watch'");
@@ -112,11 +122,6 @@ namespace Chloroplast.Tool
         {
             var subtask = args.First ();
             var subtaskargs = args.Skip (1).ToArray ();
-
-            if (!subtaskargs.Any())
-            {
-                throw new ChloroplastException ("No path provided");
-            }
 
             var builder = new ConfigurationBuilder ()
                 .AddCommandLine (subtaskargs);

@@ -12,7 +12,7 @@ namespace Chloroplast.Test
         {
             RazorRenderer renderer = new RazorRenderer ();
             
-            var content = await renderer.RenderAsync (MakeContent ());
+            var content = await renderer.RenderContentAsync (MakeContent ());
 
             // TODO: need to mock up initialization
         }

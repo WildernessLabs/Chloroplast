@@ -17,6 +17,7 @@ namespace Chloroplast.Core.Rendering
         {
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
             templates[fileName] = engine.Compile (await File.ReadAllTextAsync (templatePath));
+            
         }
 
         public async Task InitializeAsync (IConfigurationRoot config)
@@ -31,30 +32,55 @@ namespace Chloroplast.Core.Rendering
             }
         }
 
-        public async Task<string> RenderAsync (RenderedContent parsed)
+        public async Task<string> RenderContentAsync (FrameRenderedContent parsed)
         {
-            string defaultTemplateName = "Default";
-            string templateName = defaultTemplateName;
-            if (parsed.Metadata.ContainsKey ("template"))
-                templateName = parsed.Metadata["template"];
+            try
+            {
+                // now render into site frame
+                var frame = templates["SiteFrame"];
 
-            if (parsed.Metadata.ContainsKey ("layout"))
-                templateName = parsed.Metadata["layout"];
+                var result = await frame.RenderAsync (parsed);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine (ex.ToString ());
+                Console.ResetColor ();
+                return ex.ToString ();
+            }
+        }
 
-            MiniRazorTemplateDescriptor template = null;
+        public async Task<string> RenderContentAsync (RenderedContent parsed)
+        {
+            try
+            { 
+                string defaultTemplateName = "Default";
+                string templateName = defaultTemplateName;
+                if (parsed.Metadata.ContainsKey ("template"))
+                    templateName = parsed.Metadata["template"];
 
-            if (!templates.TryGetValue(templateName, out template))
-                template = templates[defaultTemplateName];
+                if (parsed.Metadata.ContainsKey ("layout"))
+                    templateName = parsed.Metadata["layout"];
 
-            // Render template
-            var result = await template.RenderAsync (parsed);
+                MiniRazorTemplateDescriptor template;
 
-            // now render into site frame
-            var frame = templates["SiteFrame"];
-            parsed.Body = result;
-            result = await frame.RenderAsync (parsed);
+                if (!templates.TryGetValue(templateName, out template))
+                    template = templates[defaultTemplateName];
 
-            return result;
+                // Render template
+                var result = await template.RenderAsync (parsed);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine (ex.ToString ());
+                Console.ResetColor ();
+                return ex.ToString ();
+            }
         }
     }
 }
