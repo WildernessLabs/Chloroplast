@@ -73,6 +73,10 @@ namespace Chloroplast.Core.Content
             }
         }
 
+        /// <summary>
+        /// Using heuristics to build the content tree
+        /// </summary>
+        /// <returns>The content nodes, nested as they are in the file system.</returns>
         public IEnumerable<ContentNode> BuildHierarchy ()
         {
             Dictionary<string, ContentNode> items = new Dictionary<string, ContentNode> ();
