@@ -7,10 +7,10 @@
   <ItemGroup>
     <PackageReference Include="YamlDotNet" Version="8.1.2" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
-    <PackageReference Include="Markdig" Version="0.20.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.6" />
-    <PackageReference Include="MiniRazor" Version="1.0.1" />
+    <PackageReference Include="Markdig" Version="0.21.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.7" />
+    <PackageReference Include="MiniRazor" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
