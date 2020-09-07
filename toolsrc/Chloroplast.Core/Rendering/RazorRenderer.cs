@@ -5,11 +5,14 @@ using System.Threading.Tasks;
 using Chloroplast.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using MiniRazor;
+using MiniRazor.Primitives;
 
 namespace Chloroplast.Core.Rendering
 {
     public class RazorRenderer
     {
+        public static RazorRenderer Instance;
+
         Dictionary<string, MiniRazorTemplateDescriptor> templates = new Dictionary<string, MiniRazorTemplateDescriptor> ();
         MiniRazorTemplateEngine engine = new MiniRazorTemplateEngine ();
 
@@ -30,6 +33,10 @@ namespace Chloroplast.Core.Rendering
             {
                 await this.AddTemplateAsync (razorPath);
             }
+
+            // danger will robinson ...
+            // there should be only one ... big assumption here
+            Instance = this;
         }
 
         public async Task<string> RenderContentAsync (FrameRenderedContent parsed)
@@ -49,6 +56,12 @@ namespace Chloroplast.Core.Rendering
                 Console.ResetColor ();
                 return ex.ToString ();
             }
+        }
+
+        public async Task<RawString> RenderTemplateContent<T>(string templateName, T model)
+        {
+            var template = templates[templateName];
+            return new RawString(await template.RenderAsync (model));
         }
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
