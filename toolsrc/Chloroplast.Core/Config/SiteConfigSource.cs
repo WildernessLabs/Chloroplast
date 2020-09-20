@@ -7,6 +7,34 @@ using YamlDotNet.RepresentationModel;
 
 namespace Chloroplast.Core.Config
 {
+    public class FrontMatterConfigSource : StreamConfigurationSource
+    {
+        string yaml;
+        public FrontMatterConfigSource (string yamlsource) => this.yaml = yamlsource;
+
+        public override IConfigurationProvider Build (IConfigurationBuilder builder)
+        {
+            var mem = new MemoryStream ();
+            var stringBytes = System.Text.Encoding.UTF8.GetBytes (yaml);
+            mem.Write (stringBytes, 0, stringBytes.Length);
+            mem.Seek (0, SeekOrigin.Begin);
+            this.Stream = mem;
+            return new FrontMatterConfigurationProvider (this);
+        }
+    }
+
+    public class FrontMatterConfigurationProvider : StreamConfigurationProvider
+    {
+        public FrontMatterConfigurationProvider (FrontMatterConfigSource source) : base (source) { }
+
+        public override void Load (Stream stream)
+        {
+            var parser = new SiteConfigurationFileParser ();
+
+            Data = parser.Parse (stream);
+        }
+    }
+
     public class SiteConfigSource : FileConfigurationSource
     {
         public override IConfigurationProvider Build (IConfigurationBuilder builder)
@@ -18,7 +46,7 @@ namespace Chloroplast.Core.Config
 
     public class SiteConfigurationProvider : FileConfigurationProvider
     {
-        public SiteConfigurationProvider (SiteConfigSource source) : base (source) { }
+        public SiteConfigurationProvider (FileConfigurationSource source) : base (source) { }
 
         public override void Load (Stream stream)
         {

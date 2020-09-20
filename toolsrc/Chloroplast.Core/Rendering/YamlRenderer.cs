@@ -3,17 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using Chloroplast.Core.Config;
 using Chloroplast.Core.Extensions;
+using Microsoft.Extensions.Configuration;
+using YamlDotNet.RepresentationModel;
 
 namespace Chloroplast.Core.Rendering
 {
     public class YamlRenderer
     {
-        public (IDictionary<string,string>,string) ParseDoc(string content)
+
+        public (IConfigurationRoot,string) ParseDoc(string content)
         {
             (string yaml, string markdown) = Split (content);
             SiteConfigurationFileParser configParser = new SiteConfigurationFileParser ();
 
-            return (configParser.Parse (yaml), markdown);
+            ConfigurationBuilder builder = new ConfigurationBuilder ();
+            builder.AddChloroplastFrontMatter (yaml);
+            return (builder.Build (), markdown);
         }
 
         private (string yaml, string markdown) Split (string content)

@@ -39,5 +39,40 @@ namespace Chloroplast.Core.Extensions
             builder.Add (source);
             return builder;
         }
+
+        public static IConfigurationBuilder AddChloroplastFrontMatter(this IConfigurationBuilder builder, string content)
+        {
+            var source = new FrontMatterConfigSource (content);
+            builder.Add (source);
+            return builder;
+        }
+
+        public static bool ContainsKey(this IConfigurationRoot config, string key)
+        {
+            var value = config[key];
+            bool hasStringKey = !string.IsNullOrWhiteSpace (value);
+
+            if (!hasStringKey)
+            {
+                var section = config.GetSection (key);
+                return section.Exists();
+            }
+
+            return true;
+        }
+
+        public static bool ContainsKey (this IConfigurationSection config, string key)
+        {
+            var value = config[key];
+            bool hasStringKey = !string.IsNullOrWhiteSpace (value);
+
+            if (!hasStringKey)
+            {
+                var section = config.GetSection (key);
+                return section != null;
+            }
+
+            return true;
+        }
     }
 }

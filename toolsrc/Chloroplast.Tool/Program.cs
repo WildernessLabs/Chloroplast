@@ -138,6 +138,8 @@ namespace Chloroplast.Tool
             }
                 
             var config = builder.Build ();
+            SiteConfig.Instance = config;
+
             return config;
         }
     }

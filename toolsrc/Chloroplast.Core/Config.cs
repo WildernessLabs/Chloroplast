@@ -1,15 +1,10 @@
 ﻿using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Chloroplast.Core
 {
-    public class SiteConfig
+    public static class SiteConfig
     {
-        public SiteConfig()
-        { }
-
-        public static SiteConfig FromSettings()
-        {
-            return default;
-        }
+        public static IConfigurationRoot Instance { get; set; }
     }
 }

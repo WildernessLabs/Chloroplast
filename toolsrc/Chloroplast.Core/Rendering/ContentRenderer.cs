@@ -11,7 +11,7 @@ namespace Chloroplast.Core.Rendering
     {
         public ContentNode Node { get; set; }
         public string Body { get; set; }
-        public IDictionary<string, string> Metadata = new Dictionary<string, string> ();
+        public IConfigurationRoot Metadata { get; set; }
 
         public RenderedContent ()
         {
@@ -26,14 +26,14 @@ namespace Chloroplast.Core.Rendering
 
         public string GetMeta(string key)
         {
-            string value;
-            Metadata.TryGetValue (key, out value);
-            return value;
+            string value = Metadata[key];
+            return value ?? string.Empty;
         }
 
         public bool HasMeta(string key)
         {
-            return Metadata.ContainsKey (key);
+            string value = Metadata[key];
+            return string.IsNullOrWhiteSpace(value);
         }
     }
 
@@ -69,8 +69,9 @@ namespace Chloroplast.Core.Rendering
             YamlRenderer yamlrenderer = new YamlRenderer ();
             (var yaml, string markdown) = yamlrenderer.ParseDoc (parsed.Body);
             parsed.Metadata = yaml;
+
             parsed.Body = markdown;
-            parsed.Node.Title = yaml.Try("title") ?? yaml.Try("Title") ?? parsed.Node.Slug;
+            parsed.Node.Title = yaml["title"] ?? yaml["Title"] ?? parsed.Node.Slug;
 
             // convert markdown to html
             MarkdownRenderer mdRenderer = new MarkdownRenderer ();

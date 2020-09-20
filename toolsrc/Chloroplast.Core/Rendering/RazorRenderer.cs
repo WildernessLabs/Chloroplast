@@ -70,6 +70,7 @@ namespace Chloroplast.Core.Rendering
             { 
                 string defaultTemplateName = "Default";
                 string templateName = defaultTemplateName;
+
                 if (parsed.Metadata.ContainsKey ("template"))
                     templateName = parsed.Metadata["template"];
 
