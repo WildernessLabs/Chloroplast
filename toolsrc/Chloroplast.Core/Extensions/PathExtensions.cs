@@ -29,6 +29,11 @@ namespace Chloroplast.Core.Extensions
             return replaced;
         }
 
+        public static string GetPathFileName(this string value)
+        {
+            return Path.GetFileName (value);
+        }
+
         public static string CombinePath(this string value, params string[] paths)
         {
             string combinedPaths = Path.Combine (paths).NormalizePath ();

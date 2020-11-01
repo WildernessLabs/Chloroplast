@@ -59,12 +59,13 @@ namespace Chloroplast.Core.Rendering
         }
         public static async Task<RenderedContent> FromMarkdownAsync(ContentNode node)
         {
+            var content = node.Source.ReadContentAsync ();
             var parsed = new RenderedContent 
             {
                 Node = node,
-                Body = await node.Source.ReadContentAsync()
+                Body = content.Result
             };
-
+            
             // parse front-matter
             YamlRenderer yamlrenderer = new YamlRenderer ();
             (var yaml, string markdown) = yamlrenderer.ParseDoc (parsed.Body);

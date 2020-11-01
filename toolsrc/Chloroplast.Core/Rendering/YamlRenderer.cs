@@ -5,6 +5,7 @@ using Chloroplast.Core.Config;
 using Chloroplast.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -63,6 +64,27 @@ namespace Chloroplast.Core.Rendering
             string parsedYaml = lines.StringJoinFromSubArray (Environment.NewLine, startdelimiter, enddelimiter);
             string parsedMarkdown = lines.StringJoinFromSubArray (Environment.NewLine, enddelimiter+1, content.Length - enddelimiter+1);
             return (parsedYaml, parsedMarkdown);
+        }
+
+        /// <summary>
+        /// Saves a menu markdown file
+        /// </summary>
+        /// <param name="filePath">the path, including markdown filename</param>
+        /// <param name="nodes">the menu nodes we want to be included</param>
+        public static void RenderAndSaveMenu(string filePath, IEnumerable<MenuNode> nodes)
+        {
+            var serializer = new SerializerBuilder ()
+                .WithNamingConvention(new YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention())
+                .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+                .Build();
+            string fileContent = serializer.Serialize (new
+            {
+                template = "menu",
+                navTree = nodes
+            });
+
+            string mdContent = $"---{Environment.NewLine}{fileContent}{Environment.NewLine}---{Environment.NewLine}";
+            File.WriteAllText (filePath, mdContent);
         }
     }
 }
