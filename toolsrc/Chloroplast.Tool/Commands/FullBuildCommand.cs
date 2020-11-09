@@ -66,7 +66,14 @@ namespace Chloroplast.Tool.Commands
                     .Select (t => t.Result.Result)
                     .Where(r => r != null);
 
-                IEnumerable<ContentNode> menutree = area.BuildHierarchy ().ToArray();
+                IEnumerable<ContentNode> menutree;
+
+                if (area is GroupContentArea)
+                {
+                    menutree = ((GroupContentArea)area).BuildHierarchy ().ToArray ();
+                }
+                else // this isn't used for frame rendering anyways. TODO: refactor this out
+                    menutree = new ContentNode[0];
 
                 // this is an experimental feature that is, for now, disabled.
                 // helpful for quickly bootstrapping menu files, but should be

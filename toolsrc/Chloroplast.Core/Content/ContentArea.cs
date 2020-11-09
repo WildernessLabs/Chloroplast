@@ -7,23 +7,83 @@ using Microsoft.Extensions.Configuration;
 
 namespace Chloroplast.Core.Content
 {
-    public class ContentArea
+    public abstract class ContentArea
+    {
+        public string SourcePath { get; set; }
+        public string TargetPath { get; set; }
+        public abstract IList<ContentNode> ContentNodes { get; }
+
+        public static IEnumerable<ContentArea> LoadContentAreas (IConfigurationRoot config)
+        {
+
+            string rootDirectory = config["root"].NormalizePath ();
+            string outDirectory = config["out"].NormalizePath ();
+
+            // individual files
+
+            var fileConfigs = config.GetSection ("files");
+            foreach (var fileConfig in fileConfigs.GetChildren ())
+            {
+                var area = new IndividualContentArea
+                {
+                    SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
+                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"])
+                };
+
+                yield return area;
+            }
+
+            // areas
+            var areaConfigs = config.GetSection ("areas");
+
+
+            foreach (var areaConfig in areaConfigs.GetChildren ())
+            {
+                var area = new GroupContentArea
+                {
+                    SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
+                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"])
+                };
+
+                // TODO: validate values
+
+                yield return area;
+            }
+        }
+    }
+
+    public class IndividualContentArea : ContentArea
+    {
+        public override IList<ContentNode> ContentNodes
+        {
+            get
+            {
+                return new[] {
+                    new ContentNode
+                    {
+                        Slug = Path.GetDirectoryName (this.SourcePath),
+                        Source = new DiskFile (this.SourcePath, this.SourcePath),
+                        Target = new DiskFile (this.TargetPath, this.TargetPath)
+                    }
+                }.ToList();
+            }
+        }
+    }
+
+    public class GroupContentArea : ContentArea
     {
         List<ContentNode> nodes;
 
-        public ContentArea ()
+        public GroupContentArea ()
         {
         }
 
-        public ContentArea(IEnumerable<ContentNode> inputNodes)
+        public GroupContentArea (IEnumerable<ContentNode> inputNodes)
         {
             this.nodes = new List<ContentNode> (inputNodes);
         }
 
-        public string SourcePath { get; set; }
-        public string TargetPath { get; set; }
-
-        public IList<ContentNode> ContentNodes
+        public override IList<ContentNode> ContentNodes
         {
             get
             {
@@ -52,26 +112,7 @@ namespace Chloroplast.Core.Content
             }
         }
 
-        public static IEnumerable<ContentArea> LoadContentAreas(IConfigurationRoot config)
-        {
-            var areaConfigs = config.GetSection ("areas");
-            
-            string rootDirectory = config["root"].NormalizePath();
-            string outDirectory = config["out"].NormalizePath ();
-
-            foreach (var areaConfig in areaConfigs.GetChildren())
-            {
-                var area = new ContentArea
-                {
-                    SourcePath = rootDirectory.CombinePath(areaConfig["source_folder"]),
-                    TargetPath = outDirectory.CombinePath(areaConfig["output_folder"])
-                };
-
-                // TODO: validate values
-
-                yield return area;
-            }
-        }
+        
 
         /// <summary>
         /// Using heuristics to build the content tree
