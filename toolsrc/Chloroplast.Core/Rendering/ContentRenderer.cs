@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Chloroplast.Core.Extensions;
+using Chloroplast.Core.Content;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -12,6 +14,7 @@ namespace Chloroplast.Core.Rendering
         public ContentNode Node { get; set; }
         public string Body { get; set; }
         public IConfigurationRoot Metadata { get; set; }
+        public Header[] Headers { get; internal set; }
 
         public RenderedContent ()
         {
@@ -78,12 +81,35 @@ namespace Chloroplast.Core.Rendering
             MarkdownRenderer mdRenderer = new MarkdownRenderer ();
             parsed.Body = mdRenderer.Render (parsed.Body);
 
+            // parse out headers
+            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument ();
+            doc.LoadHtml (parsed.Body);
+            var nodes = doc.DocumentNode.SelectNodes ("//h1|//h2|//h3|//h4//h5//h6");
+            List<Header> headers = null;
+            if (nodes != null)
+            {
+                headers = new List<Header> (nodes.Count);
+                foreach (var n in nodes.Where(n=>!string.IsNullOrWhiteSpace(n.InnerText)))
+                {
+                    var header = Header.FromNode (n);
+                    headers.Add (header);
+
+                    // insert the anchor before the header element
+                    var anchor = doc.CreateElement ("a");
+                    anchor.Attributes.Add ("name", header.Slug);
+                    n.ParentNode.InsertBefore (anchor, n);
+                }
+                parsed.Body = doc.DocumentNode.OuterHtml;
+            }
+            parsed.Headers = headers != null ? headers.ToArray() : new Header[0];
+
             return parsed;
         }
 
         public static async Task<RenderedContent> ToRazorAsync (RenderedContent content)
         {
             content.Body = await razorRenderer.RenderContentAsync (content);
+
             return content;
         }
 
