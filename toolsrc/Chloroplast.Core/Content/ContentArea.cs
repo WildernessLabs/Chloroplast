@@ -11,6 +11,7 @@ namespace Chloroplast.Core.Content
     {
         public string SourcePath { get; set; }
         public string TargetPath { get; set; }
+        public string RootRelativePath { get; set; }
         public abstract IList<ContentNode> ContentNodes { get; }
 
         public static IEnumerable<ContentArea> LoadContentAreas (IConfigurationRoot config)
@@ -27,7 +28,8 @@ namespace Chloroplast.Core.Content
                 var area = new IndividualContentArea
                 {
                     SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
-                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"])
+                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"]),
+                    RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "")
                 };
 
                 yield return area;
@@ -42,7 +44,8 @@ namespace Chloroplast.Core.Content
                 var area = new GroupContentArea
                 {
                     SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
-                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"])
+                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"]),
+                    RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "")
                 };
 
                 // TODO: validate values
@@ -63,7 +66,8 @@ namespace Chloroplast.Core.Content
                     {
                         Slug = Path.GetDirectoryName (this.SourcePath),
                         Source = new DiskFile (this.SourcePath, this.SourcePath),
-                        Target = new DiskFile (this.TargetPath, this.TargetPath)
+                        Target = new DiskFile (this.TargetPath, this.TargetPath),
+                        Area = this
                     }
                 }.ToList();
             }
@@ -103,7 +107,8 @@ namespace Chloroplast.Core.Content
                                   {
                                       Slug = Path.GetDirectoryName (relative),
                                       Source = new DiskFile (p, relative),
-                                      Target = new DiskFile (targetFile, targetrelative)
+                                      Target = new DiskFile (targetFile, targetrelative),
+                                      Area = this
                                   };
 
                                   return node;
