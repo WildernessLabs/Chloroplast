@@ -89,6 +89,7 @@ namespace Chloroplast.Core.Rendering
             if (nodes != null)
             {
                 headers = new List<Header> (nodes.Count);
+
                 foreach (var n in nodes.Where(n=>!string.IsNullOrWhiteSpace(n.InnerText)))
                 {
                     var header = Header.FromNode (n);

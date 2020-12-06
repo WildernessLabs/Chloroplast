@@ -7,7 +7,7 @@ using MiniRazor.Primitives;
 
 namespace Chloroplast.Core.Rendering
 {
-    public abstract class ChloroplastTemplateBase<T> : MiniRazor.MiniRazorTemplateBase<T>
+    public abstract class ChloroplastTemplateBase<T> : MiniRazor.MiniRazorTemplateBase<T> where T : RenderedContent
     {
         public ChloroplastTemplateBase ()
         {
@@ -24,12 +24,13 @@ namespace Chloroplast.Core.Rendering
                 .NormalizePath ()
                 .CombinePath (menuPath);
 
-               // load the menu path
-               var node = new ContentNode
+            // load the menu path
+            var node = new ContentNode
             {
-                Slug = menuPath,
+                Slug = "/" + Model.Node.Area.TargetPath.GetPathFileName ().CombinePath (Model.Node.Slug),
                 Source = new DiskFile (fullMenuPath, menuPath),
-                Target = new DiskFile (fullMenuPath, menuPath) // not used
+                Target = new DiskFile (fullMenuPath, menuPath),
+                Parent = this.Model.Node
             };
             var r = await ContentRenderer.FromMarkdownAsync (node);
             r = await ContentRenderer.ToRazorAsync (r);
