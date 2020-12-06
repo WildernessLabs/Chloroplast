@@ -17,7 +17,8 @@ namespace Chloroplast.Core.Rendering
                 .UseEmphasisExtras ()
                 .UseGridTables ()
                 .UsePipeTables ()
-                .UseGenericAttributes ();
+                .UseGenericAttributes ()
+                .UseAutoLinks ();
 
             var pipeline = builder.Build ();
 
