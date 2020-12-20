@@ -1,13 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Chloroplast.Core.Content;
 using Chloroplast.Core.Extensions;
-using MiniRazor.Primitives;
+using MiniRazor;
 
 namespace Chloroplast.Core.Rendering
 {
-    public abstract class ChloroplastTemplateBase<T> : MiniRazor.MiniRazorTemplateBase<T> where T : RenderedContent
+    public abstract class ChloroplastTemplateBase<T> : TemplateBase<T> where T : RenderedContent
     {
         public ChloroplastTemplateBase ()
         {
