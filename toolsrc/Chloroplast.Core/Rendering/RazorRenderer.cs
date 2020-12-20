@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Chloroplast.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using MiniRazor;
-using MiniRazor.Primitives;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -13,13 +12,13 @@ namespace Chloroplast.Core.Rendering
     {
         public static RazorRenderer Instance;
 
-        Dictionary<string, MiniRazorTemplateDescriptor> templates = new Dictionary<string, MiniRazorTemplateDescriptor> ();
-        MiniRazorTemplateEngine engine = new MiniRazorTemplateEngine ();
+        Dictionary<string, TemplateDescriptor> templates = new Dictionary<string, TemplateDescriptor> ();
+        //TemplateEngine engine = new TemplateEngine ();
 
         public async Task AddTemplateAsync(string templatePath)
         {
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
-            templates[fileName] = engine.Compile (await File.ReadAllTextAsync (templatePath));
+            templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
             
         }
 
@@ -77,7 +76,7 @@ namespace Chloroplast.Core.Rendering
                 if (parsed.Metadata.ContainsKey ("layout"))
                     templateName = parsed.Metadata["layout"];
 
-                MiniRazorTemplateDescriptor template;
+                TemplateDescriptor template;
 
                 if (!templates.TryGetValue(templateName, out template))
                     template = templates[defaultTemplateName];
