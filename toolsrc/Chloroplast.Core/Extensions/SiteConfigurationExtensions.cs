@@ -74,5 +74,19 @@ namespace Chloroplast.Core.Extensions
 
             return true;
         }
+
+        public static bool GetBool(this IConfigurationRoot config, string key, bool defaultValue = false)
+        {
+            var value = config[key];
+
+            if (string.IsNullOrWhiteSpace (value))
+                return defaultValue;
+
+            bool theValue;
+
+            bool.TryParse (value, out theValue);
+
+            return theValue;
+        }
     }
 }
