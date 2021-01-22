@@ -7,7 +7,7 @@ namespace Chloroplast.Core.Extensions
     {
         public static char OtherDirectorySeparator { get; } = Path.DirectorySeparatorChar == '/' ? '\\' : '/';
 
-        public static string NormalizePath(this string value)
+        public static string NormalizePath(this string value, bool toLower = false)
         {
             if (string.IsNullOrWhiteSpace (value))
                 return string.Empty;
@@ -17,7 +17,7 @@ namespace Chloroplast.Core.Extensions
             if (slashed.StartsWith ('~'))
                 slashed = slashed.Replace("~", Environment.GetFolderPath (Environment.SpecialFolder.UserProfile));
 
-            return slashed;
+            return toLower ? slashed.ToLower() : slashed;
         }
 
         public static string RelativePath(this string value, string rootPath)

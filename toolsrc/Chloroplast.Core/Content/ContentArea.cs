@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using Chloroplast.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 
@@ -19,6 +18,7 @@ namespace Chloroplast.Core.Content
 
             string rootDirectory = config["root"].NormalizePath ();
             string outDirectory = config["out"].NormalizePath ();
+            bool normalizePaths = config.GetBool ("normalizePaths", defaultValue: true);
 
             // individual files
 
@@ -28,8 +28,8 @@ namespace Chloroplast.Core.Content
                 var area = new IndividualContentArea
                 {
                     SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
-                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"]),
-                    RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "")
+                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
+                    RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "").NormalizePath(toLower: normalizePaths)
                 };
 
                 yield return area;
@@ -44,8 +44,9 @@ namespace Chloroplast.Core.Content
                 var area = new GroupContentArea
                 {
                     SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
-                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"]),
-                    RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "")
+                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
+                    RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
+                    NormalizePaths = normalizePaths
                 };
 
                 // TODO: validate values
@@ -78,6 +79,8 @@ namespace Chloroplast.Core.Content
     {
         List<ContentNode> nodes;
 
+        public bool NormalizePaths { get; set; }
+
         public GroupContentArea ()
         {
         }
@@ -97,7 +100,7 @@ namespace Chloroplast.Core.Content
                             .Select (p =>
                               {
                                   var relative = p.RelativePath (SourcePath);
-                                  var targetrelative = relative;
+                                  var targetrelative = relative.NormalizePath(toLower: this.NormalizePaths);
 
                                   if (targetrelative.EndsWith (".md"))
                                       targetrelative = targetrelative.Substring (0, targetrelative.Length - 3) + ".html";
