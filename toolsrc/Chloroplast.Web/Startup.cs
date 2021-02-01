@@ -39,9 +39,6 @@ namespace Chloroplast.Web
             app.UseEndpoints (endpoints =>
              {
                  endpoints.MapControllers ();
-                 endpoints.MapControllerRoute (
-        name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
                  endpoints.MapControllerRoute ("content", "{*pathInfo}",
                      defaults: new
                      {
