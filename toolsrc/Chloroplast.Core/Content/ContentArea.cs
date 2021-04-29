@@ -44,9 +44,11 @@ namespace Chloroplast.Core.Content
                 var area = new GroupContentArea
                 {
                     SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
+
                     TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
                     RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
-                    NormalizePaths = normalizePaths
+                    NormalizePaths = normalizePaths,
+                    AreaType = areaConfig["type"]
                 };
 
                 // TODO: validate values
@@ -78,8 +80,19 @@ namespace Chloroplast.Core.Content
     public class GroupContentArea : ContentArea
     {
         List<ContentNode> nodes;
-
+        
         public bool NormalizePaths { get; set; }
+
+        string areaType = "markdown";
+        public string AreaType
+        {
+            get => areaType;
+            set
+            {
+                if (!string.IsNullOrWhiteSpace (value))
+                    areaType = value;
+            }
+        } 
 
         public GroupContentArea ()
         {
@@ -96,7 +109,8 @@ namespace Chloroplast.Core.Content
             {
                 if (nodes == null)
                     nodes = Directory
-                            .GetFiles (this.SourcePath, "*.*", SearchOption.AllDirectories)
+                        // TODO , switch this back to *.* ... *.xml is only for testing
+                            .GetFiles (this.SourcePath, "*.xml", SearchOption.AllDirectories)
                             .Select (p =>
                               {
                                   var relative = p.RelativePath (SourcePath);
@@ -104,6 +118,18 @@ namespace Chloroplast.Core.Content
 
                                   if (targetrelative.EndsWith (".md"))
                                       targetrelative = targetrelative.Substring (0, targetrelative.Length - 3) + ".html";
+
+                                  else if (targetrelative.EndsWith (".xml"))
+                                  {
+                                      targetrelative = targetrelative.Substring (0, targetrelative.Length - 4) + ".html";
+                                      if (targetrelative.Contains("ns-"))
+                                      {
+                                          // this is a namespace, let's switch the target filename
+                                          var filename = Path.GetFileNameWithoutExtension (targetrelative).Replace("ns-", string.Empty);
+                                          var folder = Path.GetDirectoryName (targetrelative);
+                                          targetrelative = Path.Combine (folder, filename, "index.html");
+                                      }
+                                  }
 
                                   var targetFile = TargetPath.CombinePath (targetrelative);
                                   var node = new ContentNode

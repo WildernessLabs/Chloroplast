@@ -28,5 +28,6 @@
     <Folder Include="Rendering\" />
     <Folder Include="Extensions\" />
     <Folder Include="Config\" />
+    <Folder Include="Loaders\" />
   </ItemGroup>
 </Project>
