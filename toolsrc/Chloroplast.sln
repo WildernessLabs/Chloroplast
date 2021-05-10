@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chloroplast.Core", "Chlorop
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chloroplast.Test", "Chloroplast.Test\Chloroplast.Test.csproj", "{486FF194-7940-4948-952D-BFF27F7CA251}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chloroplast.Web", "Chloroplast.Web\Chloroplast.Web.csproj", "{E58C3726-033D-4CD2-9605-617BD8B76838}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chloroplast.Web", "Chloroplast.Web\Chloroplast.Web.csproj", "{CECE2A1F-5C5C-42A4-9D50-5DE5B70831C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +27,9 @@ Global
 		{486FF194-7940-4948-952D-BFF27F7CA251}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{486FF194-7940-4948-952D-BFF27F7CA251}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{486FF194-7940-4948-952D-BFF27F7CA251}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E58C3726-033D-4CD2-9605-617BD8B76838}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E58C3726-033D-4CD2-9605-617BD8B76838}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E58C3726-033D-4CD2-9605-617BD8B76838}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E58C3726-033D-4CD2-9605-617BD8B76838}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CECE2A1F-5C5C-42A4-9D50-5DE5B70831C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CECE2A1F-5C5C-42A4-9D50-5DE5B70831C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CECE2A1F-5C5C-42A4-9D50-5DE5B70831C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CECE2A1F-5C5C-42A4-9D50-5DE5B70831C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
