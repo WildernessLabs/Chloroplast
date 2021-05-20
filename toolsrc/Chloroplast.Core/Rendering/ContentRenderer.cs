@@ -36,7 +36,7 @@ namespace Chloroplast.Core.Rendering
         public bool HasMeta(string key)
         {
             string value = Metadata[key];
-            return string.IsNullOrWhiteSpace(value);
+            return !string.IsNullOrWhiteSpace(value);
         }
     }
 
