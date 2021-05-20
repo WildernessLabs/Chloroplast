@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Chloroplast.Core.Extensions;
 using Chloroplast.Core.Content;
+using Choroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -37,6 +38,26 @@ namespace Chloroplast.Core.Rendering
         {
             string value = Metadata[key];
             return !string.IsNullOrWhiteSpace(value);
+        }
+    }
+
+    public class EcmaXmlContent<T>
+    {
+        public ContentNode Node { get; set; }
+        public T Element { get; set; }
+        public IConfigurationRoot Metadata { get; set; }
+
+
+        public string GetMeta (string key)
+        {
+            string value = Metadata[key];
+            return value ?? string.Empty;
+        }
+
+        public bool HasMeta (string key)
+        {
+            string value = Metadata[key];
+            return string.IsNullOrWhiteSpace (value);
         }
     }
 
@@ -107,6 +128,20 @@ namespace Chloroplast.Core.Rendering
             return parsed;
         }
 
+        public static async Task<RenderedContent> FromEcmaXmlAsync (ContentNode item, IConfigurationRoot config)
+        {
+            var content = item.Source.ReadContentAsync ();
+            var parsed = new RenderedContent
+            {
+                Node = item,
+                Body = content.Result
+            };
+
+            var rendered = EcmaXmlRenderer.Render (item, content.Result, config);
+
+            return parsed;
+        }
+
         public static async Task<RenderedContent> ToRazorAsync (RenderedContent content)
         {
             content.Body = await razorRenderer.RenderContentAsync (content);
@@ -118,6 +153,12 @@ namespace Chloroplast.Core.Rendering
         {
             content.Body = await razorRenderer.RenderContentAsync (content);
             return content;
+        }
+
+        public static async Task<string> ToRazorAsync (EcmaXmlContent<Namespace> nscontent)
+        {
+            var body = await razorRenderer.RenderContentAsync (nscontent);
+            return body;
         }
     }
 }

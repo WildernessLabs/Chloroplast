@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Markdig;
 using Markdig.Parsers;
 using Markdig.Renderers;
-using Microsoft.Extensions.Configuration;
-using Chloroplast.Core.Extensions;
 
 namespace Chloroplast.Core.Rendering
 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Chloroplast.Core.Extensions;
+using Choroplast.Core.Loaders.EcmaXml;
 using Microsoft.Extensions.Configuration;
 using MiniRazor;
 
@@ -94,6 +95,11 @@ namespace Chloroplast.Core.Rendering
                 Console.ResetColor ();
                 return ex.ToString ();
             }
+        }
+
+        internal Task<string> RenderContentAsync (EcmaXmlContent<Namespace> nscontent)
+        {
+            throw new NotImplementedException ();
         }
     }
 }
