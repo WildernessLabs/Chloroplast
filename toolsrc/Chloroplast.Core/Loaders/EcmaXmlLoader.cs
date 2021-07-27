@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Xml.Serialization;
-using EcmaXml = Choroplast.Core.Loaders.EcmaXml;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Loaders
 {

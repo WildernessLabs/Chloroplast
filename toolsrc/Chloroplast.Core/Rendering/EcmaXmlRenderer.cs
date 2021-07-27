@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Chloroplast.Core.Loaders;
-using EcmaXml = Choroplast.Core.Loaders.EcmaXml;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -10,7 +11,7 @@ namespace Chloroplast.Core.Rendering
         {
         }
 
-        public static RenderedContent Render (ContentNode item, string body, Microsoft.Extensions.Configuration.IConfigurationRoot config)
+        public static async Task<RenderedContent> Render (ContentNode item, string body, Microsoft.Extensions.Configuration.IConfigurationRoot config)
         {
             if (body.StartsWith("<Namespace"))
             {
@@ -24,10 +25,26 @@ namespace Chloroplast.Core.Rendering
                     Element = ns,
                     Metadata = config
                 };
+                
+                var result = await ContentRenderer.ToRazorAsync (nscontent);
+                //return md.Render (ns.Summary);
 
-                ContentRenderer.ToRazorAsync (nscontent);
-                return md.Render (ns.Summary);
+                var content = new RenderedContent
+                {
+                    Body = result,
+                    Node = item
+                };
+
+                return content;
             }
+
+            var def = new RenderedContent
+            {
+                Body = System.Web.HttpUtility.HtmlEncode(body),
+                Node = item
+            };
+
+            return def;
         }
     }
 }

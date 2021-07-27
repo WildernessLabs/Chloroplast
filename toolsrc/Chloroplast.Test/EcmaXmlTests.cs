@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using Chloroplast.Core.Loaders;
-using Choroplast.Core.Loaders.EcmaXml;
+using Chloroplast.Core.Loaders.EcmaXml;
 using Xunit;
-using EcmaXml = Choroplast.Core.Loaders.EcmaXml;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Test
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Chloroplast.Core.Extensions;
-using Choroplast.Core.Loaders.EcmaXml;
+//using Choroplast.Core.Loaders.EcmaXml;
 using Microsoft.Extensions.Configuration;
 using MiniRazor;
 
@@ -18,6 +18,8 @@ namespace Chloroplast.Core.Rendering
 
         public async Task AddTemplateAsync(string templatePath)
         {
+            Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
+            Console.WriteLine (ns.ToString ());
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
             templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
             
@@ -97,9 +99,30 @@ namespace Chloroplast.Core.Rendering
             }
         }
 
-        internal Task<string> RenderContentAsync (EcmaXmlContent<Namespace> nscontent)
+        public async Task<string> RenderContentAsync (EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.Namespace> parsed)
         {
-            throw new NotImplementedException ();
+            try
+            {
+                string templateName = "Namespace";
+
+                TemplateDescriptor template;
+
+                if (!templates.TryGetValue (templateName, out template))
+                    template = templates[templateName];
+
+                // Render template
+                var result = await template.RenderAsync (parsed);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine (ex.ToString ());
+                Console.ResetColor ();
+                return ex.ToString ();
+            }
         }
     }
 }

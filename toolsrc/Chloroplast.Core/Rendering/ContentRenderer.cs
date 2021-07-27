@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Chloroplast.Core.Extensions;
 using Chloroplast.Core.Content;
-using Choroplast.Core.Loaders.EcmaXml;
+using Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -30,35 +30,24 @@ namespace Chloroplast.Core.Rendering
 
         public string GetMeta(string key)
         {
+            if (Metadata == null) return string.Empty;
+
             string value = Metadata[key];
             return value ?? string.Empty;
         }
 
         public bool HasMeta(string key)
         {
+            if (Metadata == null) return false;
+
             string value = Metadata[key];
             return !string.IsNullOrWhiteSpace(value);
         }
     }
 
-    public class EcmaXmlContent<T>
+    public class EcmaXmlContent<T> : RenderedContent
     {
-        public ContentNode Node { get; set; }
         public T Element { get; set; }
-        public IConfigurationRoot Metadata { get; set; }
-
-
-        public string GetMeta (string key)
-        {
-            string value = Metadata[key];
-            return value ?? string.Empty;
-        }
-
-        public bool HasMeta (string key)
-        {
-            string value = Metadata[key];
-            return string.IsNullOrWhiteSpace (value);
-        }
     }
 
     public class FrameRenderedContent : RenderedContent
@@ -139,7 +128,7 @@ namespace Chloroplast.Core.Rendering
 
             var rendered = EcmaXmlRenderer.Render (item, content.Result, config);
 
-            return parsed;
+            return await rendered;
         }
 
         public static async Task<RenderedContent> ToRazorAsync (RenderedContent content)

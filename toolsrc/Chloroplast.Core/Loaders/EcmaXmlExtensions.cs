@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using EcmaXml = Choroplast.Core.Loaders.EcmaXml;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
-namespace Choroplast.Core.Loaders.EcmaXml
+namespace Chloroplast.Core.Loaders.EcmaXml
 {
     public partial class Namespace
     {
