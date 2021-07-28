@@ -56,7 +56,7 @@ namespace Chloroplast.Tool.Commands
                         else if (item.Source.RootRelativePath.EndsWith(".xml"))
                         {
                             var r = await ContentRenderer.FromEcmaXmlAsync (item, config);
-                            r = await ContentRenderer.ToRazorAsync (r);
+                            //r = await ContentRenderer.ToRazorAsync (r);
 
                             return r;
                         }
