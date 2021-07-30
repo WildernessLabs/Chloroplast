@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Chloroplast.Core.Loaders;
+using Microsoft.Extensions.Configuration;
 using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
@@ -13,27 +14,34 @@ namespace Chloroplast.Core.Rendering
 
         public static async Task<RenderedContent> Render (ContentNode item, string body, Microsoft.Extensions.Configuration.IConfigurationRoot config)
         {
-            if (body.StartsWith("<Namespace"))
+
+            MarkdownRenderer md = new MarkdownRenderer ();
+
+            if (body.StartsWith ("<Type "))
             {
-                var ns = EcmaXmlLoader.LoadNamespace (body);
+                var t = EcmaXmlLoader.LoadXType (body);
+                var nscontent = ToEcmaContent (item, config, t);
 
-                MarkdownRenderer md = new MarkdownRenderer ();
-
-                EcmaXmlContent<EcmaXml.Namespace> nscontent = new EcmaXmlContent<EcmaXml.Namespace>
-                {
-                    Node = item,
-                    Element = ns,
-                    Metadata = config
-                };
-                
                 var result = await ContentRenderer.ToRazorAsync (nscontent);
-                //return md.Render (ns.Summary);
 
                 var content = new RenderedContent
                 {
                     Body = result,
                     Node = item
                 };
+
+                return content;
+            }
+            else if (body.StartsWith("<Namespace"))
+            {
+                // TODO: Load type list for this namespace
+                var ns = EcmaXmlLoader.LoadNamespace (body);
+
+                var nscontent = ToEcmaContent (item, config, ns);
+
+                var result = await ContentRenderer.ToRazorAsync (nscontent);
+
+                RenderedContent content = ToRenderedContent (item, result);
 
                 return content;
             }
@@ -45,6 +53,25 @@ namespace Chloroplast.Core.Rendering
             };
 
             return def;
+        }
+
+        private static RenderedContent ToRenderedContent (ContentNode item, string result)
+        {
+            return new RenderedContent
+            {
+                Body = result,
+                Node = item
+            };
+        }
+
+        private static EcmaXmlContent<T> ToEcmaContent<T> (ContentNode item, IConfigurationRoot config, T t)
+        {
+            return new EcmaXmlContent<T>
+            {
+                Node = item,
+                Element = t,
+                Metadata = config
+            };
         }
     }
 }

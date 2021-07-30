@@ -16,19 +16,19 @@ namespace Chloroplast.Core.Rendering
         Dictionary<string, TemplateDescriptor> templates = new Dictionary<string, TemplateDescriptor> ();
         //TemplateEngine engine = new TemplateEngine ();
 
-        public async Task AddTemplateAsync(string templatePath)
+        public async Task AddTemplateAsync (string templatePath)
         {
             Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
             Console.WriteLine (ns.ToString ());
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
             templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
-            
+
         }
 
         public async Task InitializeAsync (IConfigurationRoot config)
         {
-            string rootPath = config["root"].NormalizePath();
-            string templatePath = config["templates_folder"].NormalizePath();
+            string rootPath = config["root"].NormalizePath ();
+            string templatePath = config["templates_folder"].NormalizePath ();
             string fullTemplatePath = rootPath.CombinePath (templatePath);
 
             foreach (var razorPath in Directory.EnumerateFiles (fullTemplatePath, "*.cshtml", SearchOption.AllDirectories))
@@ -60,16 +60,16 @@ namespace Chloroplast.Core.Rendering
             }
         }
 
-        public async Task<RawString> RenderTemplateContent<T>(string templateName, T model)
+        public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
         {
             var template = templates[templateName];
-            return new RawString(await template.RenderAsync (model));
+            return new RawString (await template.RenderAsync (model));
         }
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
         {
             try
-            { 
+            {
                 string defaultTemplateName = "Default";
                 string templateName = defaultTemplateName;
 
@@ -81,7 +81,7 @@ namespace Chloroplast.Core.Rendering
 
                 TemplateDescriptor template;
 
-                if (!templates.TryGetValue(templateName, out template))
+                if (!templates.TryGetValue (templateName, out template))
                     template = templates[defaultTemplateName];
 
                 // Render template
@@ -104,6 +104,32 @@ namespace Chloroplast.Core.Rendering
             try
             {
                 string templateName = "Namespace";
+
+                TemplateDescriptor template;
+
+                if (!templates.TryGetValue (templateName, out template))
+                    template = templates[templateName];
+
+                // Render template
+                var result = await template.RenderAsync (parsed);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine (ex.ToString ());
+                Console.ResetColor ();
+                return ex.ToString ();
+            }
+        }
+
+        public async Task<string> RenderContentAsync (EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.XType> parsed)
+        {
+            try
+            {
+                string templateName = "Type";
 
                 TemplateDescriptor template;
 

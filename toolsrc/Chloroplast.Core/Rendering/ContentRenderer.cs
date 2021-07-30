@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Chloroplast.Core.Extensions;
 using Chloroplast.Core.Content;
-using Chloroplast.Core.Loaders.EcmaXml;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -144,7 +144,13 @@ namespace Chloroplast.Core.Rendering
             return content;
         }
 
-        public static async Task<string> ToRazorAsync (EcmaXmlContent<Namespace> nscontent)
+        public static async Task<string> ToRazorAsync (EcmaXmlContent<EcmaXml.Namespace> nscontent)
+        {
+            var body = await razorRenderer.RenderContentAsync (nscontent);
+            return body;
+        }
+
+        public static async Task<string> ToRazorAsync (EcmaXmlContent<EcmaXml.XType> nscontent)
         {
             var body = await razorRenderer.RenderContentAsync (nscontent);
             return body;

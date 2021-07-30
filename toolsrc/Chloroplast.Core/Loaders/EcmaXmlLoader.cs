@@ -10,6 +10,12 @@ namespace Chloroplast.Core.Loaders
         public static EcmaXml.Namespace LoadNamespace (string s) => LoadNamespace (GenerateStreamFromString (s));
         public static EcmaXml.Namespace LoadNamespace (Stream s) => Deserialize<EcmaXml.Namespace> (s);
 
+        public static EcmaXml.Type LoadType (string s) => LoadType (GenerateStreamFromString (s));
+        public static EcmaXml.Type LoadType (Stream s) => Deserialize<EcmaXml.Type> (s);
+
+        public static EcmaXml.XType LoadXType (string s) => LoadXType (GenerateStreamFromString (s));
+        public static EcmaXml.XType LoadXType (Stream s) => Deserialize<EcmaXml.XType> (s);
+
         public static Stream GenerateStreamFromString (string s)
         {
             var stream = new MemoryStream ();
