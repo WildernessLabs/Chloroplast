@@ -27,6 +27,11 @@ namespace Chloroplast.Test
             Assert.Equal ("Test", t.Name);
             Assert.Single (t.Members);
             Assert.Equal (".ctor", t.Members.First ().Name);
+            Assert.Equal (2, t.Members.First ().Signatures.Count);
+            Assert.Equal ("protected App ();", t.Members.First ().Signatures.First ().Value);
+            Assert.Equal ("Constructor", t.Members.First ().MemberType);
+            Assert.Single (t.Members.First ().AssemblyInfos);
+            Assert.Equal ("0.22.0.0", t.Members.First ().AssemblyInfos.First().AssemblyVersion);
         }
 
 
