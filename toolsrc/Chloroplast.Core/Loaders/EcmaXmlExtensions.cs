@@ -26,9 +26,21 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         [XmlAttribute]
         public string FullName { get; set; }
 
+        [XmlElement ("TypeSignature")]
+        public List<XSignature> Signatures { get; set; } = new List<XSignature> ();
+
+        [XmlElement ("AssemblyInfo")]
+        public List<XAssemblyInfo> AssemblyInfos { get; set; } = new List<XAssemblyInfo> ();
+
         [XmlArray ("Members")]
         [XmlArrayItem ("Member", Type = typeof (XMemberItem))]
         public XMemberItem[] Members { get; set; } = new XMemberItem[0];
+
+        public XBase Base { get; set; }
+
+        // Type parameters
+        // interfaces
+        // docs
     }
 
     [XmlType ("Member")]
@@ -42,19 +54,18 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         public string MemberType { get; set; }
 
         [XmlElement ("MemberSignature")]
-        public List<XSignature> Signatures { get; set; }
+        public List<XSignature> Signatures { get; set; } = new List<XSignature> ();
 
         [XmlElement ("AssemblyInfo")]
-        public List<XAssemblyInfo> AssemblyInfos { get; set; }
+        public List<XAssemblyInfo> AssemblyInfos { get; set; } = new List<XAssemblyInfo> ();
 
-        // base
-        // interfaces
-        // assemblyinfo
-        // typeparameters
+        // generic parameters
+        // parameters
         // docs
     }
 
-    [XmlType ("MemberSignature")]
+    //[XmlType ("MemberSignature")]
+    //[XmlType ("TypeSignature")]
     public class XSignature
     {
         [XmlAttribute]
@@ -68,7 +79,14 @@ namespace Chloroplast.Core.Loaders.EcmaXml
     [XmlType("AssemblyInfo")]
     public class XAssemblyInfo
     {
-        public string AssemblyVersion { get; set; }
+        [XmlElement("AssemblyVersion")]
+        public List<string> AssemblyVersion { get; set; }
         public string AssemblyName { get; set; }
+    }
+
+    [XmlType("Base")]
+    public class XBase
+    {
+        public string BaseTypeName { get; set; }
     }
 }

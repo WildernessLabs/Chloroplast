@@ -20,9 +20,23 @@ namespace Chloroplast.Test
         }
 
         [Fact]
-        public void TestLoadType()
+        public void TestLoadType ()
         {
-            var t = EcmaXmlLoader.LoadXType (XmlForSimpleType);
+            var t = EcmaXmlLoader.LoadXType (XmlForTypeOnlyDetails);
+
+            Assert.Equal ("App<D,A>", t.Name);
+            Assert.Equal ("Meadow.App<D,A>", t.FullName);
+            Assert.Equal (2, t.Signatures.Count);
+            Assert.Single (t.AssemblyInfos);
+            Assert.Equal (2, t.AssemblyInfos.First ().AssemblyVersion.Count);
+            Assert.Equal ("0.21.0.0", t.AssemblyInfos.First ().AssemblyVersion.First());
+            Assert.Equal ("System.Object", t.Base.BaseTypeName);
+        }
+
+        [Fact]
+        public void TestLoadTypeMember()
+        {
+            var t = EcmaXmlLoader.LoadXType (XmlForMembers);
 
             Assert.Equal ("Test", t.Name);
             Assert.Single (t.Members);
@@ -31,7 +45,7 @@ namespace Chloroplast.Test
             Assert.Equal ("protected App ();", t.Members.First ().Signatures.First ().Value);
             Assert.Equal ("Constructor", t.Members.First ().MemberType);
             Assert.Single (t.Members.First ().AssemblyInfos);
-            Assert.Equal ("0.22.0.0", t.Members.First ().AssemblyInfos.First().AssemblyVersion);
+            Assert.Equal ("0.22.0.0", t.Members.First ().AssemblyInfos.First().AssemblyVersion.First());
         }
 
 
@@ -43,7 +57,45 @@ namespace Chloroplast.Test
   </Docs>
 </Namespace>
 ";
-        private static string XmlForSimpleType = @"<Type Name=""Test"">
+        private static string XmlForTypeOnlyDetails = @"<Type Name=""App&lt;D,A&gt;"" FullName=""Meadow.App&lt;D,A&gt;"">
+  <TypeSignature Language=""C#"" Value=""public abstract class App&lt;D,A&gt; : Meadow.IApp where D : class, IIODevice where A : class, IApp"" />
+  <TypeSignature Language=""ILAsm"" Value="".class public auto ansi abstract App`2&lt;class (class Meadow.Hardware.IIODevice) D, class (class Meadow.IApp) A&gt; extends System.Object implements class Meadow.IApp"" />
+  <AssemblyInfo>
+    <AssemblyName>Meadow</AssemblyName>
+    <AssemblyVersion>0.21.0.0</AssemblyVersion>
+    <AssemblyVersion>0.22.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <TypeParameters>
+    <TypeParameter Name=""D"">
+      <Constraints>
+        <ParameterAttribute>ReferenceTypeConstraint</ParameterAttribute>
+        <InterfaceName>Meadow.Hardware.IIODevice</InterfaceName>
+      </Constraints>
+    </TypeParameter>
+    <TypeParameter Name=""A"">
+      <Constraints>
+        <ParameterAttribute>ReferenceTypeConstraint</ParameterAttribute>
+        <InterfaceName>Meadow.IApp</InterfaceName>
+      </Constraints>
+    </TypeParameter>
+  </TypeParameters>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>Meadow.IApp</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Docs>
+    <typeparam name=""D"">To be added.</typeparam>
+    <typeparam name=""A"">To be added.</typeparam>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>";
+
+        private static string XmlForMembers = @"<Type Name=""Test"">
   <Members>
     <Member MemberName="".ctor"">
       <MemberSignature Language=""C#"" Value=""protected App ();"" />
