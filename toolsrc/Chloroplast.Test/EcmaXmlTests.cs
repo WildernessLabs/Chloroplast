@@ -31,6 +31,15 @@ namespace Chloroplast.Test
             Assert.Equal (2, t.AssemblyInfos.First ().AssemblyVersion.Count);
             Assert.Equal ("0.21.0.0", t.AssemblyInfos.First ().AssemblyVersion.First());
             Assert.Equal ("System.Object", t.Base.BaseTypeName);
+
+            // docs
+            var docs = t.Docs;
+            Assert.NotNull (docs);
+            Assert.Equal ("To be added.", docs.Summary);
+            Assert.Equal ("To be added.", docs.Remarks);
+            Assert.Equal (2, docs.TypeParams.Count);
+            Assert.Equal ("D", docs.TypeParams.First ().Name);
+            Assert.Equal ("To be added.", docs.TypeParams.First ().Value);
         }
 
         [Fact]
@@ -46,6 +55,15 @@ namespace Chloroplast.Test
             Assert.Equal ("Constructor", t.Members.First ().MemberType);
             Assert.Single (t.Members.First ().AssemblyInfos);
             Assert.Equal ("0.22.0.0", t.Members.First ().AssemblyInfos.First().AssemblyVersion.First());
+
+            // docs
+            var docs = t.Members.First().Docs;
+            Assert.NotNull (docs);
+            Assert.Equal ("To be added.", docs.Summary);
+            Assert.Equal ("To be added.", docs.Remarks);
+            Assert.Equal (4, docs.Params.Count);
+            Assert.Equal ("a", docs.Params.First ().Name);
+            Assert.Equal ("To be added.", docs.Params.First ().Value);
         }
 
 
@@ -104,8 +122,26 @@ namespace Chloroplast.Test
       <AssemblyInfo>
         <AssemblyVersion>0.22.0.0</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters />
+      <TypeParameters>
+        <TypeParameter Name=""T"">
+          <Attributes>
+            <Attribute>
+              <AttributeName Language=""C#"">[Mono.DocTest.Doc (""Type Parameter!"")]</AttributeName>
+            </Attribute>
+          </Attributes>
+        </TypeParameter>
+      </TypeParameters>
+      <Parameters>
+        <Parameter Name=""a"" Type=""System.Int32"" Index=""0"" />
+        <Parameter Name = ""b"" Type=""System.String"" Index=""1"" FrameworkAlternate=""One;Three"" />
+        <Parameter Name = ""d"" Type=""System.String"" Index=""1"" FrameworkAlternate=""Two"" />
+        <Parameter Name = ""c"" Type=""System.Int32"" Index=""2"" />
+      </Parameters>
       <Docs>
+        <param name=""a"">To be added.</param>
+        <param name=""b"">To be added.</param>
+        <param name=""d"">To be added.</param>
+        <param name=""c"">To be added.</param>
         <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>

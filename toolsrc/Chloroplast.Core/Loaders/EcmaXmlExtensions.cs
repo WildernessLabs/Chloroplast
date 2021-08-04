@@ -38,9 +38,36 @@ namespace Chloroplast.Core.Loaders.EcmaXml
 
         public XBase Base { get; set; }
 
-        // Type parameters
+        public XDocs Docs { get; set; }
+
+        // class type
+        // type parameters
+        // parameters (for delegates)
         // interfaces
-        // docs
+        // attributes
+    }
+
+    [XmlType("Docs")]
+    public class XDocs
+    {
+        [XmlElement ("summary")]
+        public string Summary { get; set; } = string.Empty;
+        [XmlElement ("remarks")]
+        public string Remarks { get; set; } = string.Empty;
+
+        [XmlElement ("param")]
+        public List<XParam> Params { get; set; } = new List<XParam> ();
+        [XmlElement ("typeparam")]
+        public List<XParam> TypeParams { get; set; } = new List<XParam> ();
+    }
+
+    public class XParam
+    {
+        [XmlAttribute ("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [XmlText()]
+        public string Value { get; set; } = string.Empty;
     }
 
     [XmlType ("Member")]
@@ -59,9 +86,11 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         [XmlElement ("AssemblyInfo")]
         public List<XAssemblyInfo> AssemblyInfos { get; set; } = new List<XAssemblyInfo> ();
 
+        public XDocs Docs { get; set; }
+
         // generic parameters
         // parameters
-        // docs
+        // parameter attributes
     }
 
     //[XmlType ("MemberSignature")]
