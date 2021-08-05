@@ -38,6 +38,13 @@ namespace Chloroplast.Core.Loaders.EcmaXml
 
         public XBase Base { get; set; }
 
+        [XmlArray ("Parameters")]
+        [XmlArrayItem ("Parameter", Type = typeof (XParameter))]
+        public List<XParameter> Parameters { get; set; } = new List<XParameter> ();
+        [XmlArray ("TypeParameters")]
+        [XmlArrayItem ("TypeParameter", Type = typeof (XParameter))]
+        public List<XParameter> TypeParameters { get; set; } = new List<XParameter> ();
+
         public XDocs Docs { get; set; }
 
         // class type
@@ -70,6 +77,18 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         public string Value { get; set; } = string.Empty;
     }
 
+    public class XParameter
+    {
+        [XmlAttribute]
+        public string Name { get; set; }
+        [XmlAttribute]
+        public string Type { get; set; }
+        [XmlAttribute]
+        public string RefType { get; set; }
+        // attributes
+        // default value
+    }
+
     [XmlType ("Member")]
     public class XMemberItem
     {
@@ -85,6 +104,13 @@ namespace Chloroplast.Core.Loaders.EcmaXml
 
         [XmlElement ("AssemblyInfo")]
         public List<XAssemblyInfo> AssemblyInfos { get; set; } = new List<XAssemblyInfo> ();
+
+        [XmlArray ("Parameters")]
+        [XmlArrayItem ("Parameter", Type = typeof (XParameter))]
+        public List<XParameter> Parameters { get; set; } = new List<XParameter> ();
+        [XmlArray ("TypeParameters")]
+        [XmlArrayItem ("TypeParameter", Type = typeof (XParameter))]
+        public List<XParameter> TypeParameters { get; set; } = new List<XParameter> ();
 
         public XDocs Docs { get; set; }
 
@@ -117,5 +143,8 @@ namespace Chloroplast.Core.Loaders.EcmaXml
     public class XBase
     {
         public string BaseTypeName { get; set; }
+
+        // TODO: BaseTypeArguments
+        // BaseTypeArgument TypeParamName="U">T</
     }
 }

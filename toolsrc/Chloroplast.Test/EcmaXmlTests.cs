@@ -56,6 +56,15 @@ namespace Chloroplast.Test
             Assert.Single (t.Members.First ().AssemblyInfos);
             Assert.Equal ("0.22.0.0", t.Members.First ().AssemblyInfos.First().AssemblyVersion.First());
 
+            // parameter lists
+            var member = t.Members.First ();
+            
+            Assert.Equal (4, member.Parameters.Count);
+            Assert.Equal ("a", member.Parameters[0].Name);
+            Assert.Equal ("System.String", member.Parameters[1].Type);
+
+            Assert.Equal (1, member.TypeParameters.Count);
+
             // docs
             var docs = t.Members.First().Docs;
             Assert.NotNull (docs);
@@ -132,7 +141,7 @@ namespace Chloroplast.Test
         </TypeParameter>
       </TypeParameters>
       <Parameters>
-        <Parameter Name=""a"" Type=""System.Int32"" Index=""0"" />
+        <Parameter Name=""a"" Type=""System.Int32"" RefType=""ref"" Index=""0"" />
         <Parameter Name = ""b"" Type=""System.String"" Index=""1"" FrameworkAlternate=""One;Three"" />
         <Parameter Name = ""d"" Type=""System.String"" Index=""1"" FrameworkAlternate=""Two"" />
         <Parameter Name = ""c"" Type=""System.Int32"" Index=""2"" />
