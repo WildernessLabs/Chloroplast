@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <IsPackable>true</IsPackable>
+
+    <Version>0.4.0</Version>
+    <Authors>Wilderness Labs</Authors>
+    <Company>Wilderness Labs</Company>
+    <PackageDescription>Core library for Chloroplast.Tool</PackageDescription>
+    <RepositoryUrl>https://github.com/WildernessLabs/Chloroplast</RepositoryUrl>
+ 
   </PropertyGroup>
 
   <ItemGroup>

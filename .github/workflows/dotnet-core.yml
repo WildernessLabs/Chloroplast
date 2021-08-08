@@ -28,6 +28,8 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
     - name: Pack
+      run: dotnet pack toolsrc/Chloroplast.Core/   
+    - name: Pack Tool
       run: dotnet pack toolsrc/Chloroplast.Tool/    
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.1.3
@@ -39,7 +41,12 @@ jobs:
       run: dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name "github" --username WildernessLabs --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Push generated package to GitHub registry
+    - name: Tool Core generated package to GitHub registry
+      if: github.ref == 'refs/heads/main'
+      run: dotnet nuget push ./toolsrc/Chloroplast.Core/nupkg/*.nupkg --source "github" --skip-duplicate --no-symbols true
+      env:
+        DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
+    - name: Tool Push generated package to GitHub registry
       if: github.ref == 'refs/heads/main'
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --skip-duplicate --no-symbols true
       env:
