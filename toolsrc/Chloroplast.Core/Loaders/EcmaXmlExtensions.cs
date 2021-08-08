@@ -48,8 +48,6 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         public XDocs Docs { get; set; }
 
         // class type
-        // type parameters
-        // parameters (for delegates)
         // interfaces
         // attributes
     }
@@ -114,8 +112,6 @@ namespace Chloroplast.Core.Loaders.EcmaXml
 
         public XDocs Docs { get; set; }
 
-        // generic parameters
-        // parameters
         // parameter attributes
     }
 
