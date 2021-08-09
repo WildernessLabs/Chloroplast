@@ -6,7 +6,7 @@
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <IsPackable>true</IsPackable>
 
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
     <PackageDescription>Core library for Chloroplast.Tool</PackageDescription>
