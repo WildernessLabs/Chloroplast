@@ -49,6 +49,8 @@ namespace Chloroplast.Core.Extensions
 
         public static bool ContainsKey(this IConfigurationRoot config, string key)
         {
+            if (config == null) return false;
+
             var value = config[key];
             bool hasStringKey = !string.IsNullOrWhiteSpace (value);
 

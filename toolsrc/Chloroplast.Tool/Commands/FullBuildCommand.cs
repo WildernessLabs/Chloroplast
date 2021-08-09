@@ -53,6 +53,13 @@ namespace Chloroplast.Tool.Commands
 
                             return r;
                         }
+                        else if (item.Source.RootRelativePath.EndsWith(".xml"))
+                        {
+                            var r = await ContentRenderer.FromEcmaXmlAsync (item, config);
+                            //r = await ContentRenderer.ToRazorAsync (r);
+
+                            return r;
+                        }
                         else
                         {
                             item.Source.CopyTo(item.Target);

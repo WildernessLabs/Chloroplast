@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Chloroplast.Core.Extensions;
 using Chloroplast.Core.Content;
+using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -29,15 +30,24 @@ namespace Chloroplast.Core.Rendering
 
         public string GetMeta(string key)
         {
+            if (Metadata == null) return string.Empty;
+
             string value = Metadata[key];
             return value ?? string.Empty;
         }
 
         public bool HasMeta(string key)
         {
+            if (Metadata == null) return false;
+
             string value = Metadata[key];
             return !string.IsNullOrWhiteSpace(value);
         }
+    }
+
+    public class EcmaXmlContent<T> : RenderedContent
+    {
+        public T Element { get; set; }
     }
 
     public class FrameRenderedContent : RenderedContent
@@ -107,6 +117,20 @@ namespace Chloroplast.Core.Rendering
             return parsed;
         }
 
+        public static async Task<RenderedContent> FromEcmaXmlAsync (ContentNode item, IConfigurationRoot config)
+        {
+            var content = item.Source.ReadContentAsync ();
+            var parsed = new RenderedContent
+            {
+                Node = item,
+                Body = content.Result
+            };
+
+            var rendered = EcmaXmlRenderer.Render (item, content.Result, config);
+
+            return await rendered;
+        }
+
         public static async Task<RenderedContent> ToRazorAsync (RenderedContent content)
         {
             content.Body = await razorRenderer.RenderContentAsync (content);
@@ -118,6 +142,18 @@ namespace Chloroplast.Core.Rendering
         {
             content.Body = await razorRenderer.RenderContentAsync (content);
             return content;
+        }
+
+        public static async Task<string> ToRazorAsync (EcmaXmlContent<EcmaXml.Namespace> nscontent)
+        {
+            var body = await razorRenderer.RenderContentAsync (nscontent);
+            return body;
+        }
+
+        public static async Task<string> ToRazorAsync (EcmaXmlContent<EcmaXml.XType> nscontent)
+        {
+            var body = await razorRenderer.RenderContentAsync (nscontent);
+            return body;
         }
     }
 }
