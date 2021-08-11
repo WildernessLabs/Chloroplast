@@ -110,7 +110,7 @@ namespace Chloroplast.Core.Content
                 if (nodes == null)
                     nodes = Directory
                         // TODO , switch this back to *.* ... *.xml is only for testing
-                            .GetFiles (this.SourcePath, "*.xml", SearchOption.AllDirectories)
+                            .GetFiles (this.SourcePath, "*.*", SearchOption.AllDirectories)
                             .Select (p =>
                               {
                                   var relative = p.RelativePath (SourcePath);
