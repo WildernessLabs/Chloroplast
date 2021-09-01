@@ -16,6 +16,9 @@ namespace Chloroplast.Core.Loaders
         public static EcmaXml.XType LoadXType (string s) => LoadXType (GenerateStreamFromString (s));
         public static EcmaXml.XType LoadXType (Stream s) => Deserialize<EcmaXml.XType> (s);
 
+        public static EcmaXml.XIndex LoadXIndex (string s) => LoadXIndex (GenerateStreamFromString (s));
+        public static EcmaXml.XIndex LoadXIndex (Stream s) => Deserialize<EcmaXml.XIndex> (s);
+
         public static Stream GenerateStreamFromString (string s)
         {
             var stream = new MemoryStream ();

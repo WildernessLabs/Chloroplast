@@ -122,12 +122,17 @@ namespace Chloroplast.Core.Content
                                   else if (targetrelative.EndsWith (".xml"))
                                   {
                                       targetrelative = targetrelative.Substring (0, targetrelative.Length - 4) + ".html";
-                                      if (targetrelative.Contains("ns-"))
+                                      if (targetrelative.Contains ("ns-"))
                                       {
                                           // this is a namespace, let's switch the target filename
-                                          var filename = Path.GetFileNameWithoutExtension (targetrelative).Replace("ns-", string.Empty);
+                                          var filename = Path.GetFileNameWithoutExtension (targetrelative).Replace ("ns-", string.Empty);
                                           var folder = Path.GetDirectoryName (targetrelative);
                                           targetrelative = Path.Combine (folder, filename, "index.html");
+                                      }
+                                      else if (targetrelative.EndsWith ("index.html"))
+                                      {
+                                          // let's parse this and pull out menu information
+                                          
                                       }
                                   }
 

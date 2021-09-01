@@ -11,6 +11,23 @@ namespace Chloroplast.Test
     public class EcmaXmlTests
     {
         [Fact]
+        public void TestLoadIndex()
+        {
+            var index = EcmaXmlLoader.LoadXIndex (XmlForIndex);
+
+            Assert.Single (index.Namespaces);
+            Assert.Equal ("Meadow", index.Title);
+            var ns = index.Namespaces.Single ();
+            Assert.Equal ("Meadow", ns.Name);
+
+            Assert.Equal (5, ns.Types.Count);
+
+            Assert.Equal ("AnalogCapabilities", ns.Types[0].Name);
+            Assert.Equal ("AnalogCapabilities", ns.Types[0].DisplayName);
+            Assert.Equal ("Class", ns.Types[0].Kind);
+        }
+
+        [Fact]
         public void TestLoadNamespace()
         {
             var ns = EcmaXmlLoader.LoadNamespace (XmlForNS);
@@ -63,7 +80,7 @@ namespace Chloroplast.Test
             Assert.Equal ("a", member.Parameters[0].Name);
             Assert.Equal ("System.String", member.Parameters[1].Type);
 
-            Assert.Equal (1, member.TypeParameters.Count);
+            Assert.Single (member.TypeParameters);
 
             // docs
             var docs = t.Members.First().Docs;
@@ -76,7 +93,32 @@ namespace Chloroplast.Test
         }
 
 
-
+        private static string XmlForIndex = @"<Overview>
+  <Assemblies>
+    <Assembly Name=""Meadow"" Version=""0.25.0.0"">
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Diagnostics.Debuggable(System.Diagnostics.DebuggableAttribute+DebuggingModes.IgnoreSymbolStoreSequencePoints)</AttributeName>
+        </Attribute>
+      </Attributes>
+    </Assembly>
+  </Assemblies>
+  <Remarks>To be added.</Remarks>
+  <Copyright>To be added.</Copyright>
+  <Types>
+    <Namespace Name=""Meadow"">
+      <Type Name=""AnalogCapabilities"" Kind=""Class"" />
+      <Type Name=""ByteOrder"" Kind=""Enumeration"" />
+      <Type Name=""ChangeResult`1"" DisplayName=""ChangeResult&lt;UNIT&gt;"" Kind=""Structure"" />
+      <Type Name=""IChangeResult`1"" DisplayName=""IChangeResult&lt;UNIT&gt;"" Kind=""Interface"" />
+      <Type Name=""IF7MeadowDevice"" Kind=""Interface"" />
+    </Namespace>
+  </Types>
+  <Title>Meadow</Title>
+  <ExtensionMethods>
+  </ExtensionMethods>
+</Overview>
+";
         private static string XmlForNS = @"<Namespace Name=""Meadow.Foundation.Audio"">
   <Docs>
     <summary>To be added.</summary>

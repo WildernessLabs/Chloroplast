@@ -17,6 +17,56 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         }
     }
 
+    [XmlType("Overview")]
+    public class XIndex
+    {
+        [XmlElement]
+        public string Title { get; set; }
+        //types
+        [XmlArray ("Types")]
+        [XmlArrayItem ("Namespace", Type = typeof (XIndexNamespace))]
+        public List<XIndexNamespace> Namespaces { get; set; }
+        //assemblies
+        //remarks
+        //copyright
+        //extension methods
+    }
+
+    [XmlType("Namespace")]
+    public class XIndexNamespace
+    {
+        [XmlAttribute]
+        public string Name { get; set; }
+
+        [XmlElement("Type")]
+        public List<XIndexType> Types { get; set; }
+    }
+
+    [XmlType("Type")]
+    public class XIndexType
+    {
+        [XmlAttribute]
+        public string Name { get; set; }
+
+        private string displayName;
+
+        [XmlAttribute]
+        public string DisplayName
+        {
+            get
+            {
+                return string.IsNullOrWhiteSpace (this.displayName) ? this.Name : this.displayName;
+            }
+            set
+            {
+                this.displayName = value;
+            }
+        }
+
+        [XmlAttribute]
+        public string Kind { get; set; }
+    }
+
     [Serializable]
     [XmlType("Type")]
     public class XType
