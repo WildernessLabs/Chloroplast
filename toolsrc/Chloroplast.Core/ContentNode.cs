@@ -18,6 +18,7 @@ namespace Chloroplast.Core
         public IFile Source { get; set; }
         public IFile Target { get; set; }
         public ContentArea Area { get; set; }
+        public string MenuPath { get; set; }
 
         public ContentNode ()
         {

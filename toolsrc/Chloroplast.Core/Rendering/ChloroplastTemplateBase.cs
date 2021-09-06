@@ -18,9 +18,18 @@ namespace Chloroplast.Core.Rendering
 
         protected async Task<RawString> PartialAsync(string menuPath)
         {
-            string fullMenuPath = SiteConfig.Instance["root"]
+            string fullMenuPath;
+
+            if (!menuPath.Equals (this.Model.Node.MenuPath))
+            {
+                fullMenuPath = SiteConfig.Instance["root"]
                 .NormalizePath ()
                 .CombinePath (menuPath);
+            }
+            else
+            {
+                fullMenuPath = this.Model.Node.MenuPath;
+            }
 
             // load the menu path
             var node = new ContentNode

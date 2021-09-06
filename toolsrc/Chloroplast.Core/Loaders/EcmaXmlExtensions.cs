@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
 
@@ -30,6 +31,35 @@ namespace Chloroplast.Core.Loaders.EcmaXml
         //remarks
         //copyright
         //extension methods
+
+        public string ToMenu(string rootPath)
+        {
+            StringBuilder sb = new StringBuilder ();
+            sb.AppendLine (@"---
+template: menu
+parent:
+- path: "+ rootPath +@"
+  title: Home
+navTree:");
+            foreach(var ns in this.Namespaces)
+            {
+                sb.AppendLine (@"- path: "+ rootPath +@"/"+ ns.Name +@"
+  title: "+ ns.Name +@"");
+                if (ns.Types.Any ())
+                {
+                    sb.AppendLine ("  items: ");
+                    foreach (var t in ns.Types)
+                    {
+                        sb.AppendLine ($"  - path: {rootPath}/{ns.Name}/{t.Name}.html");
+                        sb.AppendLine ($"    title: {t.Name}");
+                    }
+                }
+            }
+
+            sb.AppendLine ("---");
+
+            return sb.ToString ();
+        }
     }
 
     [XmlType("Namespace")]

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Chloroplast.Core.Extensions;
+using Chloroplast.Core.Loaders;
 using Microsoft.Extensions.Configuration;
 
 namespace Chloroplast.Core.Content
@@ -108,13 +109,16 @@ namespace Chloroplast.Core.Content
             get
             {
                 if (nodes == null)
+                {
+                    string menuPath = string.Empty;
+
                     nodes = Directory
-                        // TODO , switch this back to *.* ... *.xml is only for testing
                             .GetFiles (this.SourcePath, "*.*", SearchOption.AllDirectories)
+                            .OrderBy (p => p)
                             .Select (p =>
                               {
                                   var relative = p.RelativePath (SourcePath);
-                                  var targetrelative = relative.NormalizePath(toLower: this.NormalizePaths);
+                                  var targetrelative = relative.NormalizePath (toLower: this.NormalizePaths);
 
                                   if (targetrelative.EndsWith (".md"))
                                       targetrelative = targetrelative.Substring (0, targetrelative.Length - 3) + ".html";
@@ -132,7 +136,17 @@ namespace Chloroplast.Core.Content
                                       else if (targetrelative.EndsWith ("index.html"))
                                       {
                                           // let's parse this and pull out menu information
-                                          
+                                          var indexFile = new DiskFile (p, relative);
+                                          var XmlForIndex = indexFile.ReadContentAsync ().Result;
+                                          var index = EcmaXmlLoader.LoadXIndex (XmlForIndex);
+
+                                          // TODO: 'api/' should be coming from configuration
+                                          var apiRootPath = $"/api/{Path.GetFileName (Path.GetDirectoryName (p)).ToLower ()}";
+                                          string docSetMenu = index.ToMenu (apiRootPath);
+                                          var indexMenuPath = TargetPath.CombinePath ("menu.md");
+                                          var indexMenuFile = new DiskFile (indexMenuPath, "menu.md");
+                                          menuPath = indexMenuPath;
+                                          indexMenuFile.WriteContentAsync (docSetMenu).Wait ();
                                       }
                                   }
 
@@ -142,11 +156,13 @@ namespace Chloroplast.Core.Content
                                       Slug = Path.GetDirectoryName (relative),
                                       Source = new DiskFile (p, relative),
                                       Target = new DiskFile (targetFile, targetrelative),
+                                      MenuPath = menuPath,
                                       Area = this
                                   };
 
                                   return node;
-                              }).ToList();
+                              }).ToList ();
+                }
                 return nodes;
             }
         }
