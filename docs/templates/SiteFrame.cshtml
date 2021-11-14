@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.GetMeta("Title")</title>
+    <link href="/assets/main.css" rel="stylesheet" />
+</head>
+<body>
+    <h1><a href="/">Chloroplast Docs</a></h1>
+    <div class="maincontent">
+    @Raw(Model.Body)
+    </div>
+    <div id="footer">
+        Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a>
+    </div>
+</body>
+</html>
