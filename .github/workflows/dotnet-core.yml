@@ -52,6 +52,7 @@ jobs:
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
     - name: Tool Push generated package to nuget.org registry
+      if: github.ref == 'refs/heads/main'
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "nuget.org" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols true
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
