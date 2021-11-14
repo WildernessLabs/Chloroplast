@@ -49,7 +49,8 @@ namespace Chloroplast.Core.Content
                     TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
                     RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
                     NormalizePaths = normalizePaths,
-                    AreaType = areaConfig["type"]
+                    AreaType = areaConfig["type"],
+                    OverridePath = rootDirectory.CombinePath (areaConfig["override_folder"])
                 };
 
                 // TODO: validate values
@@ -93,7 +94,8 @@ namespace Chloroplast.Core.Content
                 if (!string.IsNullOrWhiteSpace (value))
                     areaType = value;
             }
-        } 
+        }
+        public string OverridePath { get; set; }
 
         public GroupContentArea ()
         {

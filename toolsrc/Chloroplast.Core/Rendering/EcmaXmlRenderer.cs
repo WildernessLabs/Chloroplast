@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
+using Chloroplast.Core.Content;
 using Chloroplast.Core.Loaders;
 using Microsoft.Extensions.Configuration;
 using EcmaXml = Chloroplast.Core.Loaders.EcmaXml;
@@ -19,7 +21,32 @@ namespace Chloroplast.Core.Rendering
 
             if (body.StartsWith ("<Type "))
             {
+                GroupContentArea groupArea = item.Area as GroupContentArea;
+
                 var t = EcmaXmlLoader.LoadXType (body);
+
+                // TODO: use groupArea.OverridePath to look for the type's override files if any
+                // and also all members
+                // for uid, use t.FullName
+                if (groupArea != null && Directory.Exists(groupArea.OverridePath))
+                {
+                    var overrideFile = Path.Combine (groupArea.OverridePath,t.Namespace, t.FullName + ".md");
+                    if (File.Exists(overrideFile))
+                    {
+                        t.Docs.Remarks = File.ReadAllText (overrideFile);
+                    }
+
+                    foreach(var m in t.Members)
+                    {
+                        // TODO: look for override file for this member
+                        overrideFile = Path.Combine (groupArea.OverridePath, t.Namespace, t.FullName + "." + m.Name + ".md");
+                        if (File.Exists (overrideFile))
+                        {
+                            m.Docs.Remarks = File.ReadAllText (overrideFile);
+                        }
+                    }
+                }
+
                 var nscontent = ToEcmaContent (item, config, t);
 
                 var result = await ContentRenderer.ToRazorAsync (nscontent);

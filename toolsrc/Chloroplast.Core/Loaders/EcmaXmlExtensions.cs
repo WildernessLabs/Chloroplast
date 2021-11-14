@@ -106,6 +106,13 @@ navTree:");
         [XmlAttribute]
         public string FullName { get; set; }
 
+        public string Namespace {
+            get
+            {
+                return FullName.Replace ("." + Name, string.Empty);
+            }
+        }
+
         [XmlElement ("TypeSignature")]
         public List<XSignature> Signatures { get; set; } = new List<XSignature> ();
 

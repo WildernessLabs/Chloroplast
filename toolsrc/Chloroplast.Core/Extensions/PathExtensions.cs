@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace Chloroplast.Core.Extensions
 {
@@ -36,7 +37,9 @@ namespace Chloroplast.Core.Extensions
 
         public static string CombinePath(this string value, params string[] paths)
         {
-            string combinedPaths = Path.Combine (paths).NormalizePath ();
+            if (value == null) value = string.Empty;
+
+            string combinedPaths = Path.Combine (paths.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray()).NormalizePath ();
             if (combinedPaths.StartsWith (Path.DirectorySeparatorChar))
                 combinedPaths = combinedPaths.Substring (1);
 
