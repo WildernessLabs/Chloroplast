@@ -8,23 +8,23 @@
         var children = section.GetChildren();
         if (children.Any())
         {
-        <ol>
+        <ul class="nav nav-pills flex-column mb-auto">
             @foreach(var item in children)
             {
-                <li>
-                    <a href="/@item["path"]">@item["title"]</a>
+                <li class="nav-item">
+                    <a href="/@item["path"]" class="nav-link link-light">@item["title"]</a>
                     @if (item.ContainsKey("items"))
                     {
                         @Raw(RenderNodes(item.GetSection("items")))
                     }
                 </li>
             }
-        </ol>
+        </ul>
         }
         return "";
     }
 }
 
-<div id="menu">
+<div class="col-sm bg-dark text-white" id="leftnav">
     @RenderNodes(Model.Metadata.GetSection ("navTree"))
 </div>
