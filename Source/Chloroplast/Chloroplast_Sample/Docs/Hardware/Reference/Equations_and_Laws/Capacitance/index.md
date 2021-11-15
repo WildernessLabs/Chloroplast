@@ -1,4 +1,0 @@
----
-layout: Hardware
-title: Capacitance
----

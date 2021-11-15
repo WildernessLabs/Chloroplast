@@ -1,0 +1,30 @@
+@using System.Linq;
+@using System.Collections.Generic;
+@using Microsoft.Extensions.Configuration;
+@using Chloroplast.Core.Extensions;
+@{
+    string RenderNodes(IConfigurationSection section)
+    {
+        var children = section.GetChildren();
+        if (children.Any())
+        {
+        <ul class="nav nav-pills flex-column mb-auto">
+            @foreach(var item in children)
+            {
+                <li class="nav-item">
+                    <a href="/@item["path"]" class="nav-link link-light">@item["title"]</a>
+                    @if (item.ContainsKey("items"))
+                    {
+                        @Raw(RenderNodes(item.GetSection("items")))
+                    }
+                </li>
+            }
+        </ul>
+        }
+        return "";
+    }
+}
+
+<div class="col-sm bg-dark text-white" id="leftnav">
+    @RenderNodes(Model.Metadata.GetSection ("navTree"))
+</div>
