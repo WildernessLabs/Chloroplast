@@ -9,5 +9,6 @@ Wilderness Labs docs engine that converts and hosts markdown and (soon) XML API 
 1. And lastly
   1. clone this repository locally
   1. in the terminal, type `cd docs` to move into the docs directory.
+  1. take a look at the [SiteConfig.yml](/docs/SiteConfig.yml) file to see the configuration.
   1. build the docs content with `chloroplast build`
-  1. run the built-in local web server with `chloroplast host` to buil and browse the docs locally.
+  1. run the built-in local web server with `chloroplast host --out out` to buil and browse the docs locally.
