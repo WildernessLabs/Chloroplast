@@ -14,17 +14,21 @@ https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31
 You can acquire chloroplast by installing it as either a [local or global 
 tool](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install).
 
+
 ## Wilderness Labs package registry
 
-Currently, Chloroplast is distributed only through the wilderness labs package
-registry. This means you'll need to add the authenticated nuget source as follows.
+Chloroplast can be found on the public nuget.org package registry at:  
+https://www.nuget.org/packages/Chloroplast.Tool/
+
+However you can also choose to install it through the wilderness labs package
+registry. This means you'll need to add the authenticated nuget source as follows if you wish to do so.
 
 ```
 dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name “wildernesslabs” --username << your github username >> --password << a personal access token >>
 ```
 
 ## Global
-With that installed you can install Chloroplast as a global tool.
+Regardless of which package registry you choose, you can install Chloroplast as a global tool.
 
 ```
 dotnet tool install Chloroplast.Tool -g
@@ -34,7 +38,7 @@ If you install it as a global tool, you can invoke it with the tool name
 `chloroplast`.
 
 ## Local
-Or alternatively, you can install it as a local tool by first creating a local
+Alternatively, you can install it as a local tool by first creating a local
 tool manifest in the project folder, as follows:
 
 ```
