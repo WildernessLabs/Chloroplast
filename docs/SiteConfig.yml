@@ -1,0 +1,16 @@
+﻿---
+# Site configuration file sample for chloroplast
+
+# site basics
+title: Chloroplast Docs
+email: hello@wildernesslabs.co
+description: >-
+  Chloroplast by Wilderness Labs docs.
+
+# razor templates
+templates_folder: templates
+
+# main site folder
+areas:
+  - source_folder: /source
+    output_folder: /
