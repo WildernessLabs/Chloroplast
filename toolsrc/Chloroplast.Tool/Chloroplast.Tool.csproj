@@ -38,18 +38,6 @@
       <Link>ProjectTemplates\conceptual\SiteConfig.yml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\docs\templates\SiteFrame.cshtml">
-      <Link>ProjectTemplates\conceptual\templates\SiteFrame.cshtml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\docs\templates\Default.cshtml">
-      <Link>ProjectTemplates\conceptual\templates\Default.cshtml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\docs\templates\menu.cshtml">
-      <Link>ProjectTemplates\conceptual\templates\menu.cshtml</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\..\docs\source\Installing\index.md">
       <Link>ProjectTemplates\conceptual\source\Installing\index.md</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -78,6 +66,18 @@
     </None>
     <None Include="..\..\docs\source\apidocs\index.md">
       <Link>ProjectTemplates\conceptual\source\apidocs\index.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\templates\menu.cshtml">
+      <Link>ProjectTemplates\conceptual\templates\menu.cshtml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\templates\SiteFrame.cshtml">
+      <Link>ProjectTemplates\conceptual\templates\SiteFrame.cshtml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\templates\Default.cshtml">
+      <Link>ProjectTemplates\conceptual\templates\Default.cshtml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

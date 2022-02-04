@@ -10,15 +10,20 @@ using System.Net.Http;
 
 namespace Chloroplast.Tool.Commands
 {
-    
+    public class TemplateFileData
+    {
+        public string RelativeFilePath { get; set; }
+        public Stream Stream { get; set; }
+    }
+
     public interface INewTemplateFetcher
     {
-        IEnumerable<Stream> GetTemplateFiles (string from);
+        IEnumerable<TemplateFileData> GetTemplateFiles (string from);
     }
 
     public class NewTemplateDiskFetcher : INewTemplateFetcher
     {
-        public IEnumerable<Stream> GetTemplateFiles (string from)
+        public IEnumerable<TemplateFileData> GetTemplateFiles (string from)
         {
             // get a list of files and iterate over them
             var files = Directory.GetFiles (from);
@@ -26,7 +31,11 @@ namespace Chloroplast.Tool.Commands
             {
                 using (FileStream sourceStream = File.Open (file, FileMode.Open))
                 {
-                    yield return sourceStream;
+                    yield return new TemplateFileData
+                    {
+                        RelativeFilePath = file,
+                        Stream = sourceStream
+                    };
                 }
             }
         }
@@ -35,13 +44,15 @@ namespace Chloroplast.Tool.Commands
 
     public class NewTemplateUrlFetcher : INewTemplateFetcher
     {
-        public IEnumerable<Stream> GetTemplateFiles (string fromUrl)
+        public IEnumerable<TemplateFileData> GetTemplateFiles (string fromUrl)
         {
             using (HttpClient client = new HttpClient ())
             {
                 using (Stream stream = client.GetStreamAsync (fromUrl).Result)
                 {
-                    yield return stream;
+                    // parse result stream to get list of files
+                    // then iterate and return those streams
+                    throw new NotImplementedException ();
                 }
             }
         }
@@ -56,7 +67,7 @@ namespace Chloroplast.Tool.Commands
         {
         }
 
-        public string Name => "Init";
+        public string Name => "New";
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
@@ -66,28 +77,34 @@ namespace Chloroplast.Tool.Commands
 
             INewTemplateFetcher fetcher;
             // if from is a url set fetcher to NewTemplateUrlFetcher
-            if (from.IsUrl ())
-            {
-                fetcher = new NewTemplateUrlFetcher ();
-            }
-            else
+            //if (from.IsUrl ())
+            //{
+            //    fetcher = new NewTemplateUrlFetcher ();
+            //}
+            //else
             {
                 fetcher = new NewTemplateDiskFetcher ();
             }
 
+            List<Task> copyTasks = new List<Task> ();
+
             // get the template files, and copy them to the destination
-            foreach (Stream stream in fetcher.GetTemplateFiles (from))
+            foreach (TemplateFileData file in fetcher.GetTemplateFiles (from))
             {
-                string fileName = Path.GetFileName (stream.Name);
+                string fileName = Path.GetFileName (file.RelativeFilePath);
                 string destination = Path.Combine (to, fileName);
                 // fileName needs to be relative path from "root"
                 
                 using (FileStream destinationStream = File.Create (destination))
                 {
-                    yield return stream.CopyToAsync (destinationStream);
+                    copyTasks.Add( file.Stream.CopyToAsync (destinationStream));
                 }
             }
+
+            return copyTasks;
         }
+
+
 
         public string AskValue (string key)
         {
