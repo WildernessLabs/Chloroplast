@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Chloroplast.Core;
 using Chloroplast.Core.Extensions;
 using System.Net.Http;
+using Microsoft.Extensions.Configuration.CommandLine;
 
 namespace Chloroplast.Tool.Commands
 {
@@ -62,9 +64,11 @@ namespace Chloroplast.Tool.Commands
     {
 
         private IConfigurationRoot config;
+        private string[] args;
 
-        public NewCommand ()
+        public NewCommand (string[] args)
         {
+            this.args = args;
         }
 
         public string Name => "New";
@@ -72,8 +76,20 @@ namespace Chloroplast.Tool.Commands
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
             this.config = config;
-            string from = AskValue ("from");
-            string to = AskValue ("to");
+            CommandLineConfigurationProvider s = config.Providers.First() as CommandLineConfigurationProvider;
+            if (s == null)
+            {
+                throw new ApplicationException ("There's an issue with the application's configuration. Please log a bug");
+            }
+
+            string from = args.First ();
+
+            // TODO: check template folder for `from` folder, use that path
+
+            string to = args.Skip (1).First ();
+
+            // TODO: make folder in working directory with `to` as name, use that path
+
 
             INewTemplateFetcher fetcher;
             // if from is a url set fetcher to NewTemplateUrlFetcher
