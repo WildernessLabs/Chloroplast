@@ -29,7 +29,7 @@ namespace Chloroplast.Tool.Commands
         {
             // get a list of files and iterate over them
             var files = Directory.GetFiles (from);
-            foreach (string file in Directory.EnumerateFiles (from))
+            foreach (string file in Directory.EnumerateFiles (from, "*.*", SearchOption.AllDirectories))
             {
                 using (FileStream sourceStream = File.Open (file, FileMode.Open))
                 {
@@ -68,7 +68,12 @@ namespace Chloroplast.Tool.Commands
 
         public NewCommand (string[] args)
         {
-            this.args = args;
+            if (args != null && args.Length < 3)
+            {
+                throw new ChloroplastException ($"Need two parameters for 'new' command:{Environment.NewLine}chloroplast new <template> <projectName>");
+            }
+
+            this.args = args.Skip(1).ToArray();
         }
 
         public string Name => "New";
@@ -82,9 +87,16 @@ namespace Chloroplast.Tool.Commands
                 throw new ApplicationException ("There's an issue with the application's configuration. Please log a bug");
             }
 
-            string from = args.First ();
+            string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly ().Location);
+            string templatesPath = Path.Combine (exePath, "ProjectTemplates");
 
-            // TODO: check template folder for `from` folder, use that path
+            string from = args.First ();
+            string desiredTemplatePath = Path.Combine (templatesPath, from);
+
+            if (!Directory.Exists(desiredTemplatePath))
+            {
+                throw new ChloroplastException ($"Template '{from}' not found");
+            }
 
             string to = args.Skip (1).First ();
 
@@ -104,13 +116,17 @@ namespace Chloroplast.Tool.Commands
 
             List<Task> copyTasks = new List<Task> ();
 
+            string w = Path.Combine ("some", "relative", "/path");
+
             // get the template files, and copy them to the destination
-            foreach (TemplateFileData file in fetcher.GetTemplateFiles (from))
+            var templateSourceFiles = fetcher.GetTemplateFiles (desiredTemplatePath);
+            foreach (TemplateFileData file in templateSourceFiles)
             {
                 string fileName = Path.GetFileName (file.RelativeFilePath);
                 string destination = Path.Combine (to, fileName);
                 // fileName needs to be relative path from "root"
-                
+                destination.EnsureFileDirectory ();
+
                 using (FileStream destinationStream = File.Create (destination))
                 {
                     copyTasks.Add( file.Stream.CopyToAsync (destinationStream));
