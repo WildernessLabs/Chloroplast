@@ -63,8 +63,8 @@ namespace Chloroplast.Tool
                     case "host":
                         command = new HostCommand ();
                         break;
-                    case "init":
-                        command = new InitCommand ();
+                    case "new":
+                        command = new NewCommand (args);
                         break;
                     default:
                         throw new ChloroplastException ("usage: pass 'build', or 'watch'");

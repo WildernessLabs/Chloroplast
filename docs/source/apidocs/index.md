@@ -5,6 +5,8 @@ title: API Docs
 
 Chloroplast supports documenting .NET APIs.
 
+**PLEASE NOTE:** This functionality is still in development and not fully released yet.
+
 ## Build Process
 The API build process is inherently a multi-step process, for which we'll use a few different tools:
 
@@ -111,3 +113,5 @@ jobs:
 ```
 
 ## Supporting DocXML/Triple Slash docs
+
+WIP ...
