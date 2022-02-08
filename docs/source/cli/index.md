@@ -3,9 +3,35 @@ template: Default
 title: Command Line Interface
 ---
 
-Chloroplast supports various sub commands. It is recommended to first `cd` into your project's root folder, and run the commands with defaults as appropriate. This simplifies 
+Chloroplast supports various sub commands. It is recommended to first `cd` into your project's root folder, and run the commands with defaults as appropriate.
 
-# `build` sub command
+## `new` sub command
+
+The new subcommand allows you to bootstrap a chloroplast site by 
+copying files to a destination folder.
+
+```
+chloroplast new conceptual targetFolder
+```
+
+This will create `targetFolder` (if it doesn't already exist), and 
+copy files from the `conceptual` template. You can then run the
+following commands to build and preview the site locally:
+
+```
+cd targetFolder
+chloroplast build
+chloroplast host
+```
+
+### parameters
+
+- `conceptual`: The second positional parameter after `new`.
+  - This will currently only support `conceptual`, which will be a copy of these docs.
+  - Eventually we will have more templates, and eventually open up to community contributions.
+- `targetFolder`: the third positional parameter after `new` is the name of the target folder where the template files will be placed.
+
+## `build` sub command
 
 The build subcommand will build a chloroplast site
 
@@ -13,7 +39,7 @@ The build subcommand will build a chloroplast site
 chloroplast build --root path/to/SiteConfig/ --out path/to/out
 ```
 
-## parameters
+### parameters
 
 - `root`: the path to the directory that contains a `SiteConfig.yml` file
 - `out`: the path to the directory where the resulting HTML will be output.
@@ -23,7 +49,7 @@ The parameters above will default to the current working directory for the root 
 
 The build command will render all `index.md` files into corresponding `index.html` files, and copy everything else to the same corresponding location (images, styles, etc).
 
-# `host` sub command
+## `host` sub command
 
 The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring.
 
@@ -34,7 +60,7 @@ chloroplast host --out path/to/html
 You can just press the enter key to end this task at any time. For simplicity's sake, you can also just run this command in a separate terminal window and leave it running. That way, as you rebuild the content or update 
 the front-end styles, you can just refresh the browser after that buil has completed.
 
-## parameters
+### parameters
 
 - `out`: This should be the same value as the `out` parameter used in the `build` command.
 
