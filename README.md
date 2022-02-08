@@ -3,12 +3,17 @@ Wilderness Labs docs engine that converts and hosts markdown and (soon) XML API 
 
 ## Getting Started
 
-1. [Install](/docs/source/Installing/index.md) the `choloroplast.tool` dotnet tool.
-1. Build [the razor templates](/docs/source/templates/index.md), or take a look at the [sample templates](/docs/templates/).
-1. Learn the available [tool commands](/docs/source/cli/index.md)
-1. And lastly, for an easy way to preview a working content build:
-    1. clone this repository locally
-    1. in the terminal, type `cd docs` to move into the docs directory.
-    1. take a look at the [SiteConfig.yml](/docs/SiteConfig.yml) file to see the configuration.
-    1. build the docs content with `chloroplast build`
-    1. run the built-in local web server with `chloroplast host --out out` to buil and browse the docs locally.
+First [Install](/docs/source/Installing/index.md) the `choloroplast.tool` dotnet tool.
+
+Then run the following commands to: create a new chloroplast project at `targetFolder`, then build it, and run the local chloroplast webserver to preview the docs.
+
+```
+chloroplast new conceptual targetFolder
+
+cd targetFolder
+
+chloroplast build
+chloroplast host
+```
+
+Once you're done with that, you can modify that default template, and [read the docs](/docs/).
