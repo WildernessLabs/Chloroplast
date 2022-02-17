@@ -15,6 +15,8 @@ namespace Chloroplast.Tool.Commands
 {
     public class HostCommand : ICliCommand
     {
+        string rootPath;
+
         public HostCommand ()
         {
         }
@@ -25,7 +27,7 @@ namespace Chloroplast.Tool.Commands
         {
             string pathToUse;
             var outPath = config["out"].NormalizePath ();
-            var rootPath = config["root"].NormalizePath ();
+            this.rootPath = config["root"].NormalizePath ();
 
             if (!string.IsNullOrWhiteSpace(outPath))
             {
@@ -59,7 +61,7 @@ namespace Chloroplast.Tool.Commands
                  })
                 .UseConsoleLifetime ()
                 .Build ();
-            using (host)
+            //using (host)
             {
                 await host.StartAsync ();
                 Console.WriteLine ($"started on http://localhost:5000 ... press any key to end");
@@ -76,12 +78,54 @@ namespace Chloroplast.Tool.Commands
                     Console.WriteLine ("Error starting browser, " + ex.Message);
                 }
 
-                Console.Read ();
-                return new Task[0];
+                return new[] {Task.Factory.StartNew(() =>
+                    {
+
+                        Console.WriteLine ("watching: " + this.rootPath);
+                        using var watcher = new FileSystemWatcher(this.rootPath);
+
+                        watcher.NotifyFilter = NotifyFilters.LastWrite
+                                             | NotifyFilters.Size;
+
+                        watcher.Changed += Watcher_Changed;
+                        watcher.Error += Watcher_Error;;
+
+                        watcher.Filter = "*.md";
+                        watcher.IncludeSubdirectories = true;
+                        watcher.EnableRaisingEvents = true;
+
+                        Console.ReadLine();
+
+                        host.Dispose();
+                }) };
             }
         }
 
-        
+        private static void Watcher_Error (object sender, ErrorEventArgs e) =>
+            PrintException (e.GetException ());
+
+        private static void PrintException (Exception? ex)
+        {
+            if (ex != null)
+            {
+                Console.WriteLine ($"Message: {ex.Message}");
+                Console.WriteLine ("Stacktrace:");
+                Console.WriteLine (ex.StackTrace);
+                Console.WriteLine ();
+                PrintException (ex.InnerException);
+            }
+        }
+
+
+        private void Watcher_Changed (object sender, FileSystemEventArgs e)
+        {
+            if (e.ChangeType != WatcherChangeTypes.Changed)
+            {
+                return;
+            }
+            Console.WriteLine ($"Changed: {e.FullPath}");
+        }
+
         public class Startup
         {
             public Startup (IConfiguration configuration)

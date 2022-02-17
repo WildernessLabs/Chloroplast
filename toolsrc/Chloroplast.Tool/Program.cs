@@ -95,7 +95,7 @@ namespace Chloroplast.Tool
             catch (Exception ex)
             {
                 Console.Error.WriteLine ($"Oops, this was unexpected :(");
-                Console.Error.WriteLine (ex.Message);
+                Console.Error.WriteLine (ex.ToString());
                 if (ex.InnerException != null)
                 {
                     var currentEx = ex.InnerException;
