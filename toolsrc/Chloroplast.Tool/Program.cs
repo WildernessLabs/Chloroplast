@@ -22,7 +22,7 @@ namespace Chloroplast.Tool
             if (args.Length == 1 && args[0].EndsWith ("version", StringComparison.CurrentCultureIgnoreCase))
                 return;
 
-            if (args.Length < 1 || args.Length == 1 && args[0] == "build")
+            if (args.Length < 1 || args.Length == 1 && (args[0] == "build" || args[0] == "host"))
             {
                 string configPath = Directory.GetCurrentDirectory ().CombinePath ("SiteConfig.yml");
                 Console.WriteLine ($"looking for {configPath}");
@@ -30,7 +30,7 @@ namespace Chloroplast.Tool
                 {
                     args = new string[]
                     {
-                        "build",
+                        args.Length >= 1 ? args[0] : "build",
                         "--root",
                         Directory.GetCurrentDirectory(),
                         "--out",
@@ -95,7 +95,7 @@ namespace Chloroplast.Tool
             catch (Exception ex)
             {
                 Console.Error.WriteLine ($"Oops, this was unexpected :(");
-                Console.Error.WriteLine (ex.Message);
+                Console.Error.WriteLine (ex.ToString());
                 if (ex.InnerException != null)
                 {
                     var currentEx = ex.InnerException;
@@ -126,7 +126,7 @@ namespace Chloroplast.Tool
             var builder = new ConfigurationBuilder ()
                 .AddCommandLine (subtaskargs);
 
-            if (subtask == "build")
+            if (subtask == "build" || subtask == "host")
             {
                 var sitePath = subtaskargs.Skip (1).First ().NormalizePath ();
                 if (!System.IO.Directory.Exists (sitePath))

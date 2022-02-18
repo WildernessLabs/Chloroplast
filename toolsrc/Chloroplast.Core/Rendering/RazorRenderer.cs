@@ -18,11 +18,13 @@ namespace Chloroplast.Core.Rendering
 
         public async Task AddTemplateAsync (string templatePath)
         {
-            Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
-            Console.WriteLine (ns.ToString ());
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
-            templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
-
+            if (!templates.ContainsKey (fileName))
+            {
+                Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
+                Console.WriteLine (ns.ToString ());
+                templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
+            }
         }
 
         public async Task InitializeAsync (IConfigurationRoot config)
