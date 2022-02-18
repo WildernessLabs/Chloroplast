@@ -24,37 +24,42 @@ namespace Chloroplast.Core.Content
             // individual files
 
             var fileConfigs = config.GetSection ("files");
-            foreach (var fileConfig in fileConfigs.GetChildren ())
+            if (fileConfigs != null)
             {
-                var area = new IndividualContentArea
+                foreach (var fileConfig in fileConfigs.GetChildren ())
                 {
-                    SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
-                    TargetPath = outDirectory.CombinePath (fileConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
-                    RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "").NormalizePath(toLower: normalizePaths)
-                };
+                    var area = new IndividualContentArea
+                    {
+                        SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
+                        TargetPath = outDirectory.CombinePath (fileConfig["output_folder"].NormalizePath (toLower: normalizePaths)),
+                        RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths)
+                    };
 
-                yield return area;
+                    yield return area;
+                }
             }
 
             // areas
             var areaConfigs = config.GetSection ("areas");
 
-
-            foreach (var areaConfig in areaConfigs.GetChildren ())
+            if (areaConfigs != null)
             {
-                var area = new GroupContentArea
+                foreach (var areaConfig in areaConfigs.GetChildren ())
                 {
-                    SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
+                    var area = new GroupContentArea
+                    {
+                        SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
 
-                    TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath(toLower: normalizePaths)),
-                    RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
-                    NormalizePaths = normalizePaths,
-                    AreaType = areaConfig["type"]
-                };
+                        TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath (toLower: normalizePaths)),
+                        RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
+                        NormalizePaths = normalizePaths,
+                        AreaType = areaConfig["type"]
+                    };
 
-                // TODO: validate values
+                    // TODO: validate values
 
-                yield return area;
+                    yield return area;
+                }
             }
         }
     }
