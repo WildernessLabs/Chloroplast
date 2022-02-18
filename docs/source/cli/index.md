@@ -51,14 +51,15 @@ The build command will render all `index.md` files into corresponding `index.htm
 
 ## `host` sub command
 
-The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring.
+The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring. If you update markdown files, the content will automatically be rebuilt so you can just refresh the browser.
 
 ```
-chloroplast host --out path/to/html
+chloroplast host --root path/to/root --out path/to/html 
 ```
 
-You can just press the enter key to end this task at any time. For simplicity's sake, you can also just run this command in a separate terminal window and leave it running. That way, as you rebuild the content or update 
-the front-end styles, you can just refresh the browser after that buil has completed.
+You can just press the enter key to end this task after stopping the web host with ctrl+c at any time. 
+
+If you are updating razor templates, you can also just run this command in a separate terminal window and leave it running. That way, as you run the full `build` subcommand, the content and front-end styles will update, and you can just refresh the browser after that build has completed.
 
 ### parameters
 
