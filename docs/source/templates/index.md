@@ -3,7 +3,7 @@ template: Default
 title: Templating
 ---
 
-Chloroplast templates are built using asp.net's razor templates.
+Chloroplast templates are built using ASP.NET's Razor templates.
 
 # Configuration
 
@@ -29,7 +29,7 @@ If this value is either incorrect, or omitted, it will default to look for a tem
 
 # SiteFrame.cshtml
 
-For the main site's chrome, chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
+For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
 
 ```
 <html>
