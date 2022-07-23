@@ -10,6 +10,7 @@ You must have the `dotnet` CLI installed ... to do so, you need only install _.N
 https://docs.microsoft.com/en-us/dotnet/core/install/
 
 # Installing Chloroplast
+
 You can acquire Chloroplast by installing it as either a [local or global 
 tool](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install).
 
@@ -17,7 +18,6 @@ tool](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install).
 ## Wilderness Labs package registry
 
 ### Recommended
-
 Chloroplast can be found on the public nuget.org package registry at:  
 https://www.nuget.org/packages/Chloroplast.Tool/
 
