@@ -49,9 +49,9 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 Available to all templates are the following functions:
 
 - `@Raw("<some string>")`
-  - the `Raw` method will avoid html encoding content (which is the default).
+  - the `Raw` method will avoid HTML encoding content (which is the default).
 - `@Model.Body`
-  - This is the main html content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
+  - This is the main HTML content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
 - `@Model.GetMeta("title")`
   - with this you can access any value in the front matter (for example, `title`).
 - `@await PartialAsync("TemplateName", "model value")`
