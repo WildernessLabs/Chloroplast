@@ -7,11 +7,15 @@ Chloroplast templates are built using asp.net's razor templates.
 
 # Configuration
 
-The `SiteConfig.yml` file lets you configure the location of templates.
+The `SiteConfig.yml` file lets you configure the location of templates and the folders to find content files to process.
 
-```
+```yaml
 # razor templates
-templates_folder: Templates
+templates_folder: templates
+
+areas:
+  - source_folder: /source
+    output_folder: /
 ```
 
 # Markdown front matter
