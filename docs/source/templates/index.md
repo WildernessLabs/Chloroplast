@@ -5,7 +5,7 @@ title: Templating
 
 Chloroplast templates are built using ASP.NET's Razor templates.
 
-# Configuration
+## Configuration
 
 The `SiteConfig.yml` file lets you configure the location of templates and the folders to find content files to process.
 
@@ -18,11 +18,11 @@ areas:
     output_folder: /
 ```
 
-# Markdown front matter
+## Markdown front matter
 
-The template will be defined by the content's front matter. 
+The template will be defined by the content's front matter.
 
-```
+```console
 ---
 template: TemplateName
 title: Document title
@@ -31,11 +31,11 @@ title: Document title
 
 If this value is either incorrect, or omitted, it will default to look for a template named `Default.cshtml`. These templates are assumed to be just for the content area itself.
 
-# SiteFrame.cshtml
+## SiteFrame.cshtml
 
 For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
 
-```
+```console
 <html>
 <head>
     <title>@Model.GetMeta("Title")</title>
@@ -48,7 +48,7 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 </html>
 ```
 
-# Template Properties and Methods
+## Template Properties and Methods
 
 Available to all templates are the following functions:
 
@@ -59,7 +59,7 @@ Available to all templates are the following functions:
 - `@Model.GetMeta("title")`
   - with this you can access any value in the front matter (for example, `title`).
 - `@await PartialAsync("TemplateName", "model value")`
-  - This lets you render sub templates. 
+  - This lets you render sub templates.
   - the template name parameter will match the razor fil.e name ... so in the example above, it would be looking for a file named `Templates/TemplateName.cshtml`
   - the second parameter can be any kind of object really, whatever the template in question is expecting.
 - `@Model.Headers` collection

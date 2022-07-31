@@ -7,24 +7,21 @@ Chloroplast supports various sub commands. It is recommended to first `cd` into 
 
 ## `new` sub command
 
-The new subcommand allows you to bootstrap a chloroplast site by 
-copying files to a destination folder.
+The new subcommand allows you to bootstrap a chloroplast site by copying files to a destination folder.
 
-```
+```console
 chloroplast new conceptual targetFolder
 ```
 
-This will create `targetFolder` (if it doesn't already exist), and 
-copy files from the `conceptual` template. You can then run the
-following commands to build and preview the site locally:
+This will create `targetFolder`, if it doesn't already exist, and copy files from the `conceptual` template. You can then run the following commands to build and preview the site locally:
 
-```
+```console
 cd targetFolder
 chloroplast build
 chloroplast host
 ```
 
-### parameters
+### `new` parameters
 
 - `conceptual`: The second positional parameter after `new`.
   - This will currently only support `conceptual`, which will be a copy of these docs.
@@ -35,17 +32,17 @@ chloroplast host
 
 The build subcommand will build a Chloroplast site
 
-```
+```console
 chloroplast build --root path/to/SiteConfig/ --out path/to/out
 ```
 
-### parameters
+### `build` parameters
 
 - `root`: the path to the directory that contains a `SiteConfig.yml` file
 - `out`: the path to the directory where the resulting HTML will be output.
 - `normalizePaths`: defaults to `true`, which normalizes all paths to lower case. Set this to false for output paths to match the source casing.
 
-The parameters above will default to the current working directory for the root path, and an `out/` directory in that same path if both parameters are omitted. 
+The parameters above will default to the current working directory for the root path, and an `out/` directory in that same path if both parameters are omitted.
 
 The build command will render all `index.md` files into corresponding `index.html` files, and copy everything else to the same corresponding location (images, styles, etc).
 
@@ -53,15 +50,15 @@ The build command will render all `index.md` files into corresponding `index.htm
 
 The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring. If you update markdown files, the content will automatically be rebuilt so you can just refresh the browser.
 
-```
-chloroplast host --root path/to/root --out path/to/html 
+```console
+chloroplast host --root path/to/root --out path/to/html
 ```
 
-You can just press the enter key to end this task after stopping the web host with Ctrl+C at any time. 
+You can just press the enter key to end this task after stopping the web host with Ctrl+C at any time.
 
 If you are updating razor templates, you can also just run this command in a separate terminal window and leave it running. That way, as you run the full `build` subcommand, the content and front-end styles will update, and you can just refresh the browser after that build has completed.
 
-### parameters
+### `host` parameters
 
 - `out`: This should be the same value as the `out` parameter used in the `build` command.
 

@@ -4,7 +4,7 @@ title: Chloroplast Home
 subtitle: Documentation site for Chloroplast.
 ---
 
-# Welcome!
+## Welcome!
 
 To the Chloroplast docs. Once you [install it](/Installing), you can learn how to [use it](/cli), and [template it](/templates).
 
