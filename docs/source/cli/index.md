@@ -33,7 +33,7 @@ chloroplast host
 
 ## `build` sub command
 
-The build subcommand will build a chloroplast site
+The build subcommand will build a Chloroplast site
 
 ```
 chloroplast build --root path/to/SiteConfig/ --out path/to/out
@@ -57,7 +57,7 @@ The host sub command starts a simple HTML web server. Useful for local preview d
 chloroplast host --root path/to/root --out path/to/html 
 ```
 
-You can just press the enter key to end this task after stopping the web host with ctrl+c at any time. 
+You can just press the enter key to end this task after stopping the web host with Ctrl+C at any time. 
 
 If you are updating razor templates, you can also just run this command in a separate terminal window and leave it running. That way, as you run the full `build` subcommand, the content and front-end styles will update, and you can just refresh the browser after that build has completed.
 

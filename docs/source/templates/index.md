@@ -3,7 +3,7 @@ template: Default
 title: Templating
 ---
 
-Chloroplast templates are built using asp.net's razor templates.
+Chloroplast templates are built using ASP.NET's Razor templates.
 
 # Configuration
 
@@ -33,7 +33,7 @@ If this value is either incorrect, or omitted, it will default to look for a tem
 
 # SiteFrame.cshtml
 
-For the main site's chrome, chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
+For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
 
 ```
 <html>
@@ -53,9 +53,9 @@ For the main site's chrome, chloroplast will look for a template named `SiteFram
 Available to all templates are the following functions:
 
 - `@Raw("<some string>")`
-  - the `Raw` method will avoid html encoding content (which is the default).
+  - the `Raw` method will avoid HTML encoding content (which is the default).
 - `@Model.Body`
-  - This is the main html content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
+  - This is the main HTML content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
 - `@Model.GetMeta("title")`
   - with this you can access any value in the front matter (for example, `title`).
 - `@await PartialAsync("TemplateName", "model value")`

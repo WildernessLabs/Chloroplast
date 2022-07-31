@@ -12,7 +12,7 @@ The API build process is inherently a multi-step process, for which we'll use a 
 
 - [mdoc](https://github.com/mono/api-doc-tools/): This tool takes compiled .NET assemblies, and produces an XML format called EcmaXml, which represents all of the type and namespace metadata, and gives you an opportunity to document your APIs.
 - msbuild: We are going to use msbuild to fetch mdoc itself, along with all the APIs that you need documented.
-- Build Server: The glue that will drive and automate this process. In this document, we will use Github Actions to demonstrate the capabilities, but this can honestly be built with any other build pipeline such as Azure DevOps.
+- Build Server: The glue that will drive and automate this process. In this document, we will use GitHub Actions to demonstrate the capabilities, but this can honestly be built with any other build pipeline such as Azure DevOps.
 
 ## Using MSBuild to Drive APIs
 
@@ -49,7 +49,7 @@ The API build process is inherently a multi-step process, for which we'll use a 
 </Project>
 ```
 
-## Using Github Actions to Automate Builds
+## Using GitHub Actions to Automate Builds
 
 ```yaml
 name: Content Build
