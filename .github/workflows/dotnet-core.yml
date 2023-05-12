@@ -31,9 +31,9 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
     - name: Pack
-      run: dotnet pack toolsrc/Chloroplast.Core/   
+      run: dotnet pack toolsrc/Chloroplast.Core/
     - name: Pack Tool
-      run: dotnet pack toolsrc/Chloroplast.Tool/    
+      run: dotnet pack toolsrc/Chloroplast.Tool/
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.1.3
       with:
@@ -59,4 +59,3 @@ jobs:
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "nuget.org" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --no-symbols true
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
-
