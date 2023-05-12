@@ -5,7 +5,7 @@ title: Templating
 
 Chloroplast templates are built using ASP.NET's Razor templates.
 
-# Configuration
+## Configuration
 
 The `SiteConfig.yml` file lets you configure the location of templates and the folders to find content files to process.
 
@@ -18,11 +18,11 @@ areas:
     output_folder: /
 ```
 
-# Markdown front matter
+## Markdown front matter
 
-The template will be defined by the content's front matter. 
+The template will be defined by the content's front matter.
 
-```
+```console
 ---
 template: TemplateName
 title: Document title
@@ -31,11 +31,11 @@ title: Document title
 
 If this value is either incorrect, or omitted, it will default to look for a template named `Default.cshtml`. These templates are assumed to be just for the content area itself.
 
-# SiteFrame.cshtml
+## SiteFrame.cshtml
 
 For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
 
-```
+```console
 <html>
 <head>
     <title>@Model.GetMeta("Title")</title>
@@ -48,20 +48,20 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 </html>
 ```
 
-# Template Properties and Methods
+## Template Properties and Methods
 
 Available to all templates are the following functions:
 
 - `@Raw("<some string>")`
-  - the `Raw` method will avoid HTML encoding content (which is the default).
+  - The `Raw` method will avoid HTML encoding content (which is the default).
 - `@Model.Body`
-  - This is the main HTML content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
+  - This is the main HTML content being rendered using the page's template. You should output this through the `Raw` method since it will likely contain HTML.
 - `@Model.GetMeta("title")`
   - with this you can access any value in the front matter (for example, `title`).
 - `@await PartialAsync("TemplateName", "model value")`
-  - This lets you render sub templates. 
-  - the template name parameter will match the razor fil.e name ... so in the example above, it would be looking for a file named `Templates/TemplateName.cshtml`
-  - the second parameter can be any kind of object really, whatever the template in question is expecting.
+  - This lets you render sub templates.
+  - The template name parameter will match the Razor file name. So, in the example above, it would be looking for a file named `templates/TemplateName.cshtml`
+  - The second parameter can be any kind of object really, whatever the template in question is expecting.
 - `@Model.Headers` collection
   - Each `h1`-`h6` will be parsed and added to this headers collection.
   - Every `Header` object has the following properties:
@@ -69,5 +69,5 @@ Available to all templates are the following functions:
     - Value: the text
     - Slug: a slug version of the `Value`, which corresponds to an anchor added to the HTML before the header.
 - `@await PartialAsync("Docs/area/menu.md")`
-  - This overload of the `PartialAsync` method assumes you're rendering a markdown file.
-  - The markdown file can define its own template (will default to `Default`), and will only render the contents of that specific template (ie. no `SiteFrame.cshtml`).
+  - This overload of the `PartialAsync` method assumes you're rendering a Markdown file.
+  - The Markdown file can define its own template (default of `Default`), and will only render the contents of that specific template (ie. no `SiteFrame.cshtml`).

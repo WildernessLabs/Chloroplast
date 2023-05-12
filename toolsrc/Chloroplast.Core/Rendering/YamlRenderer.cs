@@ -74,7 +74,7 @@ namespace Chloroplast.Core.Rendering
         public static void RenderAndSaveMenu(string filePath, IEnumerable<MenuNode> nodes)
         {
             var serializer = new SerializerBuilder ()
-                .WithNamingConvention(new YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention())
+                .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
                 .Build();
             string fileContent = serializer.Serialize (new

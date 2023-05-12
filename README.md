@@ -34,7 +34,7 @@ If you want to see Chloroplast in action, you can even host the Chloroplast docs
     There are [several ways to install Chloroplast](https://github.com/WildernessLabs/Chloroplast/blob/main/docs/source/Installing/index.md#package-repository). This will install it from NuGet as a global tool.
 
     ```
-    dotnet tool install Chloroplast.Tool -g
+    dotnet tool install Chloroplast.Tool --global
     ```
 
 1. Navigate to the Chloroplast docs.
