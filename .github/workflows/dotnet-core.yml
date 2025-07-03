@@ -43,11 +43,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Tool Core generated package to GitHub registry
       if: github.ref == 'refs/heads/main'
+      continue-on-error: true
       run: dotnet nuget push ./toolsrc/Chloroplast.Core/nupkg/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols true
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
     - name: Tool Push generated package to GitHub registry
       if: github.ref == 'refs/heads/main'
+      continue-on-error: true
       run: dotnet nuget push ./toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols true
       env:
         DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
