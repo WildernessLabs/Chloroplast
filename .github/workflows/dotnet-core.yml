@@ -23,10 +23,11 @@ jobs:
         dotnet-version: 8.0.x
     - name: Calculate version
       run: |
-        # Use base version 0.6 and append run number for unique builds
-        VERSION="0.6.${{ github.run_number }}"
+        # Extract major.minor version from the Tool csproj file
+        BASE_VERSION=$(grep '<Version.*>' toolsrc/Chloroplast.Tool/Chloroplast.Tool.csproj | sed 's/.*<Version[^>]*>\([^<]*\)<\/Version>.*/\1/' | sed 's/-dev//' | cut -d. -f1,2)
+        VERSION="$BASE_VERSION.${{ github.run_number }}"
         echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
-        echo "Building version: $VERSION"
+        echo "Building version: $VERSION (base: $BASE_VERSION)"
     - name: Install dependencies
       run: dotnet restore toolsrc
     - name: Build
