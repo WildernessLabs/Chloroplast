@@ -6,6 +6,6 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MimeTypeMapOfficial" Version="1.0.15" />
+    <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
   </ItemGroup>
 </Project>

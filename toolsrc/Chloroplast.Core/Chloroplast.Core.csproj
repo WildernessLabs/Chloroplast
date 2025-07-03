@@ -6,7 +6,7 @@
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <IsPackable>true</IsPackable>
 
-    <Version>0.5.3</Version>
+    <Version>0.6.0</Version>
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
     <PackageDescription>Core library for Chloroplast.Tool</PackageDescription>
@@ -15,13 +15,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="YamlDotNet" Version="9.1.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
-    <PackageReference Include="Markdig" Version="0.22.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="5.0.0" />
-    <PackageReference Include="MiniRazor" Version="2.0.3" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.29" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="9.0.6" />
+    <PackageReference Include="Markdig" Version="0.41.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.6" />
+    <PackageReference Include="MiniRazor" Version="2.2.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
