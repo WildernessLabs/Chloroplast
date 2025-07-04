@@ -21,6 +21,13 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Calculate version
+      run: |
+        # Extract major.minor version from the Tool csproj file
+        BASE_VERSION=$(grep '<Version.*>' toolsrc/Chloroplast.Tool/Chloroplast.Tool.csproj | sed 's/.*<Version[^>]*>\([^<]*\)<\/Version>.*/\1/' | sed 's/-dev//' | cut -d. -f1,2)
+        VERSION="$BASE_VERSION.${{ github.run_number }}"
+        echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Building version: $VERSION (base: $BASE_VERSION)"
     - name: Install dependencies
       run: dotnet restore toolsrc
     - name: Build
@@ -28,9 +35,9 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
     - name: Pack
-      run: dotnet pack toolsrc/Chloroplast.Core/   
+      run: dotnet pack toolsrc/Chloroplast.Core/ -p:Version=${{ env.PACKAGE_VERSION }}   
     - name: Pack Tool
-      run: dotnet pack toolsrc/Chloroplast.Tool/    
+      run: dotnet pack toolsrc/Chloroplast.Tool/ -p:Version=${{ env.PACKAGE_VERSION }}    
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
       with:
