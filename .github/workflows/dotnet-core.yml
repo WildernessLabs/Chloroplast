@@ -52,13 +52,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Restore dependencies
-        run: dotnet restore toolsrc
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: artifacts
+          path: .
       - name: Pack Core
         run: dotnet pack toolsrc/Chloroplast.Core/ -p:Version=${{ needs.build.outputs.package_version }} --no-build
       - name: Pack Tool
@@ -92,5 +90,7 @@ jobs:
       - name: Push Tool package to GitHub registry
         run: dotnet nuget push packages/Chloroplast.Tool.*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
       - name: Push Tool package to nuget.org registry
-        run: dotnet nuget push packages/Chloroplast.Tool.*.nupkg --source "nuget.org" --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push packages/Chloroplast.Tool.*.nupkg --source "nuget.org" --api-key $NUGET_API_KEY --skip-duplicate
 
