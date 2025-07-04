@@ -41,7 +41,9 @@ jobs:
         name: build-artifacts
         path: |
           toolsrc/Chloroplast.Core/bin/Release
+          toolsrc/Chloroplast.Core/obj
           toolsrc/Chloroplast.Tool/bin/Release
+          toolsrc/Chloroplast.Tool/obj
 
   pack:
     needs: build
