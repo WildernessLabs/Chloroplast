@@ -62,9 +62,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore toolsrc
       - name: Pack Core
-        run: dotnet pack toolsrc/Chloroplast.Core/ -p:Version=${{ needs.build.outputs.package_version }} --no-build
+        run: dotnet pack toolsrc/Chloroplast.Core/ -p:Version=${{ needs.build.outputs.package_version }}
       - name: Pack Tool
-        run: dotnet pack toolsrc/Chloroplast.Tool/ -p:Version=${{ needs.build.outputs.package_version }} --no-build
+        run: dotnet pack toolsrc/Chloroplast.Tool/ -p:Version=${{ needs.build.outputs.package_version }}
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
