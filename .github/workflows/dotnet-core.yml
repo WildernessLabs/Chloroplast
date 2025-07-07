@@ -11,10 +11,8 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
-    outputs:
-      package_version: ${{ steps.version.outputs.package_version }}
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -35,66 +33,28 @@ jobs:
       run: dotnet build --configuration Release --no-restore toolsrc
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts
-        path: |
-          toolsrc/Chloroplast.Core/bin/Release
-          toolsrc/Chloroplast.Core/obj
-          toolsrc/Chloroplast.Tool/bin/Release
-          toolsrc/Chloroplast.Tool/obj
-
-  pack:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-          path: .
-      - name: Restore dependencies
-        run: dotnet restore toolsrc
-      - name: Pack Core
-        run: dotnet pack toolsrc/Chloroplast.Core/ -p:Version=${{ needs.build.outputs.package_version }}
-      - name: Pack Tool
-        run: dotnet pack toolsrc/Chloroplast.Tool/ -p:Version=${{ needs.build.outputs.package_version }}
-      - name: Upload packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: packages
-          path: |
-            toolsrc/Chloroplast.Core/nupkg/*.nupkg
-            toolsrc/Chloroplast.Tool/nupkg/*.nupkg
-
-  publish:
-    needs: pack
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download packages
-        uses: actions/download-artifact@v4
-        with:
-          name: packages
-          path: packages
-      - name: List packages
-        run: |
-          echo "Packages directory contents:"
-          ls -R packages
-      - name: Add private GitHub registry to NuGet
-        run: dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name "github" --username WildernessLabs --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
-      - name: Push Core package to GitHub registry
-        run: dotnet nuget push packages/Chloroplast.Core.*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
-      - name: Push Tool package to GitHub registry
-        run: dotnet nuget push packages/Chloroplast.Tool.*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
-      - name: Push Tool package to nuget.org registry
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push packages/Chloroplast.Tool.*.nupkg --source "nuget.org" --api-key $NUGET_API_KEY --skip-duplicate
+    - name: Pack Core
+      run: dotnet pack toolsrc/Chloroplast.Core/ --configuration Release --no-restore -p:Version=${{ steps.version.outputs.package_version }}
+    - name: Pack Tool
+      run: dotnet pack toolsrc/Chloroplast.Tool/ --configuration Release --no-restore -p:Version=${{ steps.version.outputs.package_version }}
+    - name: List packages
+      run: |
+        echo "Core packages:"
+        ls -la toolsrc/Chloroplast.Core/nupkg/
+        echo "Tool packages:"
+        ls -la toolsrc/Chloroplast.Tool/nupkg/
+    - name: Add private GitHub registry to NuGet
+      if: github.ref == 'refs/heads/main'
+      run: dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name "github" --username WildernessLabs --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+    - name: Push Core package to GitHub registry
+      if: github.ref == 'refs/heads/main'
+      run: dotnet nuget push toolsrc/Chloroplast.Core/nupkg/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+    - name: Push Tool package to GitHub registry
+      if: github.ref == 'refs/heads/main'
+      run: dotnet nuget push toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+    - name: Push Tool package to nuget.org registry
+      if: github.ref == 'refs/heads/main'
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "nuget.org" --api-key $NUGET_API_KEY --skip-duplicate
 
