@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -108,6 +109,9 @@ namespace Chloroplast.Tool.Commands
                 }
 
                 Task.WaitAll (tasks.ToArray ());
+                
+                // Generate sitemap files after all content is processed
+                await GenerateSitemapsAsync(area, config);
             }
 
             return tasks;
@@ -138,6 +142,42 @@ namespace Chloroplast.Tool.Commands
                     menu.Items = null;
 
                 yield return menu;
+            }
+        }
+
+        private async Task GenerateSitemapsAsync(ContentArea area, IConfigurationRoot config)
+        {
+            try
+            {
+                // Get sitemap configuration
+                var baseUrl = config["sitemap:baseUrl"] ?? config["baseUrl"];
+                var enabled = config.GetBool("sitemap:enabled", defaultValue: true);
+                var maxUrlsPerSitemap = config.GetInt("sitemap:maxUrlsPerSitemap", defaultValue: 50000);
+
+                if (!enabled || string.IsNullOrEmpty(baseUrl))
+                {
+                    Console.WriteLine("Sitemap generation skipped (disabled or no baseUrl configured)");
+                    return;
+                }
+
+                Console.WriteLine("Generating sitemap files...");
+
+                var generator = new SitemapGenerator(baseUrl, area.TargetPath)
+                {
+                    MaxUrlsPerSitemap = maxUrlsPerSitemap
+                };
+
+                var sitemapFiles = generator.GenerateSitemaps(area.ContentNodes);
+                
+                foreach (var file in sitemapFiles)
+                {
+                    Console.WriteLine($"\tgenerated: {Path.GetFileName(file)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating sitemaps: {ex.Message}");
+                // Don't fail the build if sitemap generation fails
             }
         }
     }

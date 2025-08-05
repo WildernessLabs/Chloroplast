@@ -7,6 +7,9 @@ email: hello@wildernesslabs.co
 description: >-
   Chloroplast by Wilderness Labs docs.
 
+# base URL for sitemap generation
+baseUrl: https://developer.wildernesslabs.co/
+
 # razor templates
 templates_folder: templates
 

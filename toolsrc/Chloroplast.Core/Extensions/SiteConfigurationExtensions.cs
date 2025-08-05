@@ -90,5 +90,19 @@ namespace Chloroplast.Core.Extensions
 
             return theValue;
         }
+
+        public static int GetInt(this IConfigurationRoot config, string key, int defaultValue = 0)
+        {
+            var value = config[key];
+
+            if (string.IsNullOrWhiteSpace(value))
+                return defaultValue;
+
+            int theValue;
+
+            int.TryParse(value, out theValue);
+
+            return theValue;
+        }
     }
 }
