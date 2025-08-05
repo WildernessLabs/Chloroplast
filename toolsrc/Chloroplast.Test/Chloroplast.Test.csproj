@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chloroplast.Core\Chloroplast.Core.csproj" />
+    <ProjectReference Include="..\Chloroplast.Tool\Chloroplast.Tool.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="TreeTests.cs" />

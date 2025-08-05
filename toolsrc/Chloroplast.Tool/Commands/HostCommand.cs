@@ -12,6 +12,8 @@ using System.IO;
 using Chloroplast.Core;
 using Microsoft.Extensions.Primitives;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Chloroplast.Tool.Commands
 {
@@ -28,6 +30,29 @@ namespace Chloroplast.Tool.Commands
         }
 
         public string Name => "Host";
+
+        public int FindAvailablePort(int startPort = 5000)
+        {
+            for (int port = startPort; port <= startPort + 100; port++)
+            {
+                try
+                {
+                    using (var tcpListener = new TcpListener(IPAddress.Loopback, port))
+                    {
+                        tcpListener.Start();
+                        tcpListener.Stop();
+                        return port;
+                    }
+                }
+                catch (SocketException)
+                {
+                    // Port is in use, try the next one
+                    continue;
+                }
+            }
+            
+            throw new ChloroplastException($"Unable to find an available port in range {startPort}-{startPort + 100}");
+        }
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
@@ -58,6 +83,20 @@ namespace Chloroplast.Tool.Commands
                 }
             }
 
+            // Find an available port
+            int availablePort;
+            try
+            {
+                availablePort = FindAvailablePort(5000);
+            }
+            catch (ChloroplastException ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                return new Task[0];
+            }
+
+            var hostUrl = $"http://localhost:{availablePort}";
+            
             var host = Host.CreateDefaultBuilder ()
                 .UseContentRoot (pathToUse)
                 .ConfigureWebHostDefaults (webBuilder =>
@@ -65,21 +104,22 @@ namespace Chloroplast.Tool.Commands
                      webBuilder.CaptureStartupErrors (true);
                      webBuilder.UseWebRoot ("/");
                      webBuilder.PreferHostingUrls (true);
-                     webBuilder.UseUrls ("http://localhost:5000");
+                     webBuilder.UseUrls (hostUrl);
                      webBuilder.UseStartup<Startup> ();
                  })
                 .UseConsoleLifetime (c => c.SuppressStatusMessages = true)
                 .Build ();
-            //using (host)
+
+            try
             {
                 await host.StartAsync ();
-                Console.WriteLine ($"started on http://localhost:5000 ... press any key to end");
+                Console.WriteLine ($"started on {hostUrl} ... press any key to end");
 
                 try
                 {
                     System.Diagnostics.Process proc = new System.Diagnostics.Process ();
                     proc.StartInfo.UseShellExecute = true;
-                    proc.StartInfo.FileName = "http://localhost:5000/";
+                    proc.StartInfo.FileName = hostUrl + "/";
                     proc.Start ();
                 }
                 catch (Exception ex)
@@ -133,6 +173,12 @@ namespace Chloroplast.Tool.Commands
                         watchers.Clear();
                         host.Dispose();
                 }) };
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to start host: {ex.Message}");
+                host?.Dispose();
+                return new Task[0];
             }
         }
 
