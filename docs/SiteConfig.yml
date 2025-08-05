@@ -8,12 +8,7 @@ description: >-
   Chloroplast by Wilderness Labs docs.
 
 # base URL for sitemap generation
-baseUrl: https://docs.wildernesslabs.co
-
-# sitemap configuration
-sitemap:
-  enabled: true
-  maxUrlsPerSitemap: 50000
+baseUrl: https://developer.wildernesslabs.co/
 
 # razor templates
 templates_folder: templates

@@ -49,6 +49,8 @@ The parameters above will default to the current working directory for the root 
 
 The build command will render all `index.md` files into corresponding `index.html` files, and copy everything else to the same corresponding location (images, styles, etc).
 
+Additionally, the build command will automatically generate sitemap XML files if a `baseUrl` is configured in your `SiteConfig.yml`. This helps with SEO and search engine indexing.
+
 ## `host` sub command
 
 The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring. If you update markdown files, the content will automatically be rebuilt so you can just refresh the browser.
@@ -66,3 +68,28 @@ If you are updating razor templates, you can also just run this command in a sep
 - `out`: This should be the same value as the `out` parameter used in the `build` command.
 
 The parameter above will default to the `out/` folder in the current working directory, if omitted.
+
+## Sitemap Generation
+
+The build command automatically generates sitemap XML files when a `baseUrl` is configured in your `SiteConfig.yml`. This helps search engines discover and index your site's content.
+
+### Configuration
+
+Add the following to your `SiteConfig.yml` to configure sitemap generation:
+
+```yaml
+# Base URL for your site (required for sitemap generation)
+baseUrl: https://your-site.com
+
+# Optional sitemap configuration
+sitemap:
+  enabled: true              # Enable/disable sitemap generation (default: true)
+  maxUrlsPerSitemap: 50000   # Maximum URLs per sitemap file (default: 50000)
+```
+
+### Behavior
+
+- **Single sitemap**: For sites with fewer URLs than the configured threshold, a single `sitemap.xml` file is generated
+- **Multiple sitemaps**: For larger sites, multiple sitemap files are created (`sitemap1.xml`, `sitemap2.xml`, etc.) with a sitemap index file (`sitemap.xml`) that references them
+- **Content filtering**: Only HTML files are included in sitemaps; assets like CSS, images, and other files are excluded
+- **Timestamps**: Each URL entry includes a last modified timestamp based on the file's modification date
