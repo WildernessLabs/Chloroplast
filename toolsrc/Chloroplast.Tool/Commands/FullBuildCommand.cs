@@ -15,6 +15,8 @@ namespace Chloroplast.Tool.Commands
 {
     public class FullBuildCommand : ICliCommand
     {
+        private readonly BuildErrorCollection _buildErrors = new BuildErrorCollection();
+
         public FullBuildCommand ()
         {
         }
@@ -23,7 +25,35 @@ namespace Chloroplast.Tool.Commands
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
-            await ContentRenderer.InitializeAsync (config);
+            try
+            {
+                await ContentRenderer.InitializeAsync (config);
+            }
+            catch (Exception ex)
+            {
+                _buildErrors.AddError("Template initialization", 
+                    "Failed to initialize content renderer (likely template compilation error)", ex);
+                    
+                // Display errors immediately for initialization failures
+                _buildErrors.WriteErrorsToConsole();
+                
+                // Write error log if configured
+                var errorLogPath = config["errorLog"] ?? config["errorLogPath"];
+                if (!string.IsNullOrEmpty(errorLogPath))
+                {
+                    try
+                    {
+                        _buildErrors.WriteErrorsToFile(errorLogPath);
+                        Console.WriteLine($"Error details written to: {errorLogPath}");
+                    }
+                    catch (Exception logEx)
+                    {
+                        Console.Error.WriteLine($"Failed to write error log: {logEx.Message}");
+                    }
+                }
+                
+                return new Task[0];
+            }
 
             List<Task<Task<RenderedContent>>> tasks= new List<Task<Task<RenderedContent>>>();
 
@@ -44,26 +74,36 @@ namespace Chloroplast.Tool.Commands
                     // TODO: refactor this out to a build queue
                     firsttasks.Add(Task.Factory.StartNew(async () =>
                     {
-                        Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
-
-                        if (item.Source.RootRelativePath.EndsWith(".md"))
+                        try
                         {
-                            var r = await ContentRenderer.FromMarkdownAsync(item);
-                            r = await ContentRenderer.ToRazorAsync(r);
-                            //await item.Target.WriteContentAsync(r.Body);
+                            Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
 
-                            return r;
+                            if (item.Source.RootRelativePath.EndsWith(".md"))
+                            {
+                                var r = await ContentRenderer.FromMarkdownAsync(item);
+                                r = await ContentRenderer.ToRazorAsync(r);
+                                //await item.Target.WriteContentAsync(r.Body);
+
+                                return r;
+                            }
+                            else if (item.Source.RootRelativePath.EndsWith(".xml"))
+                            {
+                                var r = await ContentRenderer.FromEcmaXmlAsync (item, config);
+                                //r = await ContentRenderer.ToRazorAsync (r);
+
+                                return r;
+                            }
+                            else
+                            {
+                                item.Source.CopyTo(item.Target);
+                                return null;
+                            }
                         }
-                        else if (item.Source.RootRelativePath.EndsWith(".xml"))
+                        catch (Exception ex)
                         {
-                            var r = await ContentRenderer.FromEcmaXmlAsync (item, config);
-                            //r = await ContentRenderer.ToRazorAsync (r);
-
-                            return r;
-                        }
-                        else
-                        {
-                            item.Source.CopyTo(item.Target);
+                            _buildErrors.AddError(item.Source.RootRelativePath, 
+                                $"Failed to process content file", ex);
+                            Console.WriteLine($"\tERROR processing: {item.Source.RootRelativePath}");
                             return null;
                         }
                     }));
@@ -98,12 +138,22 @@ namespace Chloroplast.Tool.Commands
                 {
                     tasks.Add (Task.Factory.StartNew (async () =>
                     {
-                        Console.WriteLine ($"\tframe rendering: {item.Node.Title}");
+                        try
+                        {
+                            Console.WriteLine ($"\tframe rendering: {item.Node.Title}");
 
-                        var result = await ContentRenderer.ToRazorAsync (item);
-                        await item.Node.Target.WriteContentAsync (result.Body);
+                            var result = await ContentRenderer.ToRazorAsync (item);
+                            await item.Node.Target.WriteContentAsync (result.Body);
 
-                        return result;
+                            return result;
+                        }
+                        catch (Exception ex)
+                        {
+                            _buildErrors.AddError(item.Node.Source.RootRelativePath, 
+                                $"Failed to render frame for content", ex);
+                            Console.WriteLine($"\tERROR frame rendering: {item.Node.Title}");
+                            return null;
+                        }
                             
                     }));
                 }
@@ -112,6 +162,27 @@ namespace Chloroplast.Tool.Commands
                 
                 // Generate sitemap files after all content is processed
                 await GenerateSitemapsAsync(area, config);
+            }
+
+            // Display error summary at the end
+            if (_buildErrors.HasErrors)
+            {
+                _buildErrors.WriteErrorsToConsole();
+                
+                // Optionally write to error log file
+                var errorLogPath = config["errorLog"] ?? config["errorLogPath"];
+                if (!string.IsNullOrEmpty(errorLogPath))
+                {
+                    try
+                    {
+                        _buildErrors.WriteErrorsToFile(errorLogPath);
+                        Console.WriteLine($"Error details written to: {errorLogPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Failed to write error log: {ex.Message}");
+                    }
+                }
             }
 
             return tasks;
