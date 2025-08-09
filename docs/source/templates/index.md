@@ -71,3 +71,33 @@ Available to all templates are the following functions:
 - `@await PartialAsync("Docs/area/menu.md")`
   - This overload of the `PartialAsync` method assumes you're rendering a markdown file.
   - The markdown file can define its own template (will default to `Default`), and will only render the contents of that specific template (ie. no `SiteFrame.cshtml`).
+
+## Cache Busting Methods
+
+For managing asset versioning and cache invalidation:
+
+- `@WithVersion("/path/to/asset.css")`
+  - Adds a version parameter to asset URLs for cache busting (e.g., `/path/to/asset.css?v=20231215123456`)
+  - Only adds the version parameter when cache busting is enabled in configuration
+  - Properly handles existing query parameters by using `&` instead of `?` when appropriate
+- `@BuildVersion`
+  - Gets the current build version string, or `null` if cache busting is disabled
+  - Useful for displaying version information or custom cache busting logic
+
+### Cache Busting Example
+
+```html
+<!-- Recommended approach using WithVersion -->
+<link href="@WithVersion("/assets/main.css")" rel="stylesheet" />
+<script src="@WithVersion("/assets/site.js")"></script>
+
+<!-- Manual approach using BuildVersion -->
+@if (BuildVersion != null)
+{
+    <link href="/assets/main.css?v=@BuildVersion" rel="stylesheet" />
+}
+else
+{
+    <link href="/assets/main.css" rel="stylesheet" />
+}
+```

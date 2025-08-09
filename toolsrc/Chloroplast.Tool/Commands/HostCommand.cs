@@ -56,6 +56,9 @@ namespace Chloroplast.Tool.Commands
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
+            // Set up build version for cache busting
+            SetupBuildVersion(config);
+            
             this.rootconfig = config;
             var outPath = config["out"].NormalizePath ();
             this.rootPath = config["root"].NormalizePath ();
@@ -258,6 +261,30 @@ namespace Chloroplast.Tool.Commands
             var tasks = fullBuild.RunAsync (config);
             tasks.Wait ();
             this.running = false;
+        }
+
+        private void SetupBuildVersion(IConfigurationRoot config)
+        {
+            // Check if cache busting is enabled (default to true)
+            var cacheBustingEnabled = config.GetBool("cacheBusting:enabled", defaultValue: true);
+            
+            if (!cacheBustingEnabled)
+            {
+                Console.WriteLine("Cache busting disabled in configuration");
+                return;
+            }
+
+            // Get buildVersion from command line or use timestamp default
+            var buildVersion = config["buildVersion"];
+            if (string.IsNullOrWhiteSpace(buildVersion))
+            {
+                buildVersion = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            }
+
+            // Store the build version for templates to access
+            SiteConfig.BuildVersion = buildVersion;
+            
+            Console.WriteLine($"Using build version for cache busting: {buildVersion}");
         }
 
         internal class WatcherConfig : IConfigurationRoot, IConfigurationSection

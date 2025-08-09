@@ -23,6 +23,9 @@ namespace Chloroplast.Tool.Commands
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
+            // Set up build version for cache busting
+            SetupBuildVersion(config);
+            
             await ContentRenderer.InitializeAsync (config);
 
             List<Task<Task<RenderedContent>>> tasks= new List<Task<Task<RenderedContent>>>();
@@ -115,6 +118,30 @@ namespace Chloroplast.Tool.Commands
             }
 
             return tasks;
+        }
+
+        private void SetupBuildVersion(IConfigurationRoot config)
+        {
+            // Check if cache busting is enabled (default to true)
+            var cacheBustingEnabled = config.GetBool("cacheBusting:enabled", defaultValue: true);
+            
+            if (!cacheBustingEnabled)
+            {
+                Console.WriteLine("Cache busting disabled in configuration");
+                return;
+            }
+
+            // Get buildVersion from command line or use timestamp default
+            var buildVersion = config["buildVersion"];
+            if (string.IsNullOrWhiteSpace(buildVersion))
+            {
+                buildVersion = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            }
+
+            // Store the build version for templates to access
+            SiteConfig.BuildVersion = buildVersion;
+            
+            Console.WriteLine($"Using build version for cache busting: {buildVersion}");
         }
 
         private IEnumerable<MenuNode> PrepareMenu (string areapath, IEnumerable<ContentNode> nodes)
