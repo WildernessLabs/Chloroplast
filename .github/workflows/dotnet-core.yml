@@ -34,6 +34,11 @@ jobs:
       run: dotnet build --configuration Release --no-restore toolsrc
     - name: Test
       run: dotnet test --no-restore --verbosity normal toolsrc
+    - name: Verify tool by building docs
+      run: |
+        cd docs
+        dotnet ../toolsrc/Chloroplast.Tool/bin/Release/net8.0/Chloroplast.Tool.dll build
+        echo "Documentation build completed successfully"
     - name: Pack Core
       run: dotnet pack toolsrc/Chloroplast.Core/ --configuration Release --no-restore -p:Version=${{ steps.version.outputs.package_version }}
     - name: Pack Tool
