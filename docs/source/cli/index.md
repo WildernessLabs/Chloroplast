@@ -44,6 +44,7 @@ chloroplast build --root path/to/SiteConfig/ --out path/to/out
 - `root`: the path to the directory that contains a `SiteConfig.yml` file
 - `out`: the path to the directory where the resulting HTML will be output.
 - `normalizePaths`: defaults to `true`, which normalizes all paths to lower case. Set this to false for output paths to match the source casing.
+- `errorLogPath`: optional path to write detailed error information to a log file
 - `buildVersion`: optional version string to append to CSS and JavaScript references for cache busting. If not provided, a timestamp in the format `yyyyMMddHHmmss` is automatically generated.
 
 The parameters above will default to the current working directory for the root path, and an `out/` directory in that same path if both parameters are omitted. 
@@ -51,6 +52,57 @@ The parameters above will default to the current working directory for the root 
 The build command will render all `index.md` files into corresponding `index.html` files, and copy everything else to the same corresponding location (images, styles, etc).
 
 Additionally, the build command will automatically generate sitemap XML files if a `baseUrl` is configured in your `SiteConfig.yml`. This helps with SEO and search engine indexing.
+
+### Error Handling
+
+The build command provides comprehensive error handling to help diagnose issues without overwhelming the console output:
+
+- **Console Output**: Clean, concise error messages showing the essential information needed to fix problems
+- **Error Log File**: Detailed error information including full stack traces and generated source code
+
+#### Configuring Error Logging
+
+You can configure error logging in two ways:
+
+**1. Command Line Parameter:**
+```bash
+chloroplast build --errorLogPath /path/to/error-log.txt
+```
+
+**2. SiteConfig.yml Configuration:**
+```yaml
+# Error logging configuration
+errorLogPath: logs/build-errors.log
+```
+
+#### Error Log Benefits
+
+- **Console stays readable**: Only essential error information is shown in the terminal
+- **Complete debugging info**: Full stack traces, generated source code, and detailed exception information are written to the log file
+- **Multiple error collection**: All errors encountered during the build are collected and displayed together
+- **Timestamp tracking**: Each error includes timestamp information for troubleshooting
+
+#### Example Error Output
+
+**Console Output:**
+```
+=== BUILD ERRORS ===
+Found 1 error(s) during build:
+
+[20:17:21] Error in 'Template initialization': Failed to initialize content renderer
+    Template compilation failed:
+    Error(s):
+    - Template.cs(4,26): error CS1010: Newline in constant
+    - Template.cs(4,61): error CS1002: ; expected
+
+Error details written to: /tmp/build-errors.log
+```
+
+**Error Log File Contents:**
+- Complete exception stack traces
+- Full generated source code for template compilation errors
+- Detailed file paths and processing context
+- Timestamps for all errors encountered
 
 ## `host` sub command
 

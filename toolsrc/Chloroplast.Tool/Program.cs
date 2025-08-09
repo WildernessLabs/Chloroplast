@@ -76,11 +76,20 @@ namespace Chloroplast.Tool
                 Console.WriteLine ($"Running {command.Name} command");
                 var childTasks = await command.RunAsync (config);
                 Task.WaitAll(childTasks.ToArray());
-                if (childTasks.Any(t=>t.Status == TaskStatus.Faulted))
+                
+                // Check for any unhandled faulted tasks (but be less verbose since we now collect errors)
+                var faultedTasks = childTasks.Where(t => t.Status == TaskStatus.Faulted).ToArray();
+                if (faultedTasks.Any())
                 {
-                    foreach(var t in childTasks.Select(ct => ct.Exception))
+                    Console.Error.WriteLine($"Build completed with {faultedTasks.Length} task failure(s).");
+                    
+                    // Only show detailed task exceptions if it's not a build command (which handles its own errors)
+                    if (!(command is FullBuildCommand))
                     {
-                        Console.WriteLine (t);
+                        foreach(var t in faultedTasks.Select(ct => ct.Exception))
+                        {
+                            Console.Error.WriteLine (t);
+                        }
                     }
                 }
                 stopwatch.Stop ();
