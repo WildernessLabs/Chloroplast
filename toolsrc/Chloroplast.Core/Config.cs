@@ -9,6 +9,7 @@ namespace Chloroplast.Core
         public static IConfigurationRoot Instance { get; set; }
         public static string BuildVersion { get; set; }
         public static bool CacheBustingEnabled => Instance?.GetBool("cacheBusting:enabled", defaultValue: true) ?? true;
+    static bool basePathConflictWarned = false;
 
         /// <summary>
         /// Normalized base path for hosting under a sub-path (e.g., GitHub Pages).
@@ -24,8 +25,52 @@ namespace Chloroplast.Core
             get
             {
                 var raw = Instance?["basePath"]; // may be null
+                var baseUrl = Instance?["baseUrl"]; // sitemap/base url
+
+                // If both are present, warn once and prefer explicit basePath value
+                if (!string.IsNullOrWhiteSpace(raw) && !string.IsNullOrWhiteSpace(baseUrl) && !basePathConflictWarned)
+                {
+                    try
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("Warning: Both 'basePath' and 'baseUrl' are set. Using 'basePath' and ignoring any path component from 'baseUrl'.");
+                    }
+                    catch { /* ignore console color issues in some hosts */ }
+                    finally
+                    {
+                        try { Console.ResetColor(); } catch { }
+                        basePathConflictWarned = true;
+                    }
+                }
+
                 if (string.IsNullOrWhiteSpace(raw))
+                {
+                    // derive from baseUrl if present
+                    if (!string.IsNullOrWhiteSpace(baseUrl))
+                    {
+                        if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+                        {
+                            var path = uri.AbsolutePath ?? string.Empty; // starts with '/'
+                            if (string.IsNullOrWhiteSpace(path) || path == "/")
+                                return string.Empty;
+
+                            // Trim trailing slash, but preserve leading
+                            if (path.Length > 1 && path.EndsWith("/"))
+                                path = path.TrimEnd('/');
+
+                            return path; // already starts with '/'
+                        }
+                        else
+                        {
+                            // If baseUrl is not absolute, try to parse path-like content conservatively
+                            var tentative = baseUrl.Trim();
+                            if (!tentative.StartsWith("/")) tentative = "/" + tentative;
+                            if (tentative.Length > 1 && tentative.EndsWith("/")) tentative = tentative.TrimEnd('/');
+                            return tentative == "/" ? string.Empty : tentative;
+                        }
+                    }
                     return string.Empty;
+                }
 
                 raw = raw.Trim();
 

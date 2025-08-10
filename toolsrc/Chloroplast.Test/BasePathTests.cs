@@ -36,6 +36,34 @@ namespace Chloroplast.Test
         }
 
         [Theory]
+        [InlineData("https://example.com", "")]          // no path component
+        [InlineData("https://example.com/", "")]         // root path
+        [InlineData("https://example.com/repo", "/repo")]
+        [InlineData("https://example.com/repo/", "/repo")]
+        [InlineData("https://example.com/owner/repo", "/owner/repo")]
+        public void BasePath_Derives_From_BaseUrl_When_Not_Specified(string baseUrl, string expected)
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["baseUrl"] = baseUrl
+            });
+
+            Assert.Equal(expected, SiteConfig.BasePath);
+        }
+
+        [Fact]
+        public void BasePath_Prefers_Explicit_When_Both_Set()
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["baseUrl"] = "https://example.com/owner/repo",
+                ["basePath"] = "/custom"
+            });
+
+            Assert.Equal("/custom", SiteConfig.BasePath);
+        }
+
+        [Theory]
         [InlineData("/assets/site.css", "/blah", "/blah/assets/site.css")]
         [InlineData("assets/site.css", "/blah", "/blah/assets/site.css")]
         [InlineData("/assets/site.css", "", "/assets/site.css")]
