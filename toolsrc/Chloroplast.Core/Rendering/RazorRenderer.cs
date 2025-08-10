@@ -30,8 +30,14 @@ namespace Chloroplast.Core.Rendering
         public async Task InitializeAsync (IConfigurationRoot config)
         {
             string rootPath = config["root"].NormalizePath ();
-            string templatePath = config["templates_folder"].NormalizePath ();
-            string fullTemplatePath = rootPath.CombinePath (templatePath);
+            var templateFolderSetting = config["templates_folder"];
+            if (string.IsNullOrWhiteSpace(templateFolderSetting))
+                templateFolderSetting = "templates";
+
+            // Rely on CombinePath/NormalizePath to handle absolute/relative + separator normalization
+            string fullTemplatePath = rootPath
+                .CombinePath(templateFolderSetting)
+                .NormalizePath();
 
             foreach (var razorPath in Directory.EnumerateFiles (fullTemplatePath, "*.cshtml", SearchOption.AllDirectories))
             {

@@ -18,24 +18,57 @@ namespace Chloroplast.Core.Extensions
             if (slashed.StartsWith ('~'))
                 slashed = slashed.Replace("~", Environment.GetFolderPath (Environment.SpecialFolder.UserProfile));
 
-            // Ensure relative paths are resolved against the current working directory
+            // Resolve relative paths against the current working directory, and normalize dot-segments
             var fullPath = Path.IsPathRooted(slashed) ? slashed : Path.GetFullPath(slashed);
+            try
+            {
+                // Path.GetFullPath also collapses ../ and ./ segments; if input was rooted it stays as-is
+                if (Path.IsPathRooted(slashed))
+                    fullPath = Path.GetFullPath(slashed);
+            }
+            catch { /* if invalid path, keep as-is to fail later in a predictable place */ }
 
             return toLower ? fullPath.ToLower() : fullPath;
         }
 
         public static string RelativePath(this string value, string rootPath)
         {
-            var replaced = value.Normalize ().Replace (rootPath.Normalize (), string.Empty);
-            if (replaced.StartsWith (Path.DirectorySeparatorChar))
-                replaced = replaced.Substring (1);
+            return RelativePath(value, rootPath, toLower: false);
+        }
 
-            return replaced;
+        public static string RelativePath(this string value, string rootPath, bool toLower)
+        {
+            if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(rootPath))
+                return string.Empty;
+
+            // Normalize both paths to absolute to ensure consistent relative calculation
+            var fullValue = value.NormalizePath();
+            var fullRoot = rootPath.NormalizePath();
+
+            // Use framework helper to compute a relative path with platform separators
+            var rel = Path.GetRelativePath(fullRoot, fullValue);
+
+            // Normalize separators and trim any accidental leading separators
+            rel = rel.Replace(OtherDirectorySeparator, Path.DirectorySeparatorChar)
+                     .TrimStart(Path.DirectorySeparatorChar);
+
+            return toLower ? rel.ToLower() : rel;
         }
 
         public static string GetPathFileName(this string value)
         {
             return Path.GetFileName (value);
+        }
+
+        // Sanitize a relative path segment: normalize separators, trim leading separators, optional lowercase
+        public static string SanitizeRelativeSegment(this string value, bool toLower = false)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+            var s = value.Replace(OtherDirectorySeparator, Path.DirectorySeparatorChar)
+                         .TrimStart(Path.DirectorySeparatorChar);
+
+            return toLower ? s.ToLower() : s;
         }
 
         public static string CombinePath(this string value, params string[] paths)
@@ -64,9 +97,10 @@ namespace Chloroplast.Core.Extensions
                 combinedPaths = combinedPaths.TrimStart(Path.DirectorySeparatorChar);
             }
 
-            // Combine with the base value and return as-is to preserve relative/absolute semantics.
+            // Combine with the base value. Only normalize to absolute if the result is rooted;
+            // otherwise preserve relative semantics for callers that expect relative paths.
             var finalCombined = Path.Combine(value, combinedPaths);
-            return finalCombined;
+            return Path.IsPathRooted(finalCombined) ? finalCombined.NormalizePath() : finalCombined.Replace(OtherDirectorySeparator, Path.DirectorySeparatorChar);
         }
 
         /// <returns>The directory path</returns>

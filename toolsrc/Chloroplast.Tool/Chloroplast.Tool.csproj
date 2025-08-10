@@ -9,7 +9,7 @@
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <IsPackable>true</IsPackable>
 
-    <Version Condition="'$(Version)' == ''">0.9.0-dev</Version>
+  <Version Condition="'$(Version)' == ''">0.10.0-dev</Version>
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
     <PackageDescription>Markdown-based static site generator</PackageDescription>

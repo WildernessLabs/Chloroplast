@@ -31,6 +31,16 @@ namespace Chloroplast.Core
         /// <returns>List of generated sitemap file paths</returns>
         public IEnumerable<string> GenerateSitemaps(IEnumerable<ContentNode> contentNodes)
         {
+            // Ensure the output directory exists
+            try
+            {
+                OutputDirectory.EnsureDirectory();
+            }
+            catch
+            {
+                // If creating the directory fails, proceed and let file creation throw a detailed error
+            }
+
             var sitemapUrls = ExtractUrls(contentNodes).ToList();
             
             if (!sitemapUrls.Any())

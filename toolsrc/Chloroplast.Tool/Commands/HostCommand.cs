@@ -139,7 +139,8 @@ namespace Chloroplast.Tool.Commands
                         {
                             foreach (var areaConfig in areaConfigs.GetChildren ())
                             {
-                                var areaSource = areaConfig["source_folder"];
+                                // Treat leading separators as relative to the site root
+                                var areaSource = (areaConfig["source_folder"] ?? string.Empty).SanitizeRelativeSegment();
                                 this.areaSourcePaths.Add(areaSource);
                                 var areaSourcePath = this.rootPath.CombinePath (areaSource);
                                 Console.WriteLine ("watching: " + areaSourcePath);

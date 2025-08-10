@@ -28,11 +28,15 @@ namespace Chloroplast.Core.Content
             {
                 foreach (var fileConfig in fileConfigs.GetChildren ())
                 {
+                    // Trim any leading separators to ensure these are treated as relative to configured roots
+                    var sourceFile = (fileConfig["source_file"] ?? string.Empty).SanitizeRelativeSegment();
+                    var outputFolder = (fileConfig["output_folder"] ?? string.Empty).SanitizeRelativeSegment(normalizePaths);
+
                     var area = new IndividualContentArea
                     {
-                        SourcePath = rootDirectory.CombinePath (fileConfig["source_file"]),
-                        TargetPath = outDirectory.CombinePath (fileConfig["output_folder"].NormalizePath (toLower: normalizePaths)),
-                        RootRelativePath = fileConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths)
+                        SourcePath = rootDirectory.CombinePath(sourceFile),
+                        TargetPath = outDirectory.CombinePath(outputFolder),
+                        RootRelativePath = outputFolder.Replace ("index.html", "").NormalizePath (toLower: normalizePaths)
                     };
 
                     yield return area;
@@ -46,12 +50,14 @@ namespace Chloroplast.Core.Content
             {
                 foreach (var areaConfig in areaConfigs.GetChildren ())
                 {
+                    var sourceFolder = (areaConfig["source_folder"] ?? string.Empty).SanitizeRelativeSegment();
+                    var outputFolder = (areaConfig["output_folder"] ?? string.Empty).SanitizeRelativeSegment(normalizePaths);
+
                     var area = new GroupContentArea
                     {
-                        SourcePath = rootDirectory.CombinePath (areaConfig["source_folder"]),
-
-                        TargetPath = outDirectory.CombinePath (areaConfig["output_folder"].NormalizePath (toLower: normalizePaths)),
-                        RootRelativePath = areaConfig["output_folder"].Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
+                        SourcePath = rootDirectory.CombinePath(sourceFolder),
+                        TargetPath = outDirectory.CombinePath(outputFolder),
+                        RootRelativePath = outputFolder.Replace ("index.html", "").NormalizePath (toLower: normalizePaths),
                         NormalizePaths = normalizePaths,
                         AreaType = areaConfig["type"]
                     };
@@ -122,8 +128,8 @@ namespace Chloroplast.Core.Content
                             .OrderBy (p => p)
                             .Select (p =>
                               {
-                                  var relative = p.RelativePath (SourcePath);
-                                  var targetrelative = relative.NormalizePath (toLower: this.NormalizePaths);
+                                  var relative = p.RelativePath(SourcePath, this.NormalizePaths);
+                                  var targetrelative = relative;
 
                                   if (targetrelative.EndsWith (".md"))
                                       targetrelative = targetrelative.Substring (0, targetrelative.Length - 3) + ".html";
