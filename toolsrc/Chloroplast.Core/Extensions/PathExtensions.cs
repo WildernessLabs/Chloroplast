@@ -17,7 +17,10 @@ namespace Chloroplast.Core.Extensions
             if (slashed.StartsWith ('~'))
                 slashed = slashed.Replace("~", Environment.GetFolderPath (Environment.SpecialFolder.UserProfile));
 
-            return toLower ? slashed.ToLower() : slashed;
+            // Ensure relative paths are resolved against the current working directory
+            var fullPath = Path.IsPathRooted(slashed) ? slashed : Path.GetFullPath(slashed);
+
+            return toLower ? fullPath.ToLower() : fullPath;
         }
 
         public static string RelativePath(this string value, string rootPath)

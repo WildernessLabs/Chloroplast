@@ -11,7 +11,8 @@ namespace Chloroplast.Test
         public void NormalizesDirCharToPlatform ()
         {
             var mixedSlashPath = $"this{PathExtensions.OtherDirectorySeparator}path{Path.DirectorySeparatorChar}yes";
-            Assert.Equal ($"this{Path.DirectorySeparatorChar}path{Path.DirectorySeparatorChar}yes", mixedSlashPath.NormalizePath ());
+            var expected = Path.GetFullPath($"this{Path.DirectorySeparatorChar}path{Path.DirectorySeparatorChar}yes");
+            Assert.Equal (expected, mixedSlashPath.NormalizePath ());
         }
 
         [Fact]
