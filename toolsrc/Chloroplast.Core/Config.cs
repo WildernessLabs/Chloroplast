@@ -38,7 +38,11 @@ namespace Chloroplast.Core
                     catch { /* ignore console color issues in some hosts */ }
                     finally
                     {
-                        try { Console.ResetColor(); } catch { }
+                    catch (PlatformNotSupportedException) { /* ignore console color issues in some hosts */ }
+                    catch (System.IO.IOException) { /* ignore console color issues in some hosts */ }
+                    finally
+                    {
+                        try { Console.ResetColor(); } catch (PlatformNotSupportedException) { } catch (System.IO.IOException) { }
                         basePathConflictWarned = true;
                     }
                 }
