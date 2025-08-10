@@ -34,14 +34,13 @@ namespace Chloroplast.Core
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("Warning: Both 'basePath' and 'baseUrl' are set. Using 'basePath' and ignoring any path component from 'baseUrl'.");
+                        Console.ResetColor();
                     }
-                    catch { /* ignore console color issues in some hosts */ }
-                    finally
                     catch (PlatformNotSupportedException) { /* ignore console color issues in some hosts */ }
                     catch (System.IO.IOException) { /* ignore console color issues in some hosts */ }
+                    catch { /* ignore any other console issues */ }
                     finally
                     {
-                        try { Console.ResetColor(); } catch (PlatformNotSupportedException) { } catch (System.IO.IOException) { }
                         basePathConflictWarned = true;
                     }
                 }
