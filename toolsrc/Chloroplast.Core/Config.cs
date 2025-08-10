@@ -37,7 +37,6 @@ namespace Chloroplast.Core
                     }
                     catch { /* ignore console color issues in some hosts */ }
                     finally
-                    {
                     catch (PlatformNotSupportedException) { /* ignore console color issues in some hosts */ }
                     catch (System.IO.IOException) { /* ignore console color issues in some hosts */ }
                     finally
