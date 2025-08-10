@@ -30,6 +30,16 @@ namespace Chloroplast.Core.Rendering
             return $"{url}{separator}v={SiteConfig.BuildVersion}";
         }
 
+    /// <summary>
+    /// Prefixes a site-relative URL with the configured BasePath.
+    /// </summary>
+    protected string Href(string path) => SiteConfig.ApplyBasePath(path);
+
+    /// <summary>
+    /// Builds an asset URL with BasePath and optional cache-busting version.
+    /// </summary>
+    protected string Asset(string path) => WithVersion(SiteConfig.ApplyBasePath(path));
+
         protected Task<RawString> PartialAsync<K>(string templateName, K model)
         {
             return RazorRenderer.Instance.RenderTemplateContent (templateName, model);
