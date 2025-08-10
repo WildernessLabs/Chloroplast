@@ -41,5 +41,21 @@ namespace Chloroplast.Test
             var joined = "some".CombinePath ("\\path");
             Assert.Equal (Path.Combine ("some", "path"), joined);
         }
+
+        [Fact]
+        public void CombinePath_WithAbsoluteSecondPath_PreservesAbsolute()
+        {
+            var root = Path.GetTempPath();
+            var abs = Path.Combine(root, "sub", "file.txt");
+            var joined = "some".CombinePath(abs);
+            Assert.Equal(abs.NormalizePath(), joined.NormalizePath());
+        }
+
+        [Fact]
+        public void CombinePath_LeadingOtherSeparator_TreatedAsRelative()
+        {
+            var joined = "/home".CombinePath($"{PathExtensions.OtherDirectorySeparator}user", "docs");
+            Assert.Equal(Path.Combine("/home", "user", "docs").NormalizePath(), joined.NormalizePath());
+        }
     }
 }
