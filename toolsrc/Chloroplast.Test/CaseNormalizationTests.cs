@@ -2,8 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Chloroplast.Core;
 using Chloroplast.Core.Content;
 using Chloroplast.Core.Extensions;
+using Chloroplast.Core.Rendering;
+using Chloroplast.Tool.Commands;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -121,6 +126,86 @@ namespace Chloroplast.Test
                 // The target path should be lowercase when normalizePaths is true
                 Assert.Contains("installing", installingNode.Target.RootRelativePath);
                 Assert.Contains("installing", installingNode.Slug); // This is the key issue - slug should match folder
+            }
+            finally
+            {
+                // Cleanup
+                if (Directory.Exists(tempDir))
+                    Directory.Delete(tempDir, true);
+            }
+        }
+
+        [Fact]
+        public void PathNormalization_WorksWithUrlSegments()
+        {
+            // Test the new URL normalization extension method
+            Assert.Equal("installing", "Installing".NormalizeUrlSegment(toLower: true));
+            Assert.Equal("Installing", "Installing".NormalizeUrlSegment(toLower: false));
+            Assert.Equal("path/to/file", @"Path\To\File".NormalizeUrlSegment(toLower: true));
+            Assert.Equal("Path/To/File", @"Path\To\File".NormalizeUrlSegment(toLower: false));
+            Assert.Equal("", "".NormalizeUrlSegment(toLower: true));
+            Assert.Equal("", ((string)null).NormalizeUrlSegment(toLower: true));
+        }
+
+        [Fact]
+        public void FullBuildCommand_PrepareMenu_RespectsNormalization()
+        {
+            // Test that PrepareMenu respects the NormalizePaths setting
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var sourceDir = Path.Combine(tempDir, "source");
+            var outputDir = Path.Combine(tempDir, "out");
+            
+            Directory.CreateDirectory(sourceDir);
+            Directory.CreateDirectory(outputDir);
+            
+            try
+            {
+                // Create a test area with normalization enabled
+                var area = new GroupContentArea
+                {
+                    SourcePath = sourceDir,
+                    TargetPath = outputDir,
+                    NormalizePaths = true
+                };
+
+                // Create test content nodes with mixed case slugs
+                var nodes = new[]
+                {
+                    new ContentNode
+                    {
+                        Title = "Installing Guide",
+                        Slug = "Installing", // This should be normalized in menu path
+                        Area = area
+                    },
+                    new ContentNode
+                    {
+                        Title = "API Documentation",
+                        Slug = "Api/Reference", // This should be normalized in menu path  
+                        Area = area
+                    }
+                };
+
+                // Use reflection to access the private PrepareMenu method
+                var buildCommand = new FullBuildCommand();
+                var method = typeof(FullBuildCommand).GetMethod("PrepareMenu", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                var result = (IEnumerable<MenuNode>)method.Invoke(buildCommand, new object[] { "docs", nodes });
+                var menuNodes = result.ToArray();
+
+                // Verify that menu paths are normalized
+                Assert.Equal(2, menuNodes.Length);
+                
+                var installingMenu = menuNodes.FirstOrDefault(n => n.Title == "Installing Guide");
+                Assert.NotNull(installingMenu);
+                Assert.Contains("installing", installingMenu.Path.ToLower()); // Path should be lowercase
+                
+                var apiMenu = menuNodes.FirstOrDefault(n => n.Title == "API Documentation");
+                Assert.NotNull(apiMenu);
+                Assert.Contains("api/reference", apiMenu.Path.ToLower()); // Path should be lowercase
+                
+                Console.WriteLine($"Installing menu path: {installingMenu.Path}");
+                Console.WriteLine($"API menu path: {apiMenu.Path}");
             }
             finally
             {

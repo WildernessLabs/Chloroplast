@@ -71,6 +71,19 @@ namespace Chloroplast.Core.Extensions
             return toLower ? s.ToLower() : s;
         }
 
+        // Normalize a URL path segment for web links (always use forward slashes, optional lowercase)
+        public static string NormalizeUrlSegment(this string value, bool toLower = false)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+            // Replace all directory separators with forward slashes for URLs
+            var normalized = value.Replace(Path.DirectorySeparatorChar, '/')
+                                  .Replace('\\', '/') // Ensure backslashes are converted
+                                  .TrimStart('/');
+
+            return toLower ? normalized.ToLower() : normalized;
+        }
+
         public static string CombinePath(this string value, params string[] paths)
         {
             if (paths == null || paths.Length == 0)

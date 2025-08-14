@@ -113,25 +113,54 @@ namespace Chloroplast.Core.Rendering
             }
             parsed.Headers = headers != null ? headers.ToArray() : new Header[0];
 
-            // Apply BasePath to root-relative links if BasePath is configured
-            if (!string.IsNullOrEmpty(SiteConfig.BasePath))
+            // Apply BasePath and path normalization to root-relative links
+            var linkNodes = doc.DocumentNode.SelectNodes("//a[@href]");
+            if (linkNodes != null)
             {
-                var linkNodes = doc.DocumentNode.SelectNodes("//a[@href]");
-                if (linkNodes != null)
+                // Check if we should normalize paths based on the content area settings
+                bool shouldNormalizePaths = node.Area is GroupContentArea groupArea ? groupArea.NormalizePaths : false;
+
+                foreach (var linkNode in linkNodes)
                 {
-                    foreach (var linkNode in linkNodes)
+                    var href = linkNode.GetAttributeValue("href", "");
+                    
+                    // Only process root-relative links (starting with /)
+                    // Skip absolute URLs, fragments, and relative paths
+                    if (!string.IsNullOrEmpty(href) && 
+                        href.StartsWith("/") && 
+                        !href.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                        !href.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+                        !href.StartsWith("#"))
                     {
-                        var href = linkNode.GetAttributeValue("href", "");
-                        
-                        // Only process root-relative links (starting with /)
-                        // Skip absolute URLs, fragments, and relative paths
-                        if (!string.IsNullOrEmpty(href) && 
-                            href.StartsWith("/") && 
-                            !href.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-                            !href.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
-                            !href.StartsWith("#"))
+                        var updatedHref = href;
+
+                        // Apply path normalization if enabled
+                        if (shouldNormalizePaths)
                         {
-                            var updatedHref = SiteConfig.ApplyBasePath(href);
+                            // Normalize the path component (remove basePath temporarily if present, normalize, then reapply)
+                            var pathToNormalize = href;
+                            if (!string.IsNullOrEmpty(SiteConfig.BasePath) && href.StartsWith(SiteConfig.BasePath))
+                            {
+                                pathToNormalize = href.Substring(SiteConfig.BasePath.Length);
+                            }
+                            
+                            var normalizedPath = pathToNormalize.NormalizeUrlSegment(toLower: true);
+                            if (!normalizedPath.StartsWith("/"))
+                            {
+                                normalizedPath = "/" + normalizedPath;
+                            }
+
+                            updatedHref = normalizedPath;
+                        }
+
+                        // Apply BasePath to root-relative links if BasePath is configured
+                        if (!string.IsNullOrEmpty(SiteConfig.BasePath))
+                        {
+                            updatedHref = SiteConfig.ApplyBasePath(updatedHref);
+                        }
+
+                        if (updatedHref != href)
+                        {
                             linkNode.SetAttributeValue("href", updatedHref);
                         }
                     }
