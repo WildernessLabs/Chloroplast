@@ -110,9 +110,36 @@ namespace Chloroplast.Core.Rendering
                     anchor.Attributes.Add ("name", header.Slug);
                     n.ParentNode.InsertBefore (anchor, n);
                 }
-                parsed.Body = doc.DocumentNode.OuterHtml;
             }
             parsed.Headers = headers != null ? headers.ToArray() : new Header[0];
+
+            // Apply BasePath to root-relative links if BasePath is configured
+            if (!string.IsNullOrEmpty(SiteConfig.BasePath))
+            {
+                var linkNodes = doc.DocumentNode.SelectNodes("//a[@href]");
+                if (linkNodes != null)
+                {
+                    foreach (var linkNode in linkNodes)
+                    {
+                        var href = linkNode.GetAttributeValue("href", "");
+                        
+                        // Only process root-relative links (starting with /)
+                        // Skip absolute URLs, fragments, and relative paths
+                        if (!string.IsNullOrEmpty(href) && 
+                            href.StartsWith("/") && 
+                            !href.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                            !href.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
+                            !href.StartsWith("#"))
+                        {
+                            var updatedHref = SiteConfig.ApplyBasePath(href);
+                            linkNode.SetAttributeValue("href", updatedHref);
+                        }
+                    }
+                }
+            }
+
+            // Update the body with processed HTML
+            parsed.Body = doc.DocumentNode.OuterHtml;
 
             return parsed;
         }
