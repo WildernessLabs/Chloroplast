@@ -48,6 +48,24 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 </html>
 ```
 
+# Customizing Templates
+
+When designing custom templates for Chloroplast, focus on leveraging the available template methods and ensuring your templates handle the full range of Chloroplast features effectively.
+
+## Template Structure Reference
+
+For recommended template structure and patterns, refer to the included templates:
+
+- **SiteFrame.cshtml** - The main site chrome template that provides the overall page structure, navigation, and asset loading
+- **Default.cshtml** - The default content template that demonstrates content area layout and metadata handling
+
+These templates serve as the de-facto recommended structure and demonstrate best practices for:
+- Using `@Href()` for internal navigation links with BasePath handling
+- Using `@Asset()` for asset references with automatic cache busting
+- Handling content metadata with `@Model.GetMeta()`
+- Rendering content with `@Raw(Model.Body)`
+- Working with the `@Model.Headers` collection for table of contents
+
 # Template Properties and Methods
 
 Available to all templates are the following functions:
@@ -71,6 +89,40 @@ Available to all templates are the following functions:
 - `@await PartialAsync("Docs/area/menu.md")`
   - This overload of the `PartialAsync` method assumes you're rendering a markdown file.
   - The markdown file can define its own template (will default to `Default`), and will only render the contents of that specific template (ie. no `SiteFrame.cshtml`).
+
+## URL and Asset Methods
+
+For generating URLs and asset references in your templates:
+
+- `@Href("/path/to/page")`
+  - Prefixes a site-relative URL with the configured BasePath
+  - Use this for internal site navigation links
+  - Example: `<a href="@Href("/about")">About</a>`
+- `@Asset("/path/to/asset.css")`
+  - Builds an asset URL with BasePath and automatic cache-busting version
+  - Combines both BasePath application and version parameter addition
+  - **Important**: Do not manually append query parameters to Asset() results, as this will conflict with the automatic version parameter
+  - Example: `<link href="@Asset("/css/main.css")" rel="stylesheet" />`
+
+### URL Method Examples
+
+```html
+<!-- Navigation links using Href -->
+<nav>
+    <a href="@Href("/")">Home</a>
+    <a href="@Href("/docs")">Documentation</a>
+    <a href="@Href("/about")">About</a>
+</nav>
+
+<!-- Asset references using Asset (preferred for CSS/JS) -->
+<link href="@Asset("/css/main.css")" rel="stylesheet" />
+<script src="@Asset("/js/app.js")"></script>
+
+<!-- Manual approach using Href + WithVersion for more control -->
+<link href="@WithVersion(Href("/css/main.css"))" rel="stylesheet" />
+```
+
+**⚠️ Cache Busting Conflict Warning**: When using `Asset()`, do not manually append query parameters or call `WithVersion()` on the result, as `Asset()` already includes cache busting. This would result in malformed URLs like `/basePath/assets/script/samples?v=123/mysample.js`.
 
 ## Cache Busting Methods
 
