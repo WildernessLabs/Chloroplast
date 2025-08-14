@@ -229,10 +229,14 @@ namespace Chloroplast.Tool.Commands
                         continue;
                 }
 
+                // Use the area's NormalizePaths setting to ensure menu paths match generated paths
+                bool shouldNormalizePaths = node.Area is GroupContentArea groupArea ? groupArea.NormalizePaths : false;
+                string menuPath = node.Slug.NormalizeUrlSegment(shouldNormalizePaths);
+                
                 var menu = new MenuNode
                 {
                     Title = title,
-                    Path = "/" + areapath.GetPathFileName().CombinePath(node.Slug),
+                    Path = "/" + areapath.GetPathFileName().CombinePath(menuPath).NormalizeUrlSegment(shouldNormalizePaths),
                     Items = PrepareMenu (areapath, node.Children)
                 };
 

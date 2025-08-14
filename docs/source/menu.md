@@ -2,7 +2,7 @@
 template: menu
 navTree:
   - title: Installing
-    path: Installing/
+    path: installing/
   - title: Command Line
     path: cli/
   - title: Templates
