@@ -39,6 +39,11 @@ jobs:
         cd docs
         dotnet ../toolsrc/Chloroplast.Tool/bin/Release/net8.0/Chloroplast.Tool.dll build
         echo "Documentation build completed successfully"
+    - name: Upload Documentation Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: docs/out
     - name: Pack Core
       run: dotnet pack toolsrc/Chloroplast.Core/ --configuration Release --no-restore -p:Version=${{ steps.version.outputs.package_version }}
     - name: Pack Tool
@@ -64,3 +69,34 @@ jobs:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       run: dotnet nuget push toolsrc/Chloroplast.Tool/nupkg/*.nupkg --source "nuget.org" --api-key $NUGET_API_KEY --skip-duplicate
 
+  deploy-docs:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    
+    permissions:
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    steps:
+    - name: Download Documentation Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: documentation
+        path: ./docs-output
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./docs-output
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
