@@ -50,95 +50,21 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 
 # Customizing Templates
 
-When creating custom templates for Chloroplast, consider the following design elements and structure:
+When designing custom templates for Chloroplast, focus on leveraging the available template methods and ensuring your templates handle the full range of Chloroplast features effectively.
 
-## Essential Template Elements
+## Template Structure Reference
 
-Your templates should typically include these key elements:
+For recommended template structure and patterns, refer to the included templates:
 
-### Site Structure (SiteFrame.cshtml)
-- **HTML document structure**: `<html>`, `<head>`, `<body>` tags
-- **Meta tags**: Including title, viewport, and SEO metadata
-- **Asset references**: CSS stylesheets and JavaScript files
-- **Navigation**: Main site navigation menu
-- **Content area**: Where `@Raw(Model.Body)` will be rendered
-- **Footer**: Site footer with links and information
+- **SiteFrame.cshtml** - The main site chrome template that provides the overall page structure, navigation, and asset loading
+- **Default.cshtml** - The default content template that demonstrates content area layout and metadata handling
 
-### Navigation and Menus
-- **Main navigation**: Primary site navigation, often using `@Href()` for internal links
-- **Breadcrumbs**: For hierarchical navigation using `@Model.Headers` or custom logic
-- **Side navigation**: For documentation or category-based sites
-- **Table of contents**: Auto-generated from `@Model.Headers` collection
-
-### Content Templates (Default.cshtml, etc.)
-- **Article structure**: Headers, content body, metadata display
-- **Code syntax highlighting**: For technical documentation
-- **Image and media handling**: Responsive image containers
-- **Interactive elements**: Search, filtering, or dynamic content
-
-## Template Structure Example
-
-Here's a complete example showing recommended structure:
-
-```html
-<!-- SiteFrame.cshtml -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@Model.GetMeta("Title") - My Site</title>
-    <link href="@Asset("/css/main.css")" rel="stylesheet" />
-</head>
-<body>
-    <nav class="main-nav">
-        <a href="@Href("/")">Home</a>
-        <a href="@Href("/docs")">Docs</a>
-        <a href="@Href("/about")">About</a>
-    </nav>
-    
-    <main class="content">
-        @Raw(Model.Body)
-    </main>
-    
-    <footer>
-        <p>&copy; 2024 My Site. Built with Chloroplast.</p>
-    </footer>
-    
-    <script src="@Asset("/js/app.js")"></script>
-</body>
-</html>
-```
-
-```html
-<!-- Default.cshtml (content template) -->
-<article>
-    <header>
-        <h1>@Model.GetMeta("Title")</h1>
-        @if (Model.GetMeta("author") != null)
-        {
-            <p class="author">By @Model.GetMeta("author")</p>
-        }
-    </header>
-    
-    @if (Model.Headers.Any())
-    {
-        <nav class="table-of-contents">
-            <h2>Contents</h2>
-            <ul>
-                @foreach (var header in Model.Headers)
-                {
-                    <li><a href="#@header.Slug">@header.Value</a></li>
-                }
-            </ul>
-        </nav>
-    }
-    
-    <div class="content-body">
-        @Raw(Model.Body)
-    </div>
-</article>
-```
+These templates serve as the de-facto recommended structure and demonstrate best practices for:
+- Using `@Href()` for internal navigation links with BasePath handling
+- Using `@Asset()` for asset references with automatic cache busting
+- Handling content metadata with `@Model.GetMeta()`
+- Rendering content with `@Raw(Model.Body)`
+- Working with the `@Model.Headers` collection for table of contents
 
 # Template Properties and Methods
 
@@ -196,7 +122,7 @@ For generating URLs and asset references in your templates:
 <link href="@WithVersion(Href("/css/main.css"))" rel="stylesheet" />
 ```
 
-**⚠️ Cache Busting Conflict Warning**: When using `Asset()`, do not manually append query parameters or call `WithVersion()` on the result, as `Asset()` already includes cache busting. This would result in malformed URLs like `/css/main.css?v=123&custom=param&v=123`.
+**⚠️ Cache Busting Conflict Warning**: When using `Asset()`, do not manually append query parameters or call `WithVersion()` on the result, as `Asset()` already includes cache busting. This would result in malformed URLs like `/basePath/assets/script/samples?v=123/mysample.js`.
 
 ## Cache Busting Methods
 
