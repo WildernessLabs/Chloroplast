@@ -10,11 +10,11 @@
         var children = section.GetChildren();
         if (children.Any())
         {
-        <ul class="nav nav-pills flex-column mb-auto">
+        <ul class="nav">
             @foreach(var item in children)
             {
                 <li class="nav-item">
-                    <a href="@Href("/" + item["path"])" class="nav-link link-light">@item["title"]</a>
+                    <a href="@Href("/" + item["path"])" class="nav-link">@item["title"]</a>
                     @if (item.ContainsKey("items"))
                     {
                         @RenderNodes(item.GetSection("items"))
@@ -27,6 +27,6 @@
     }
 }
 
-<div class="col-sm bg-dark text-white" id="leftnav">
+<div id="leftnav">
     @RenderNodes(Model.Metadata.GetSection ("navTree"))
 </div>
