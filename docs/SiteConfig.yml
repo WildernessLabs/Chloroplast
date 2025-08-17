@@ -1,5 +1,5 @@
 ﻿---
-# Site configuration file sample for chloroplast
+# Site configuration file sample for chloroplast with localization support
 
 # site basics
 title: Chloroplast Docs
@@ -10,6 +10,14 @@ description: >-
 # base URL for sitemap generation and GitHub Pages deployment
 baseUrl: https://wildernesslabs.github.io/Chloroplast/
 basePath: /Chloroplast
+
+# localization configuration
+defaultLocale: en
+supportedLocales:
+  - en
+  - es
+  - fr
+  - de
 
 # cache busting configuration
 cacheBusting:

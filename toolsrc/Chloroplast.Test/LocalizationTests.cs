@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Chloroplast.Core;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -218,6 +219,53 @@ namespace Chloroplast.Test
             Assert.Contains("(fr)", result);
             Assert.Contains("test-slug", result);
             Assert.Contains("Test Title", result);
+        }
+        
+        [Theory]
+        [InlineData("en", "🇺🇸")]
+        [InlineData("es", "🇪🇸")]
+        [InlineData("fr", "🇫🇷")]
+        [InlineData("de", "🇩🇪")]
+        [InlineData("unknown", "🌐")]
+        public void GetCountryFlag_ReturnsCorrectFlag(string locale, string expectedFlag)
+        {
+            // Arrange
+            var template = new TestTemplate();
+
+            // Act
+            var result = template.TestGetCountryFlag(locale);
+
+            // Assert
+            Assert.Equal(expectedFlag, result);
+        }
+        
+        [Theory]
+        [InlineData("en", "English")]
+        [InlineData("es", "Español")]
+        [InlineData("fr", "Français")]
+        [InlineData("de", "Deutsch")]
+        [InlineData("unknown", "UNKNOWN")]
+        public void GetLocaleDisplayName_ReturnsCorrectName(string locale, string expectedName)
+        {
+            // Arrange
+            var template = new TestTemplate();
+
+            // Act
+            var result = template.TestGetLocaleDisplayName(locale);
+
+            // Assert
+            Assert.Equal(expectedName, result);
+        }
+        
+        private class TestTemplate : Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+        {
+            public string TestGetCountryFlag(string locale) => GetCountryFlag(locale);
+            public string TestGetLocaleDisplayName(string locale) => GetLocaleDisplayName(locale);
+            
+            public override Task ExecuteAsync()
+            {
+                return Task.CompletedTask;
+            }
         }
     }
 }

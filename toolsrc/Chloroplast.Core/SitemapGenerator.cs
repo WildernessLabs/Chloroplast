@@ -92,8 +92,32 @@ namespace Chloroplast.Core
                         yield return new SitemapUrl 
                         { 
                             Location = url,
-                            LastModified = node.Source.LastUpdated
+                            LastModified = node.Source.LastUpdated,
+                            Locale = node.Locale,
+                            AlternateUrls = GetAlternateUrls(node)
                         };
+                    }
+                }
+                
+                // Also include all translations
+                if (node.Translations != null)
+                {
+                    foreach (var translation in node.Translations)
+                    {
+                        if (ShouldIncludeInSitemap(translation))
+                        {
+                            var translationUrl = BuildUrlFromNode(translation);
+                            if (!string.IsNullOrEmpty(translationUrl))
+                            {
+                                yield return new SitemapUrl 
+                                { 
+                                    Location = translationUrl,
+                                    LastModified = translation.Source.LastUpdated,
+                                    Locale = translation.Locale,
+                                    AlternateUrls = GetAlternateUrls(translation)
+                                };
+                            }
+                        }
                     }
                 }
             }
@@ -115,7 +139,67 @@ namespace Chloroplast.Core
                 relativePath = relativePath.Substring(1);
             }
 
-            return $"{BaseUrl}/{relativePath}";
+            // Apply locale-aware URL generation
+            var localePath = SiteConfig.ApplyLocalePath("/" + relativePath, node.Locale);
+            
+            // Remove the basePath since we'll add the full baseUrl
+            if (!string.IsNullOrEmpty(SiteConfig.BasePath) && localePath.StartsWith(SiteConfig.BasePath))
+            {
+                localePath = localePath.Substring(SiteConfig.BasePath.Length);
+            }
+            
+            // Ensure no leading slash for concatenation with BaseUrl
+            if (localePath.StartsWith("/"))
+            {
+                localePath = localePath.Substring(1);
+            }
+
+            return $"{BaseUrl}/{localePath}";
+        }
+        
+        private List<AlternateUrl> GetAlternateUrls(ContentNode node)
+        {
+            var alternates = new List<AlternateUrl>();
+            
+            // Add the default language version
+            if (node.Locale != SiteConfig.DefaultLocale)
+            {
+                // Find the default language version
+                ContentNode defaultVersion = null;
+                if (node.Translations != null)
+                {
+                    defaultVersion = node.Translations.FirstOrDefault(t => t.Locale == SiteConfig.DefaultLocale);
+                }
+                
+                if (defaultVersion != null)
+                {
+                    var defaultUrl = BuildUrlFromNode(defaultVersion);
+                    alternates.Add(new AlternateUrl 
+                    { 
+                        Href = defaultUrl, 
+                        HrefLang = SiteConfig.DefaultLocale 
+                    });
+                }
+            }
+            
+            // Add all translation versions
+            if (node.Translations != null)
+            {
+                foreach (var translation in node.Translations)
+                {
+                    if (translation.Locale != node.Locale) // Don't include self
+                    {
+                        var translationUrl = BuildUrlFromNode(translation);
+                        alternates.Add(new AlternateUrl 
+                        { 
+                            Href = translationUrl, 
+                            HrefLang = translation.Locale 
+                        });
+                    }
+                }
+            }
+            
+            return alternates;
         }
 
         private List<List<SitemapUrl>> ChunkUrls(List<SitemapUrl> urls, int chunkSize)
@@ -140,6 +224,7 @@ namespace Chloroplast.Core
             {
                 writer.WriteStartDocument();
                 writer.WriteStartElement("urlset", SitemapNamespace);
+                writer.WriteAttributeString("xmlns", "xhtml", null, "http://www.w3.org/1999/xhtml");
 
                 foreach (var url in urls)
                 {
@@ -150,6 +235,19 @@ namespace Chloroplast.Core
                     if (url.LastModified.HasValue)
                     {
                         writer.WriteElementString("lastmod", url.LastModified.Value.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                    }
+                    
+                    // Add alternate language links
+                    if (url.AlternateUrls != null && url.AlternateUrls.Any())
+                    {
+                        foreach (var alternate in url.AlternateUrls)
+                        {
+                            writer.WriteStartElement("xhtml", "link", "http://www.w3.org/1999/xhtml");
+                            writer.WriteAttributeString("rel", "alternate");
+                            writer.WriteAttributeString("hreflang", alternate.HrefLang);
+                            writer.WriteAttributeString("href", alternate.Href);
+                            writer.WriteEndElement();
+                        }
                     }
                     
                     writer.WriteEndElement(); // url
@@ -197,5 +295,13 @@ namespace Chloroplast.Core
     {
         public string Location { get; set; }
         public DateTime? LastModified { get; set; }
+        public string Locale { get; set; }
+        public List<AlternateUrl> AlternateUrls { get; set; } = new List<AlternateUrl>();
+    }
+    
+    public class AlternateUrl
+    {
+        public string Href { get; set; }
+        public string HrefLang { get; set; }
     }
 }
