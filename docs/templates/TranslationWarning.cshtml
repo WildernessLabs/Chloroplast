@@ -1,0 +1,44 @@
+@using System.Linq
+@using Chloroplast.Core
+@{
+    var currentLocale = Model?.Node?.Locale ?? "en";
+    var defaultLocale = "en"; // We can't access SiteConfig from partial templates
+    var hasTranslation = false;
+    if (Model?.Node?.Translations != null)
+    {
+        foreach (var translation in Model.Node.Translations)
+        {
+            if (translation.Locale == currentLocale)
+            {
+                hasTranslation = true;
+                break;
+            }
+        }
+    }
+    var isMachineTranslated = Model?.Node?.IsMachineTranslated ?? false;
+    
+    // Simple display name lookup for the basic supported locales
+    string GetDisplayName(string locale) => locale?.ToLower() switch
+    {
+        "en" => "English",
+        "es" => "Español",
+        _ => locale?.ToUpper() ?? "Unknown"
+    };
+}
+
+@if (!hasTranslation && currentLocale != defaultLocale)
+{
+    <div class="translation-warning" role="alert">
+        <strong>⚠️ Translation Notice:</strong> 
+        This content is not available in @GetDisplayName(currentLocale). 
+        You are viewing the @GetDisplayName(defaultLocale) version.
+    </div>
+}
+
+@if (isMachineTranslated)
+{
+    <div class="machine-translation-warning" role="alert">
+        <strong>🤖 Machine Translation:</strong> 
+        This content was automatically translated and may contain errors.
+    </div>
+}

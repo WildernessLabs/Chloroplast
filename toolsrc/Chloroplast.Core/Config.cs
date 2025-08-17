@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Chloroplast.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 
@@ -9,6 +10,27 @@ namespace Chloroplast.Core
         public static IConfigurationRoot Instance { get; set; }
         public static string BuildVersion { get; set; }
         public static bool CacheBustingEnabled => Instance?.GetBool("cacheBusting:enabled", defaultValue: true) ?? true;
+        
+        /// <summary>
+        /// Gets the default locale for the site content. Defaults to "en" if not specified.
+        /// </summary>
+        public static string DefaultLocale => Instance?["defaultLocale"] ?? "en";
+        
+        /// <summary>
+        /// Gets the array of supported locales from configuration.
+        /// </summary>
+        public static string[] SupportedLocales
+        {
+            get
+            {
+                var section = Instance?.GetSection("supportedLocales");
+                if (section == null || !section.Exists())
+                    return new[] { DefaultLocale };
+                    
+                var locales = section.GetChildren().Select(x => x.Value).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+                return locales.Length > 0 ? locales : new[] { DefaultLocale };
+            }
+        }
     static bool basePathConflictWarned = false;
 
         /// <summary>
@@ -120,6 +142,43 @@ namespace Chloroplast.Core
 
             // BasePath does not end with '/', normalizedPath starts with '/'
             return BasePath + normalizedPath;
+        }
+        
+        /// <summary>
+        /// Applies locale prefix and BasePath to a site-relative URL path for localized content.
+        /// Default locale content uses the standard path without locale prefix.
+        /// </summary>
+        /// <param name="path">A site-relative path, e.g., "/docs/guide" or "docs/guide".</param>
+        /// <param name="locale">The locale code, e.g., "en", "es", "fr".</param>
+        /// <returns>Localized path with BasePath applied.</returns>
+        public static string ApplyLocalePath(string path, string locale)
+        {
+            if (string.IsNullOrWhiteSpace(locale) || locale == DefaultLocale)
+                return ApplyBasePath(path);
+                
+            if (string.IsNullOrWhiteSpace(path))
+                return ApplyBasePath($"/{locale}");
+
+            // Absolute URL? leave it
+            if (path.StartsWith("http://", System.StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("https://", System.StringComparison.OrdinalIgnoreCase))
+                return path;
+
+            // Fragment-only? leave it
+            if (path.StartsWith("#"))
+                return path;
+
+            // Ensure leading slash on the provided path
+            var normalizedPath = path.StartsWith("/") ? path : "/" + path;
+            
+            // Apply locale prefix
+            var localizedPath = $"/{locale}{normalizedPath}";
+            
+            if (string.IsNullOrEmpty(BasePath))
+                return localizedPath;
+
+            // BasePath does not end with '/', localizedPath starts with '/'
+            return BasePath + localizedPath;
         }
     }
 }

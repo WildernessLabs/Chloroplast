@@ -86,6 +86,15 @@ namespace Chloroplast.Core.Rendering
 
             parsed.Body = markdown;
             parsed.Node.Title = yaml["title"] ?? yaml["Title"] ?? parsed.Node.Slug;
+            
+            // Check if content is machine translated
+            var machineTranslated = yaml["machineTranslated"] ?? yaml["machine_translated"] ?? yaml["MachineTranslated"];
+            if (!string.IsNullOrWhiteSpace(machineTranslated) && 
+                (machineTranslated.Equals("true", StringComparison.OrdinalIgnoreCase) || 
+                 machineTranslated.Equals("yes", StringComparison.OrdinalIgnoreCase)))
+            {
+                parsed.Node.IsMachineTranslated = true;
+            }
 
             // convert markdown to html
             MarkdownRenderer mdRenderer = new MarkdownRenderer ();

@@ -1,0 +1,110 @@
+# Locale configuration for flags and display names
+# This allows customers to express their locales/countries as they choose
+locales:
+  en:
+    flag: "🇺🇸"
+    displayName: "English"
+  es:
+    flag: "🇪🇸" 
+    displayName: "Español"
+  fr:
+    flag: "🇫🇷"
+    displayName: "Français"
+  de:
+    flag: "🇩🇪"
+    displayName: "Deutsch"
+  it:
+    flag: "🇮🇹"
+    displayName: "Italiano"
+  pt:
+    flag: "🇵🇹"
+    displayName: "Português"
+  ja:
+    flag: "🇯🇵"
+    displayName: "日本語"
+  ko:
+    flag: "🇰🇷"
+    displayName: "한국어"
+  zh:
+    flag: "🇨🇳"
+    displayName: "中文"
+  ru:
+    flag: "🇷🇺"
+    displayName: "Русский"
+  ar:
+    flag: "🇸🇦"
+    displayName: "العربية"
+  hi:
+    flag: "🇮🇳"
+    displayName: "हिंदी"
+  nl:
+    flag: "🇳🇱"
+    displayName: "Nederlands"
+  sv:
+    flag: "🇸🇪"
+    displayName: "Svenska"
+  da:
+    flag: "🇩🇰"
+    displayName: "Dansk"
+  no:
+    flag: "🇳🇴"
+    displayName: "Norsk"
+  fi:
+    flag: "🇫🇮"
+    displayName: "Suomi"
+  pl:
+    flag: "🇵🇱"
+    displayName: "Polski"
+  tr:
+    flag: "🇹🇷"
+    displayName: "Türkçe"
+  cs:
+    flag: "🇨🇿"
+    displayName: "Čeština"
+  hu:
+    flag: "🇭🇺"
+    displayName: "Magyar"
+  ro:
+    flag: "🇷🇴"
+    displayName: "Română"
+  bg:
+    flag: "🇧🇬"
+    displayName: "Български"
+  hr:
+    flag: "🇭🇷"
+    displayName: "Hrvatski"
+  sk:
+    flag: "🇸🇰"
+    displayName: "Slovenčina"
+  sl:
+    flag: "🇸🇮"
+    displayName: "Slovenščina"
+  et:
+    flag: "🇪🇪"
+    displayName: "Eesti"
+  lv:
+    flag: "🇱🇻"
+    displayName: "Latviešu"
+  lt:
+    flag: "🇱🇹"
+    displayName: "Lietuvių"
+  mt:
+    flag: "🇲🇹"
+    displayName: "Malti"
+  cy:
+    flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+    displayName: "Cymraeg"
+  ga:
+    flag: "🇮🇪"
+    displayName: "Gaeilge"
+  eu:
+    flag: "🏴"
+    displayName: "Euskera"
+  ca:
+    flag: "🏴󠁥󠁳󠁣󠁴󠁿"
+    displayName: "Català"
+
+# Default values for unknown locales
+default:
+  flag: "🌐"
+  displayName: "Language"

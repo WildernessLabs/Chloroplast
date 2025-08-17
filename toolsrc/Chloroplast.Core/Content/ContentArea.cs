@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Chloroplast.Core.Extensions;
@@ -76,16 +77,55 @@ namespace Chloroplast.Core.Content
         {
             get
             {
+                var relativePath = this.SourcePath; // For individual files, use source path as relative
+                var locale = DetectLocaleFromPath(relativePath);
+                
                 return new[] {
                     new ContentNode
                     {
                         Slug = Path.GetDirectoryName (this.SourcePath),
                         Source = new DiskFile (this.SourcePath, this.SourcePath),
                         Target = new DiskFile (this.TargetPath, this.TargetPath),
-                        Area = this
+                        Area = this,
+                        Locale = locale
                     }
                 }.ToList();
             }
+        }
+        
+        /// <summary>
+        /// Detects the locale from a file path based on naming conventions.
+        /// Examples: guide.es.md -> "es", guide.md -> default locale
+        /// </summary>
+        private string DetectLocaleFromPath(string relativePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(relativePath);
+            var supportedLocales = SiteConfig.SupportedLocales;
+            
+            // Check if filename contains a locale code before the extension
+            // e.g., guide.es.md, index.fr.md
+            foreach (var locale in supportedLocales)
+            {
+                if (fileName.EndsWith($".{locale}", StringComparison.OrdinalIgnoreCase))
+                {
+                    return locale;
+                }
+            }
+            
+            // Check if the file is in a locale-specific directory
+            // e.g., /es/guide.md, /fr/getting-started.md
+            var pathParts = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (pathParts.Length > 0)
+            {
+                var firstDir = pathParts[0];
+                if (supportedLocales.Contains(firstDir, StringComparer.OrdinalIgnoreCase))
+                {
+                    return firstDir.ToLower();
+                }
+            }
+            
+            // Default to the configured default locale
+            return SiteConfig.DefaultLocale;
         }
     }
 
@@ -162,17 +202,25 @@ namespace Chloroplast.Core.Content
                                   }
 
                                   var targetFile = TargetPath.CombinePath (targetrelative);
+                                  
+                                  // Detect locale from filename (e.g., guide.es.md -> es, guide.md -> default)
+                                  var locale = DetectLocaleFromPath(relative);
+                                  
                                   var node = new ContentNode
                                   {
                                       Slug = Path.GetDirectoryName (relative),
                                       Source = new DiskFile (p, relative),
                                       Target = new DiskFile (targetFile, targetrelative),
                                       MenuPath = menuPath,
-                                      Area = this
+                                      Area = this,
+                                      Locale = locale
                                   };
 
                                   return node;
                               }).ToList ();
+                              
+                    // Group translations together
+                    GroupTranslations(nodes);
                 }
                 return nodes;
             }
@@ -235,6 +283,106 @@ namespace Chloroplast.Core.Content
             }
 
             return items.Values.Where(n => n.Parent == null);
+        }
+        
+        /// <summary>
+        /// Detects the locale from a file path based on naming conventions.
+        /// Examples: guide.es.md -> "es", guide.md -> default locale
+        /// </summary>
+        private string DetectLocaleFromPath(string relativePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(relativePath);
+            var supportedLocales = SiteConfig.SupportedLocales;
+            
+            // Check if filename contains a locale code before the extension
+            // e.g., guide.es.md, index.fr.md
+            foreach (var locale in supportedLocales)
+            {
+                if (fileName.EndsWith($".{locale}", StringComparison.OrdinalIgnoreCase))
+                {
+                    return locale;
+                }
+            }
+            
+            // Check if the file is in a locale-specific directory
+            // e.g., /es/guide.md, /fr/getting-started.md
+            var pathParts = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (pathParts.Length > 0)
+            {
+                var firstDir = pathParts[0];
+                if (supportedLocales.Contains(firstDir, StringComparer.OrdinalIgnoreCase))
+                {
+                    return firstDir.ToLower();
+                }
+            }
+            
+            // Default to the configured default locale
+            return SiteConfig.DefaultLocale;
+        }
+        
+        /// <summary>
+        /// Groups content nodes by their base content and populates the Translations property.
+        /// </summary>
+        private void GroupTranslations(List<ContentNode> allNodes)
+        {
+            // Group nodes by their base content path (without locale)
+            var groups = allNodes.GroupBy(node => GetBaseContentPath(node.Source.RootRelativePath));
+            
+            foreach (var group in groups)
+            {
+                var nodesList = group.ToList();
+                if (nodesList.Count <= 1) continue; // No translations
+                
+                // Find the default language node
+                var defaultNode = nodesList.FirstOrDefault(n => n.Locale == SiteConfig.DefaultLocale) ?? nodesList.First();
+                
+                // Set translations for the default node
+                defaultNode.Translations = nodesList.Where(n => n != defaultNode).ToArray();
+                
+                // For non-default nodes, create a reference back to the default
+                foreach (var translatedNode in nodesList.Where(n => n != defaultNode))
+                {
+                    var otherTranslations = nodesList.Where(n => n != translatedNode).ToArray();
+                    translatedNode.Translations = otherTranslations;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Gets the base content path without locale identifiers.
+        /// Examples: guide.es.md -> guide.md, /es/guide.md -> /guide.md
+        /// </summary>
+        private string GetBaseContentPath(string relativePath)
+        {
+            var supportedLocales = SiteConfig.SupportedLocales;
+            
+            // Handle locale in filename (guide.es.md -> guide.md)
+            var fileName = Path.GetFileNameWithoutExtension(relativePath);
+            var extension = Path.GetExtension(relativePath);
+            var directory = Path.GetDirectoryName(relativePath) ?? "";
+            
+            foreach (var locale in supportedLocales)
+            {
+                if (fileName.EndsWith($".{locale}", StringComparison.OrdinalIgnoreCase))
+                {
+                    var baseFileName = fileName.Substring(0, fileName.Length - locale.Length - 1);
+                    return Path.Combine(directory, baseFileName + extension).Replace("\\", "/");
+                }
+            }
+            
+            // Handle locale in directory (/es/guide.md -> /guide.md)
+            var pathParts = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (pathParts.Length > 1)
+            {
+                var firstDir = pathParts[0];
+                if (supportedLocales.Contains(firstDir, StringComparer.OrdinalIgnoreCase))
+                {
+                    var remainingPath = string.Join("/", pathParts.Skip(1));
+                    return remainingPath;
+                }
+            }
+            
+            return relativePath.Replace("\\", "/");
         }
     }
 }
