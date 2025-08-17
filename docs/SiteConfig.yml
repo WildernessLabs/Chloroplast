@@ -16,8 +16,6 @@ defaultLocale: en
 supportedLocales:
   - en
   - es
-  - fr
-  - de
 
 # cache busting configuration
 cacheBusting:

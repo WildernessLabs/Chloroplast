@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Command Line Interface</title>
+    <link href="/Chloroplast/assets/main.css?v=20250817144954" rel="stylesheet" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="/Chloroplast/">Chloroplast Docs</a></h1>
+        </div>
+    </header>
+
+    <div class="container" style="margin-left:0; max-width:100%;">
+    <div class="row">
+        
+<div id="leftnav">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a href="/Chloroplast/installing/" class="nav-link">Installing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Chloroplast/cli/" class="nav-link">Command Line</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Chloroplast/templates/" class="nav-link">Templates</a>
+                </li>
+        </ul>
+
+</div>
+        <div class="main-content">
+            <h2>Command Line Interface</h2>
+            
+            
+            <p>Chloroplast supports various sub commands. It is recommended to first <code>cd</code> into your project's root folder, and run the commands with defaults as appropriate.</p>
+<a name="new_sub_command"></a><h2><code>new</code> sub command</h2>
+<p>The new subcommand allows you to bootstrap a chloroplast site by
+copying files to a destination folder.</p>
+<pre><code>chloroplast new conceptual targetFolder
+</code></pre>
+<p>This will create <code>targetFolder</code> (if it doesn't already exist), and
+copy files from the <code>conceptual</code> template. You can then run the
+following commands to build and preview the site locally:</p>
+<pre><code>cd targetFolder
+chloroplast build
+chloroplast host
+</code></pre>
+<a name="parameters"></a><h3>parameters</h3>
+<ul>
+<li><code>conceptual</code>: The second positional parameter after <code>new</code>.
+<ul>
+<li>This will currently only support <code>conceptual</code>, which will be a copy of these docs.</li>
+<li>Eventually we will have more templates, and eventually open up to community contributions.</li>
+</ul>
+</li>
+<li><code>targetFolder</code>: the third positional parameter after <code>new</code> is the name of the target folder where the template files will be placed.</li>
+</ul>
+<a name="build_sub_command"></a><h2><code>build</code> sub command</h2>
+<p>The build subcommand will build a Chloroplast site</p>
+<pre><code>chloroplast build --root path/to/SiteConfig/ --out path/to/out
+</code></pre>
+<a name="parameters"></a><h3>parameters</h3>
+<ul>
+<li><code>root</code>: the path to the directory that contains a <code>SiteConfig.yml</code> file</li>
+<li><code>out</code>: the path to the directory where the resulting HTML will be output.</li>
+<li><code>normalizePaths</code>: defaults to <code>true</code>, which normalizes all paths to lower case. Set this to false for output paths to match the source casing.</li>
+<li><code>errorLogPath</code>: optional path to write detailed error information to a log file</li>
+<li><code>buildVersion</code>: optional version string to append to CSS and JavaScript references for cache busting. If not provided, a timestamp in the format <code>yyyyMMddHHmmss</code> is automatically generated.</li>
+</ul>
+<p>The parameters above will default to the current working directory for the root path, and an <code>out/</code> directory in that same path if both parameters are omitted.</p>
+<p>The build command will render all <code>index.md</code> files into corresponding <code>index.html</code> files, and copy everything else to the same corresponding location (images, styles, etc).</p>
+<p>Additionally, the build command will automatically generate sitemap XML files if a <code>baseUrl</code> is configured in your <code>SiteConfig.yml</code>. This helps with SEO and search engine indexing.</p>
+<a name="Error_Handling"></a><h3>Error Handling</h3>
+<p>The build command provides comprehensive error handling to help diagnose issues without overwhelming the console output:</p>
+<ul>
+<li><strong>Console Output</strong>: Clean, concise error messages showing the essential information needed to fix problems</li>
+<li><strong>Error Log File</strong>: Detailed error information including full stack traces and generated source code</li>
+</ul>
+<h4>Configuring Error Logging</h4>
+<p>You can configure error logging in two ways:</p>
+<p><strong>1. Command Line Parameter:</strong></p>
+<pre><code class="language-bash">chloroplast build --errorLogPath /path/to/error-log.txt
+</code></pre>
+<p><strong>2. SiteConfig.yml Configuration:</strong></p>
+<pre><code class="language-yaml"># Error logging configuration
+errorLogPath: logs/build-errors.log
+</code></pre>
+<h4>Error Log Benefits</h4>
+<ul>
+<li><strong>Console stays readable</strong>: Only essential error information is shown in the terminal</li>
+<li><strong>Complete debugging info</strong>: Full stack traces, generated source code, and detailed exception information are written to the log file</li>
+<li><strong>Multiple error collection</strong>: All errors encountered during the build are collected and displayed together</li>
+<li><strong>Timestamp tracking</strong>: Each error includes timestamp information for troubleshooting</li>
+</ul>
+<h4>Example Error Output</h4>
+<p><strong>Console Output:</strong></p>
+<pre><code>=== BUILD ERRORS ===
+Found 1 error(s) during build:
+
+[20:17:21] Error in 'Template initialization': Failed to initialize content renderer
+    Template compilation failed:
+    Error(s):
+    - Template.cs(4,26): error CS1010: Newline in constant
+    - Template.cs(4,61): error CS1002: ; expected
+
+Error details written to: /tmp/build-errors.log
+</code></pre>
+<p><strong>Error Log File Contents:</strong></p>
+<ul>
+<li>Complete exception stack traces</li>
+<li>Full generated source code for template compilation errors</li>
+<li>Detailed file paths and processing context</li>
+<li>Timestamps for all errors encountered</li>
+</ul>
+<a name="host_sub_command"></a><h2><code>host</code> sub command</h2>
+<p>The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring. If you update markdown files, the content will automatically be rebuilt so you can just refresh the browser.</p>
+<pre><code>chloroplast host --root path/to/root --out path/to/html 
+</code></pre>
+<p>You can just press the enter key to end this task after stopping the web host with Ctrl+C at any time.</p>
+<p>If you are updating razor templates, you can also just run this command in a separate terminal window and leave it running. That way, as you run the full <code>build</code> subcommand, the content and front-end styles will update, and you can just refresh the browser after that build has completed.</p>
+<a name="parameters"></a><h3>parameters</h3>
+<ul>
+<li><code>out</code>: This should be the same value as the <code>out</code> parameter used in the <code>build</code> command.</li>
+</ul>
+<p>The parameter above will default to the <code>out/</code> folder in the current working directory, if omitted.</p>
+<a name="Sitemap_Generation"></a><h2>Sitemap Generation</h2>
+<p>The build command automatically generates sitemap XML files when a <code>baseUrl</code> is configured in your <code>SiteConfig.yml</code>. This helps search engines discover and index your site's content.</p>
+<a name="Configuration"></a><h3>Configuration</h3>
+<p>Add the following to your <code>SiteConfig.yml</code> to configure sitemap generation:</p>
+<pre><code class="language-yaml"># Base URL for your site (required for sitemap generation)
+baseUrl: https://your-site.com
+
+# Optional sitemap configuration
+sitemap:
+  enabled: true              # Enable/disable sitemap generation (default: true)
+  maxUrlsPerSitemap: 50000   # Maximum URLs per sitemap file (default: 50000)
+</code></pre>
+<a name="Behavior"></a><h3>Behavior</h3>
+<ul>
+<li><strong>Single sitemap</strong>: For sites with fewer URLs than the configured threshold, a single <code>sitemap.xml</code> file is generated</li>
+<li><strong>Multiple sitemaps</strong>: For larger sites, multiple sitemap files are created (<code>sitemap1.xml</code>, <code>sitemap2.xml</code>, etc.) with a sitemap index file (<code>sitemap.xml</code>) that references them</li>
+<li><strong>Content filtering</strong>: Only HTML files are included in sitemaps; assets like CSS, images, and other files are excluded</li>
+<li><strong>Timestamps</strong>: Each URL entry includes a last modified timestamp based on the file's modification date</li>
+</ul>
+<a name="Cache_Busting"></a><h2>Cache Busting</h2>
+<p>Chloroplast automatically adds version parameters to CSS and JavaScript references to ensure browser cache invalidation when assets are updated. This feature helps prevent users from seeing stale styles or scripts after deployments.</p>
+<a name="Configuration"></a><h3>Configuration</h3>
+<p>Add the following to your <code>SiteConfig.yml</code> to control cache busting behavior:</p>
+<pre><code class="language-yaml"># Cache busting configuration
+cacheBusting:
+  enabled: true  # Enable/disable cache busting (default: true)
+</code></pre>
+<a name="Usage_in_Templates"></a><h3>Usage in Templates</h3>
+<p>In your Razor templates, use the <code>WithVersion()</code> method to add version parameters to asset URLs:</p>
+<pre><code class="language-html">&lt;!-- CSS with cache busting --&gt;
+&lt;link href=&quot;@WithVersion(&quot;/assets/main.css&quot;)&quot; rel=&quot;stylesheet&quot; /&gt;
+
+&lt;!-- JavaScript with cache busting --&gt;
+&lt;script src=&quot;@WithVersion(&quot;/assets/site.js&quot;)&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+</code></pre>
+<a name="Command_Line_Usage"></a><h3>Command Line Usage</h3>
+<p>You can specify a custom build version when running the build command:</p>
+<pre><code class="language-bash"># Use a custom version
+chloroplast build --buildVersion &quot;v1.2.3&quot;
+
+# Use automatic timestamp version (default)
+chloroplast build
+</code></pre>
+<a name="Behavior"></a><h3>Behavior</h3>
+<ul>
+<li><strong>When enabled</strong>: Asset URLs are appended with <code>?v={version}</code> parameter (e.g., <code>/assets/main.css?v=20231215123456</code>)</li>
+<li><strong>When disabled</strong>: Asset URLs remain unchanged (e.g., <code>/assets/main.css</code>)</li>
+<li><strong>Automatic versioning</strong>: If no <code>--buildVersion</code> is specified, a timestamp in format <code>yyyyMMddHHmmss</code> is automatically generated</li>
+<li><strong>Query parameter handling</strong>: The version parameter is properly appended with <code>&amp;</code> if the URL already contains query parameters</li>
+</ul>
+
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <div class="container">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="/Chloroplast/" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
+                <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
+                <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
+                <li class="nav-item"><a href="https://blog.wildernesslabs.co/" class="nav-link text-muted">Blog</a></li>
+            </ul>
+            <p class="text-center text-muted">Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a></p>
+        </div>
+    </footer>
+</body>
+</html>

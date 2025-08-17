@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Docs</title>
+    <link href="/Chloroplast/assets/main.css?v=20250817144954" rel="stylesheet" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="/Chloroplast/">Chloroplast Docs</a></h1>
+        </div>
+    </header>
+
+    <div class="container" style="margin-left:0; max-width:100%;">
+    <div class="row">
+        
+<div id="leftnav">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a href="/Chloroplast/installing/" class="nav-link">Installing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Chloroplast/cli/" class="nav-link">Command Line</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Chloroplast/templates/" class="nav-link">Templates</a>
+                </li>
+        </ul>
+
+</div>
+        <div class="main-content">
+            <h2>API Docs</h2>
+            
+            
+            <p>Chloroplast supports documenting .NET APIs.</p>
+<p><strong>PLEASE NOTE:</strong> This functionality is still in development and not fully released yet.</p>
+<a name="Build_Process"></a><h2>Build Process</h2>
+<p>The API build process is inherently a multi-step process, for which we'll use a few different tools:</p>
+<ul>
+<li><a href="https://github.com/mono/api-doc-tools/">mdoc</a>: This tool takes compiled .NET assemblies, and produces an XML format called EcmaXml, which represents all of the type and namespace metadata, and gives you an opportunity to document your APIs.</li>
+<li>msbuild: We are going to use msbuild to fetch mdoc itself, along with all the APIs that you need documented.</li>
+<li>Build Server: The glue that will drive and automate this process. In this document, we will use GitHub Actions to demonstrate the capabilities, but this can honestly be built with any other build pipeline such as Azure DevOps.</li>
+</ul>
+<a name="Using_MSBuild_to_Drive_APIs"></a><h2>Using MSBuild to Drive APIs</h2>
+<pre><code class="language-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;netstandard2.1&lt;/TargetFramework&gt;
+        &lt;MdocVersion&gt;5.8.2&lt;/MdocVersion&gt;
+        &lt;MdocPath&gt;$(NuGetPackageRoot)mdoc\$(MdocVersion)\tools\mdoc.exe&lt;/MdocPath&gt;
+        &lt;OutEcmaXml&gt;tmp/EcmaXml&lt;/OutEcmaXml&gt;
+
+        &lt;ChloroplastCoreVersion&gt;0.5.0&lt;/ChloroplastCoreVersion&gt;
+        &lt;ChloroplastCorePath&gt;$(NuGetPackageRoot)chloroplast.core\$(ChloroplastCoreVersion)\lib\$(TargetFramework)\Chloroplast.Core.dll&lt;/ChloroplastCorePath&gt;
+        
+        &lt;MiniRazorPath&gt;$(NuGetPackageRoot)minirazor\2.0.3\lib\$(TargetFramework)\&lt;/MiniRazorPath&gt;
+        &lt;ConfigurationNugetPath&gt;$(NuGetPackageRoot)Microsoft.Extensions.Configuration.Abstractions\5.0.0\lib\netstandard2.0\&lt;/ConfigurationNugetPath&gt;
+
+        &lt;ApiPaths&gt;$(ChloroplastCorePath)&lt;/ApiPaths&gt;
+        &lt;DependencyPaths&gt;-L $(NuGetPackageRoot)&lt;/DependencyPaths&gt;
+    &lt;/PropertyGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;PackageReference Include=&quot;mdoc&quot; Version=&quot;$(MdocVersion)&quot; /&gt;
+
+    &lt;PackageReference Include=&quot;Chloroplast.Core&quot; Version=&quot;$(ChloroplastCoreVersion)&quot; /&gt;
+
+  &lt;/ItemGroup&gt;
+
+    &lt;Target Name=&quot;mdocupdate&quot; DependsOnTargets=&quot;restore&quot;&gt;
+        &lt;Message Text=&quot;Output At: $(OutEcmaXml)&quot; Importance=&quot;high&quot;/&gt;
+        &lt;Message Text=&quot;API paths: $(ApiPaths)&quot; Importance=&quot;high&quot;/&gt;
+        &lt;Exec Command=&quot;$(MdocPath) update $(ApiPaths) -out $(OutEcmaXml) $(DependencyPaths) --debug&quot; /&gt;
+      &lt;/Target&gt;
+&lt;/Project&gt;
+</code></pre>
+<a name="Using_GitHub_Actions_to_Automate_Builds"></a><h2>Using GitHub Actions to Automate Builds</h2>
+<pre><code class="language-yaml">name: Content Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+          
+      - name: Add private GitHub registry to NuGet
+        run: dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name &quot;wildernesslabs&quot; --username wildlingdev --password ${{ secrets.WILDLINGDEV_PAT }} --store-password-in-clear-text
+      
+      - name: Build APIs with mdoc
+        run: |
+          cd $GITHUB_WORKSPACE
+          dotnet restore mdocbuild.csproj
+          msbuild mdocbuild.csproj /t:mdocupdate
+      
+      - name: Install Chloroplast
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install Chloroplast.Tool
+        
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: |
+          cd $GITHUB_WORKSPACE
+          ls .
+          dotnet chloroplast
+          ls .
+          
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.1.3
+        with:
+          name: output
+          path: out/*
+          
+      - name: Publish to Web
+        if: github.ref == 'refs/heads/main'
+        uses: bacongobbler/azure-blob-storage-upload@v1.2.0
+        with:
+          source_dir: out
+          container_name: $web
+          connection_string: ${{ secrets.STORAGE_CONNECTION }}
+          sync: true
+
+</code></pre>
+<a name="Supporting_DocXML/Triple_Slash_docs"></a><h2>Supporting DocXML/Triple Slash docs</h2>
+<p>WIP ...</p>
+
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <div class="container">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="/Chloroplast/" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
+                <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
+                <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
+                <li class="nav-item"><a href="https://blog.wildernesslabs.co/" class="nav-link text-muted">Blog</a></li>
+            </ul>
+            <p class="text-center text-muted">Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a></p>
+        </div>
+    </footer>
+</body>
+</html>

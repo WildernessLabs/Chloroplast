@@ -104,8 +104,37 @@ Chloroplast provides several helper methods in your Razor templates:
 
 ```html
 @{
-    var currentLocale = Model?.Node?.Locale ?? SiteConfig.DefaultLocale;
+    var currentLocale = CurrentLocale;  // Direct access from base template
     var supportedLocales = SiteConfig.SupportedLocales;
+    var isMachineTranslated = IsMachineTranslated;  // Direct access from base template
+}
+```
+
+## Machine Translation Support
+
+Chloroplast supports marking content as machine translated to show appropriate warnings:
+
+### Front Matter Configuration
+
+Mark content as machine translated in the front matter:
+
+```yaml
+---
+title: Mi Página
+machineTranslated: true  # or machine_translated: true, or MachineTranslated: true
+---
+```
+
+### Template Detection
+
+Templates can detect machine translated content:
+
+```html
+@if (IsMachineTranslated)
+{
+    <div class="machine-translation-warning">
+        🤖 This content was automatically translated and may contain errors.
+    </div>
 }
 ```
 
@@ -143,23 +172,52 @@ The sitemap generator automatically includes all localized content with proper `
 
 This helps search engines understand your multilingual content structure.
 
+## Template Base Methods
+
+These properties and methods are directly available in all templates without needing to access specific objects:
+
+### Localization Support
+
+- `@CurrentLocale` - Gets the current page's locale
+- `@IsMachineTranslated` - Gets whether the current page was machine translated
+- `@HasTranslation("es")` - Checks if the current page has a translation in the specified locale
+- `@LocaleHref("/path", "es")` - Generates a locale-aware URL
+- `@GetLocalizedPageUrl("es")` - Gets the current page URL in a different language
+- `@GetCountryFlag("es")` - Gets the country flag emoji for a locale (can be overridden)
+- `@GetLocaleDisplayName("es")` - Gets the native display name for a locale (can be overridden)
+
 ## Translation Warnings
 
-You can add warnings for content that isn't translated:
+To show translation status, include the translation warning partial:
 
 ```html
-@{
-    var currentLocale = Model?.Node?.Locale ?? SiteConfig.DefaultLocale;
-    var defaultLocale = SiteConfig.DefaultLocale;
-    var hasTranslation = Model?.Node?.Translations?.Any(t => t.Locale == currentLocale) ?? false;
-}
+@await PartialAsync("TranslationWarning")
+```
 
-@if (!hasTranslation && currentLocale != defaultLocale)
+This will automatically:
+- Show a warning if content isn't available in the current locale  
+- Show a machine translation notice if the content was auto-translated
+- Use localized messages based on the current language
+
+### Manual Translation Warnings
+
+If you prefer manual control, you can use the template base methods:
+
+```html
+@if (!HasTranslation(CurrentLocale) && CurrentLocale != SiteConfig.DefaultLocale)
 {
     <div class="translation-warning" role="alert">
         <strong>⚠️ Translation Notice:</strong> 
-        This content is not available in @GetLocaleDisplayName(currentLocale). 
-        You are viewing the @GetLocaleDisplayName(defaultLocale) version.
+        This content is not available in @GetLocaleDisplayName(CurrentLocale). 
+        You are viewing the @GetLocaleDisplayName(SiteConfig.DefaultLocale) version.
+    </div>
+}
+
+@if (IsMachineTranslated)
+{
+    <div class="machine-translation-warning" role="alert">
+        <strong>🤖 Machine Translation:</strong> 
+        This content was automatically translated and may contain errors.
     </div>
 }
 ```

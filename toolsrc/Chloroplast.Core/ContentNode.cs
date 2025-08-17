@@ -26,6 +26,11 @@ namespace Chloroplast.Core
         public string Locale { get; set; }
         
         /// <summary>
+        /// Indicates whether this content was machine translated.
+        /// </summary>
+        public bool IsMachineTranslated { get; set; }
+        
+        /// <summary>
         /// Array of translated versions of this content node.
         /// The default language version is not included in this array.
         /// </summary>
