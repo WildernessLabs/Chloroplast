@@ -1,7 +1,7 @@
 ﻿@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>
 @using Chloroplast.Core
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@CurrentLocale">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,17 +9,17 @@
     <link href="@Asset("/assets/main.css")" rel="stylesheet" />
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1><a href="@LocaleHref("/", CurrentLocale)">Chloroplast Docs</a></h1>
-            <nav style="float:right;">
-                <ul style="list-style:none; display:flex; gap:.75rem; margin:0; padding:0;">
+    <header class="site-header">
+        <div class="container site-header-container">
+            <h1 class="site-title"><a href="@LocaleHref("/", CurrentLocale)">Chloroplast Docs</a></h1>
+            <nav class="locale-nav" aria-label="Language selector">
+                <ul class="locale-nav-list">
                 @foreach (var loc in SiteConfig.SupportedLocales)
                 {
                     var url = GetLocalizedPageUrl(loc);
                     var isActive = string.Equals(loc, CurrentLocale, System.StringComparison.OrdinalIgnoreCase);
-                    <li style="margin:0;">
-                        <a href="@url" style="text-decoration:none;@(isActive?"font-weight:bold;":"")" title="@GetLocaleDisplayName(loc)">@GetCountryFlag(loc) @loc</a>
+                    <li class="locale-nav-item">
+                        <a href="@url" class="locale-nav-link@(isActive?" active":"")" title="@GetLocaleDisplayName(loc)"@(isActive?" aria-current=\"true\"":"")>@GetCountryFlag(loc) <span class="locale-code">@loc</span></a>
                     </li>
                 }
                 </ul>

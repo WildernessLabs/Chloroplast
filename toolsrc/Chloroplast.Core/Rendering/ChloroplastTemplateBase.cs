@@ -104,39 +104,101 @@ namespace Chloroplast.Core.Rendering
     /// <param name="locale">The target locale</param>
     protected string GetLocalizedPageUrl(string locale)
     {
+        // Try to find an authored translation first
         if (Model?.Node?.Translations != null)
         {
             var translation = System.Array.Find(Model.Node.Translations, t => t.Locale == locale);
             if (translation != null)
             {
-                    var translatedPath = "/" + translation.Target.RootRelativePath.Replace(".html", "").Replace("\\", "/");
-                    // If the translated path already starts with the locale segment (due to localized folder output),
-                    // avoid applying the locale again; just apply BasePath.
-                    if (translatedPath.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
-                        translatedPath.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
-                        translatedPath.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        return SiteConfig.ApplyBasePath(translatedPath);
-                    }
-                    return LocaleHref(translatedPath, locale);
+                return BuildPrettyLocalizedUrl(translation.Target.RootRelativePath, locale);
             }
         }
-        
-        // Fallback to current page path with locale prefix
-        var currentPath = Model?.Node?.Target?.RootRelativePath?.Replace(".html", "").Replace("\\", "/");
-            if (!string.IsNullOrEmpty(currentPath))
+
+        // Use current node (may be fallback synthesized) and project into requested locale
+        var currentRootRelative = Model?.Node?.Target?.RootRelativePath;
+        if (!string.IsNullOrWhiteSpace(currentRootRelative))
+        {
+            return BuildPrettyLocalizedUrl(currentRootRelative, locale);
+        }
+
+        // Final fallback: root
+        return BuildPrettyLocalizedUrl("index.html", locale);
+    }
+
+    /// <summary>
+    /// Converts a target RootRelativePath (e.g., "cli/index.html", "es/cli/index.html", "installing.html")
+    /// into a pretty, locale-aware, base-path-applied URL.
+    /// Rules:
+    ///  * Strip .html
+    ///  * Collapse any trailing /index to just a trailing /
+    ///  * For non-default locales, ensure the leading /{locale}/ prefix (unless already present)
+    ///  * For default locale, ensure no locale prefix
+    ///  * Always return a leading '/'
+    ///  * Root index becomes '/'
+    /// </summary>
+    protected internal string BuildPrettyLocalizedUrl(string rootRelativePath, string locale)
+    {
+        if (string.IsNullOrWhiteSpace(rootRelativePath)) return SiteConfig.ApplyBasePath("/");
+
+        var defaultLocale = SiteConfig.DefaultLocale;
+
+        // Standardize separators
+        var p = rootRelativePath.Replace('\\', '/'); // e.g. es/cli/index.html
+
+        // Remove any leading ./ that might sneak in (defensive)
+        if (p.StartsWith("./")) p = p.Substring(1);
+
+        // Strip .html extension (only at end)
+        if (p.EndsWith(".html", System.StringComparison.OrdinalIgnoreCase))
+            p = p.Substring(0, p.Length - 5); // remove .html -> es/cli/index
+
+        // Ensure leading slash for further checks
+        if (!p.StartsWith('/')) p = "/" + p; // /es/cli/index OR /installing
+
+        // If we have a trailing /index, collapse it
+        if (p.EndsWith("/index", System.StringComparison.OrdinalIgnoreCase))
+        {
+            if (p.Equals("/index", System.StringComparison.OrdinalIgnoreCase))
             {
-                currentPath = "/" + currentPath;
-                if (currentPath.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
-                    currentPath.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
-                    currentPath.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    return SiteConfig.ApplyBasePath(currentPath);
-                }
-                return LocaleHref(currentPath, locale);
+                p = "/"; // root
             }
-        
-        return LocaleHref("/", locale);
+            else
+            {
+                p = p.Substring(0, p.Length - 6); // drop '/index' -> /es/cli OR /cli
+                if (p.Length > 1 && !p.EndsWith('/')) p += '/'; // directory form ends with /
+            }
+        }
+
+        // Normalize locale prefix rules
+        if (locale != defaultLocale)
+        {
+            // If path already starts with /{locale}/ or equals /{locale}, keep it; else prefix
+            if (!(p.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
+                  p.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
+                  p.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase)))
+            {
+                if (p == "/") p = $"/{locale}/"; // root in locale
+                else p = $"/{locale}" + (p.StartsWith("/") ? p : "/" + p); // /{locale}/... preserving existing leading slash
+            }
+        }
+        else
+        {
+            // Default locale should not retain a prefixed folder (in case content is authored under locale folder unexpectedly)
+            if (p.StartsWith($"/{defaultLocale}/", System.StringComparison.OrdinalIgnoreCase))
+            {
+                p = p.Substring(defaultLocale.Length + 1); // remove '/en'
+                if (!p.StartsWith('/')) p = "/" + p;
+            }
+            else if (p.Equals($"/{defaultLocale}", System.StringComparison.OrdinalIgnoreCase))
+            {
+                p = "/"; // default locale root
+            }
+        }
+
+        // Avoid double slashes (defensive)
+        while (p.Contains("//")) p = p.Replace("//", "/");
+
+        return SiteConfig.ApplyBasePath(p);
     }
     
     /// <summary>
