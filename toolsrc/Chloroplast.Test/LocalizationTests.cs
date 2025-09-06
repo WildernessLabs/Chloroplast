@@ -14,6 +14,8 @@ namespace Chloroplast.Test
             builder.AddInMemoryCollection(configValues);
             var cfg = builder.Build();
             SiteConfig.Instance = cfg;
+            // Ensure tests always start with base path enabled (not overridden by CLI flag in prior runs)
+            SiteConfig.DisableBasePath = false;
             return cfg;
         }
 

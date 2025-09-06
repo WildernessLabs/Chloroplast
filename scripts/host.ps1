@@ -1,6 +1,7 @@
 #!/usr/bin/env pwsh
 #
-# Hosts the docs site using dotnet run.
+# Hosts the docs site for LOCAL TESTING.
+# Always disables base path (passes --no-basepath) so site appears at root.
 #
 # This script is intended to be run from the repository root.
 # It automatically locates the tool project and the docs folder.
@@ -22,9 +23,9 @@ Write-Host "Docs Root:       $DocsRoot"
 Write-Host "Output Path:     $DocsOut"
 Write-Host ""
 
-# Execute the host command
-Write-Host "Starting host..."
-dotnet run --project $ToolProject -- host --root $DocsRoot --out $DocsOut
+# Execute the host command (always with --no-basepath)
+Write-Host "Starting host (base path disabled)..."
+dotnet run --project $ToolProject -- host --root $DocsRoot --out $DocsOut --no-basepath
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Host command failed to start with exit code $LASTEXITCODE." -ForegroundColor Red

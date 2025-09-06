@@ -58,6 +58,7 @@ namespace Chloroplast.Tool.Commands
         {
             // Set up build version for cache busting
             SetupBuildVersion(config);
+            Console.WriteLine($"BasePath effective: '{SiteConfig.BasePath}' (disabled={SiteConfig.DisableBasePath})");
             
             this.rootconfig = config;
             var outPath = config["out"].NormalizePath ();

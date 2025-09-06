@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Chloroplast.Core.Extensions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 
 namespace Chloroplast.Core
@@ -10,6 +11,12 @@ namespace Chloroplast.Core
         public static IConfigurationRoot Instance { get; set; }
         public static string BuildVersion { get; set; }
         public static bool CacheBustingEnabled => Instance?.GetBool("cacheBusting:enabled", defaultValue: true) ?? true;
+    /// <summary>
+    /// When set (via CLI --no-basepath) the effective BasePath is forced to empty for the lifetime
+    /// of the process. This is used for local testing so that locally hosted builds don't need to
+    /// emulate a production sub-path (e.g., GitHub Pages repository name).
+    /// </summary>
+    public static bool DisableBasePath { get; set; }
         
         /// <summary>
         /// Gets the default locale for the site content. Defaults to "en" if not specified.
@@ -46,6 +53,8 @@ namespace Chloroplast.Core
         {
             get
             {
+                if (DisableBasePath)
+                    return string.Empty;
                 var raw = Instance?["basePath"]; // may be null
                 var baseUrl = Instance?["baseUrl"]; // sitemap/base url
 
@@ -122,6 +131,8 @@ namespace Chloroplast.Core
         /// <returns>Path prefixed with BasePath, beginning with "/".</returns>
         public static string ApplyBasePath(string path)
         {
+            if (DisableBasePath) return path;
+            
             if (string.IsNullOrWhiteSpace(path))
                 return BasePath.Length == 0 ? "/" : BasePath;
 
