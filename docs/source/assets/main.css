@@ -330,6 +330,10 @@ footer a:hover {
     color: var(--wl-blue);
 }
 
+/* Basic spacing utilities (used in footer markup) */
+.pb-3 { padding-bottom: 1rem; }
+.mb-3 { margin-bottom: 1rem; }
+
 /* Secondary text styling */
 .text-muted {
     color: var(--wl-steel-blue) !important;
@@ -402,6 +406,9 @@ footer a:hover {
 }
 
 .nav.justify-content-center {
+    /* Footer horizontal nav: use flex ONLY when combined with justify-content-center */
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
 }
 

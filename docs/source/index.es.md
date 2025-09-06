@@ -7,7 +7,7 @@ machineTranslated: true
 
 # ¡Bienvenido!
 
-A la documentación de Chloroplast. Una vez que lo [instales](/installing/), puedes aprender cómo [usarlo](/cli) y [crear plantillas](/templates).
+A la documentación de Chloroplast. Una vez que lo [instales](/installing/), puedes aprender cómo [usarlo](/cli), [crear plantillas](/templates) y añadir [localización](/localization/).
 
 El código fuente se puede encontrar aquí:  
 https://github.com/wildernesslabs/Chloroplast
