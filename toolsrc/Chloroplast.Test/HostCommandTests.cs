@@ -1,56 +1,50 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Chloroplast.Tool.Commands;
+using Chloroplast.Core;
 
 namespace Chloroplast.Test
 {
     public class HostCommandTests
     {
-        [Fact]
-        public void FindAvailablePort_ReturnsAvailablePort()
+        private class MockHostCommand : HostCommand
         {
-            // Arrange
-            var hostCommand = new HostCommand();
-
-            // Act
-            var port = hostCommand.FindAvailablePort(5000);
-
-            // Assert
-            Assert.True(port >= 5000);
-            Assert.True(port <= 5100);
-            
-            // Verify the port is actually available
-            using var tcpListener = new TcpListener(IPAddress.Loopback, port);
-            tcpListener.Start(); // Should not throw
-            tcpListener.Stop();
+            private readonly HashSet<int> occupied;
+            public MockHostCommand(IEnumerable<int> occupiedPorts)
+            {
+                occupied = new HashSet<int>(occupiedPorts);
+            }
+            protected override bool ProbePort(int port) => !occupied.Contains(port);
         }
 
         [Fact]
-        public void FindAvailablePort_WithPortInUse_FindsNextAvailablePort()
+        public void FindAvailablePort_SkipsOccupiedPorts()
         {
-            // Arrange
-            var hostCommand = new HostCommand();
-            var firstListener = new TcpListener(IPAddress.Loopback, 5000);
-            firstListener.Start();
+            var mock = new MockHostCommand(new []{5000,5001,5002});
+            var port = mock.FindAvailablePort(5000);
+            Assert.Equal(5003, port);
+        }
 
-            try
-            {
-                // Act
-                var port = hostCommand.FindAvailablePort(5000);
+        [Fact]
+        public void FindAvailablePort_ReturnsStartIfFree()
+        {
+            var mock = new MockHostCommand(Array.Empty<int>());
+            var port = mock.FindAvailablePort(7000);
+            Assert.Equal(7000, port);
+        }
 
-                // Assert
-                Assert.Equal(5001, port);
-                
-                // Verify the port is actually available
-                using var tcpListener = new TcpListener(IPAddress.Loopback, port);
-                tcpListener.Start(); // Should not throw
-                tcpListener.Stop();
-            }
-            finally
-            {
-                firstListener.Stop();
-            }
+        [Fact]
+        public void FindAvailablePort_ThrowsWhenRangeExhausted()
+        {
+            // Occupy full search window of 3 ports for small test by narrowing window via start/end assumptions
+            // We'll simulate by occupying start..start+200
+            var occupied = Enumerable.Range(8000, 201).ToArray();
+            var mock = new MockHostCommand(occupied);
+            Assert.Throws<ChloroplastException>(() => mock.FindAvailablePort(8000));
         }
     }
 }

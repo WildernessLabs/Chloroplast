@@ -162,10 +162,36 @@ namespace Chloroplast.Core.Rendering
                             updatedHref = normalizedPath;
                         }
 
-                        // Apply BasePath to root-relative links if BasePath is configured
-                        if (!string.IsNullOrEmpty(SiteConfig.BasePath))
+                        // Apply locale/base path handling. If already locale-prefixed for this node, just apply base path.
+                        if (node.Locale != SiteConfig.DefaultLocale && updatedHref.StartsWith($"/{node.Locale}/"))
                         {
-                            updatedHref = SiteConfig.ApplyBasePath(updatedHref);
+                            updatedHref = SiteConfig.ApplyBasePath(updatedHref); // already localized
+                        }
+                        else
+                        {
+                            // For non-default locales, localize links that are not already localized for any supported locale
+                            bool alreadyLocalized = false;
+                            if (node.Locale != SiteConfig.DefaultLocale)
+                            {
+                                foreach (var loc in SiteConfig.SupportedLocales)
+                                {
+                                    if (loc == SiteConfig.DefaultLocale) continue; // default has no prefix
+                                    if (updatedHref.StartsWith($"/{loc}/"))
+                                    {
+                                        alreadyLocalized = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!alreadyLocalized)
+                            {
+                                updatedHref = SiteConfig.ApplyLocalePath(updatedHref, node.Locale);
+                            }
+                            else
+                            {
+                                updatedHref = SiteConfig.ApplyBasePath(updatedHref);
+                            }
                         }
 
                         if (updatedHref != href)

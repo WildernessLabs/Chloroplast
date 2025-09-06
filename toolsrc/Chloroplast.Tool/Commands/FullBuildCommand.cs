@@ -126,6 +126,47 @@ namespace Chloroplast.Tool.Commands
                 else // this isn't used for frame rendering anyways. TODO: refactor this out
                     menutree = new ContentNode[0];
 
+                // Generate locale-specific menu markdown copies (simple duplication for now)
+                try
+                {
+                    var supportedLocales = SiteConfig.SupportedLocales;
+                    var defaultLocale = SiteConfig.DefaultLocale;
+                    // Find existing menu node(s)
+                    var menuNodes = area.ContentNodes.Where(n => n.Source.RootRelativePath.EndsWith("menu.md", StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (menuNodes.Any())
+                    {
+                        foreach (var menuNode in menuNodes)
+                        {
+                            foreach (var loc in supportedLocales)
+                            {
+                                if (loc == defaultLocale) continue; // default stays as-is
+                                // localized target path: <out>/<loc>/menu.html (rendered) and source copy <loc>/menu.md
+                                var localizedSourceRel = System.IO.Path.Combine(loc, "menu.md").Replace("\\", "/");
+                                var localizedTargetRel = System.IO.Path.Combine(loc, "menu.html").Replace("\\", "/");
+                                if (area.ContentNodes.Any(n => n.Source.RootRelativePath.Replace("\\", "/") == localizedSourceRel))
+                                    continue; // already exists / authored
+                                var localizedSourceFull = area.SourcePath.CombinePath("menu.md"); // reuse same physical source file
+                                var localizedTargetFull = area.TargetPath.CombinePath(localizedTargetRel);
+                                area.ContentNodes.Add(new ContentNode
+                                {
+                                    Slug = menuNode.Slug,
+                                    Title = menuNode.Title,
+                                    Source = new DiskFile(localizedSourceFull, localizedSourceRel),
+                                    Target = new DiskFile(localizedTargetFull, localizedTargetRel),
+                                    Area = area,
+                                    MenuPath = menuNode.MenuPath,
+                                    Locale = loc,
+                                    IsFallback = true
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: failed to generate localized menu copies: {ex.Message}");
+                }
+
                 // this is an experimental feature that is, for now, disabled.
                 // helpful for quickly bootstrapping menu files, but should be
                 // fleshed out into a full subcommand at some point

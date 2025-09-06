@@ -1,7 +1,16 @@
 ﻿@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+@using Chloroplast.Core
 <div class="container" style="margin-left:0; max-width:100%;">
     <div class="row">
-        @await PartialAsync("source/menu.md")
+        @{
+            var baseMenu = "source/menu.md";
+            var localizedMenu = CurrentLocale != SiteConfig.DefaultLocale ? $"source/menu.{CurrentLocale}.md" : baseMenu;
+            // Try localized first; PartialAsync will throw if missing, so check file existence
+            var rootPath = SiteConfig.Instance["root"];
+            var localizedMenuFull = System.IO.Path.Combine(rootPath, localizedMenu.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString()));
+            var menuPathToUse = System.IO.File.Exists(localizedMenuFull) ? localizedMenu : baseMenu;
+        }
+        @await PartialAsync(menuPathToUse)
         <div class="main-content">
             <h2>@Model.GetMeta("title")</h2>
             @if (@Model.HasMeta("subtitle"))

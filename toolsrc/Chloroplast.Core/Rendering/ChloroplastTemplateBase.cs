@@ -68,6 +68,34 @@ namespace Chloroplast.Core.Rendering
         if (CurrentLocale == locale) return true;
         return Model?.Node?.Translations?.Any(t => t.Locale == locale) ?? false;
     }
+
+        /// <summary>
+        /// Builds a menu item href from a raw path string.
+        /// Performs:
+        ///  * Normalization (leading slash, strip .html)
+        ///  * Locale prefixing (if non-default and not already locale-prefixed)
+        ///  * BasePath application
+        /// </summary>
+        /// <param name="rawPath">The raw path value from menu metadata (may be null, relative, missing leading slash).</param>
+        protected string BuildMenuItemHref(string rawPath)
+        {
+            if (string.IsNullOrWhiteSpace(rawPath)) return string.Empty;
+
+            // Normalize menu path first (leading slash, remove .html)
+            var normalized = rawPath.NormalizeMenuPath();
+
+            var locale = CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+
+            // If non-default locale and path isn't already locale-prefixed, apply locale path; else standard href
+            if (locale != defaultLocale && !normalized.IsLocalePrefixed(locale))
+            {
+                return LocaleHref(normalized, locale);
+            }
+
+            // Already localized or default locale
+            return Href(normalized);
+        }
     
     /// <summary>
     /// Gets the URL for the current page in the specified locale.
@@ -81,18 +109,32 @@ namespace Chloroplast.Core.Rendering
             var translation = System.Array.Find(Model.Node.Translations, t => t.Locale == locale);
             if (translation != null)
             {
-                var translatedPath = "/" + translation.Target.RootRelativePath.Replace(".html", "").Replace("\\", "/");
-                return LocaleHref(translatedPath, locale);
+                    var translatedPath = "/" + translation.Target.RootRelativePath.Replace(".html", "").Replace("\\", "/");
+                    // If the translated path already starts with the locale segment (due to localized folder output),
+                    // avoid applying the locale again; just apply BasePath.
+                    if (translatedPath.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
+                        translatedPath.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
+                        translatedPath.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        return SiteConfig.ApplyBasePath(translatedPath);
+                    }
+                    return LocaleHref(translatedPath, locale);
             }
         }
         
         // Fallback to current page path with locale prefix
         var currentPath = Model?.Node?.Target?.RootRelativePath?.Replace(".html", "").Replace("\\", "/");
-        if (!string.IsNullOrEmpty(currentPath))
-        {
-            currentPath = "/" + currentPath;
-            return LocaleHref(currentPath, locale);
-        }
+            if (!string.IsNullOrEmpty(currentPath))
+            {
+                currentPath = "/" + currentPath;
+                if (currentPath.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
+                    currentPath.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
+                    currentPath.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return SiteConfig.ApplyBasePath(currentPath);
+                }
+                return LocaleHref(currentPath, locale);
+            }
         
         return LocaleHref("/", locale);
     }
@@ -155,7 +197,8 @@ namespace Chloroplast.Core.Rendering
                 Slug = "/" + Model.Node.Area.TargetPath.GetPathFileName ().CombinePath (Model.Node.Slug),
                 Source = new DiskFile (fullMenuPath, menuPath),
                 Target = new DiskFile (fullMenuPath, menuPath),
-                Parent = this.Model.Node
+                Parent = this.Model.Node,
+                Locale = this.Model.Node.Locale // propagate locale so menu links localize correctly
             };
             var r = await ContentRenderer.FromMarkdownAsync (node);
             r = await ContentRenderer.ToRazorAsync (r);

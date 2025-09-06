@@ -36,6 +36,12 @@ namespace Chloroplast.Core
         /// </summary>
         public ContentNode[] Translations { get; set; } = new ContentNode[0];
 
+    /// <summary>
+    /// True when this node is a synthesized fallback for a locale that doesn't yet
+    /// have an authored translation. Content is sourced from the default locale.
+    /// </summary>
+    public bool IsFallback { get; set; }
+
         public ContentNode ()
         {
         }
@@ -45,7 +51,7 @@ namespace Chloroplast.Core
 
         public override string ToString ()
         {
-            return $"{Slug}, {Title}, {Source}->{Target} ({Locale})";
+            return $"{Slug}, {Title}, {Source}->{Target} ({Locale}{(IsFallback ? ", fallback" : string.Empty)})";
         }
     }
 }

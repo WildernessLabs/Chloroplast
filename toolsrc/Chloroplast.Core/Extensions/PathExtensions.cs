@@ -131,5 +131,49 @@ namespace Chloroplast.Core.Extensions
             string dir = Path.GetDirectoryName(value);
             return dir.EnsureDirectory ();
         }
+
+        /// <summary>
+        /// Ensures the string starts with a leading '/'. Returns '/' if empty when requested.
+        /// </summary>
+        public static string EnsureLeadingSlash(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "/"; // callers usually expect a root path when empty
+            return value[0] == '/' ? value : "/" + value;
+        }
+
+        /// <summary>
+        /// Determines if the provided path is already locale-prefixed for the given locale.
+        /// Accepts: /{locale}, /{locale}/, /{locale}/something.
+        /// Comparison is case-insensitive.
+        /// </summary>
+        public static bool IsLocalePrefixed(this string path, string locale)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(locale))
+                return false;
+
+            // Fast path: must start with '/'
+            if (path[0] != '/') return false;
+
+            var lower = path.ToLowerInvariant();
+            var loc = locale.ToLowerInvariant();
+
+            return lower == $"/{loc}" || lower == $"/{loc}/" || lower.StartsWith($"/{loc}/");
+        }
+
+        /// <summary>
+        /// Normalizes a raw menu path (adds leading slash, normalizes separators, strips trailing ".html").
+        /// Does NOT apply locale or base path.
+        /// </summary>
+        public static string NormalizeMenuPath(this string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+            var p = raw.Replace(OtherDirectorySeparator, Path.DirectorySeparatorChar)
+                       .Replace('\\', '/') // collapse to URL style for menu items
+                       .Replace(Path.DirectorySeparatorChar, '/');
+            if (p.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+                p = p.Substring(0, p.Length - 5);
+            return p.EnsureLeadingSlash();
+        }
     }
 }
