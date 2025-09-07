@@ -73,6 +73,7 @@ pre {
     padding: 1rem;
     margin: 1rem 0;
     overflow-x: auto;
+    white-space: pre-wrap;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -97,6 +98,72 @@ header {
     background-color: var(--wl-navy-deep);
     padding: 1rem 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Site Header Enhancements */
+.site-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.site-title {
+    font-size: 1.8rem;
+    margin: 0;
+    line-height: 1;
+}
+
+/* Locale Navigation */
+.locale-nav {
+    display: block;
+}
+
+.locale-nav-list {
+    list-style: none;
+    display: flex;
+    gap: .75rem;
+    margin: 0;
+    padding: 0;
+}
+
+.locale-nav-item { margin: 0; }
+
+.locale-nav-link {
+    text-decoration: none;
+    color: var(--wl-white);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .4rem .6rem;
+    border-radius: var(--wl-border-radius);
+    line-height: 1;
+    transition: background .2s ease, color .2s ease, font-weight .2s ease;
+}
+
+.locale-nav-link:hover {
+    background: var(--wl-card-overlay);
+    color: var(--wl-blue);
+}
+
+.locale-nav-link.active {
+    font-weight: 700;
+    background: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+.locale-nav-link.active:hover {
+    background: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+.locale-code { text-transform: lowercase; }
+
+@media (max-width: 640px) {
+    .site-header-container { flex-direction: column; align-items: flex-start; }
+    .locale-nav-list { flex-wrap: wrap; }
+    .locale-nav-link { padding: .35rem .5rem; font-size: .9rem; }
 }
 
 header h1 {
@@ -263,6 +330,10 @@ footer a:hover {
     color: var(--wl-blue);
 }
 
+/* Basic spacing utilities (used in footer markup) */
+.pb-3 { padding-bottom: 1rem; }
+.mb-3 { margin-bottom: 1rem; }
+
 /* Secondary text styling */
 .text-muted {
     color: var(--wl-steel-blue) !important;
@@ -335,6 +406,9 @@ footer a:hover {
 }
 
 .nav.justify-content-center {
+    /* Footer horizontal nav: use flex ONLY when combined with justify-content-center */
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
 }
 
@@ -352,4 +426,25 @@ footer a:hover {
 .nav.justify-content-center .nav-link:hover {
     background: none;
     color: var(--wl-orange);
+}
+
+/* Localization: Translation & Machine Translation Warnings */
+.translation-warning, .machine-translation-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 16px 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+.translation-warning-link {
+    color: #856404;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.translation-warning-link:hover {
+    color: #533f03;
 }

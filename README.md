@@ -18,6 +18,24 @@ chloroplast host
 
 Once you're done with that, you can modify that default template, and [read the docs](/docs/).
 
+### Local testing without BasePath
+
+If your `SiteConfig.yml` declares a `basePath` (common for GitHub Pages) but you'd like to preview locally at the root (`/`) without rewriting links, pass the `--no-basepath` flag to `build` or `host`:
+
+```
+chloroplast build --no-basepath
+chloroplast host --no-basepath
+```
+
+The provided PowerShell helper scripts also support this via a switch:
+
+```
+./scripts/build.ps1 -NoBasePath
+./scripts/host.ps1 -NoBasePath
+```
+
+This does not modify your configuration, it only suppresses base path application for that single run.
+
 ## Host the Chloroplast docs
 
 If you want to see Chloroplast in action, you can even host the Chloroplast docs themselves.

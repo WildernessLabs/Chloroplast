@@ -149,6 +149,23 @@ namespace Chloroplast.Tool
             var config = builder.Build ();
             SiteConfig.Instance = config;
 
+            // Runtime flag: --no-basepath to temporarily ignore configured basePath/baseUrl.
+            // We look for the presence of the flag (no value) in the original argument list after the subcommand.
+            if (subtaskargs.Any(a => string.Equals(a, "--no-basepath", StringComparison.OrdinalIgnoreCase)))
+            {
+                SiteConfig.DisableBasePath = true;
+                try
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("BasePath override active: base path application disabled for this run.");
+                }
+                catch { }
+                finally
+                {
+                    try { Console.ResetColor(); } catch { }
+                }
+            }
+
             return config;
         }
     }

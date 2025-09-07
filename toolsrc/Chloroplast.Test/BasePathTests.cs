@@ -213,6 +213,87 @@ Regular paragraph with [inline link](/inline) in text.
             Assert.Contains("href=\"/mysite/reference-target\"", result.Body);
             Assert.Contains("href=\"/mysite/inline\"", result.Body);
         }
+
+        [Fact]
+        public void BasePath_DisabledOverride_ReturnsEmpty()
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["basePath"] = "/custom"
+            });
+            SiteConfig.DisableBasePath = true;
+            Assert.Equal(string.Empty, SiteConfig.BasePath);
+            SiteConfig.DisableBasePath = false; // reset
+        }
+
+        [Theory]
+        [InlineData("/assets/main.css", "/assets/main.css")] // leading slash remains
+        [InlineData("assets/main.css", "assets/main.css")]   // relative path untouched (caller responsibility)
+        [InlineData("/", "/")] // root stays root
+        public void ApplyBasePath_DisabledOverride_DoesNotPrefix(string input, string expected)
+        {
+            MakeConfig(new Dictionary<string, string> { ["basePath"] = "/pref" });
+            SiteConfig.DisableBasePath = true;
+            var output = SiteConfig.ApplyBasePath(input);
+            Assert.Equal(expected, output);
+            SiteConfig.DisableBasePath = false;
+        }
+
+        [Fact]
+        public void ApplyLocalePath_DisabledOverride_DefaultLocale()
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["basePath"] = "/pref",
+                ["defaultLocale"] = "en"
+            });
+            SiteConfig.DisableBasePath = true;
+            var output = SiteConfig.ApplyLocalePath("/docs", "en");
+            Assert.Equal("/docs", output); // no base path
+            SiteConfig.DisableBasePath = false;
+        }
+
+        [Fact]
+        public void ApplyLocalePath_DisabledOverride_NonDefaultLocale()
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["basePath"] = "/pref",
+                ["defaultLocale"] = "en"
+            });
+            SiteConfig.DisableBasePath = true;
+            var output = SiteConfig.ApplyLocalePath("/docs", "es");
+            Assert.Equal("/es/docs", output); // locale applied, base path skipped
+            SiteConfig.DisableBasePath = false;
+        }
+
+        [Fact]
+        public async Task ContentRenderer_DisabledOverride_DoesNotPrefix()
+        {
+            MakeConfig(new Dictionary<string, string>
+            {
+                ["basePath"] = "/Chloroplast"
+            });
+            SiteConfig.DisableBasePath = true;
+
+            var markdown = @"---\ntitle: Test Page\n---\n\nCheck [install](/Installing) and [home](/).";
+
+            var mockSource = new MockContentSource(markdown);
+            var contentNode = new ContentNode
+            {
+                Source = mockSource,
+                Slug = "test",
+                Title = "Test"
+            };
+
+            var result = await ContentRenderer.FromMarkdownAsync(contentNode);
+
+            Assert.DoesNotContain("href=\"/Chloroplast/Installing\"", result.Body);
+            Assert.Contains("href=\"/Installing\"", result.Body);
+            Assert.Contains("href=\"/\"", result.Body);
+
+            SiteConfig.DisableBasePath = false;
+        }
     }
 
     // Mock content source for testing

@@ -1,14 +1,19 @@
 ﻿@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+@using Chloroplast.Core
 <div class="container" style="margin-left:0; max-width:100%;">
     <div class="row">
-        @await PartialAsync("source/menu.md")
+    @* Render menu via generic localized content helper *@
+    @await LocalizedMarkdownPartialAsync("source/menu.md")
         <div class="main-content">
             <h2>@Model.GetMeta("title")</h2>
             @if (@Model.HasMeta("subtitle"))
             {
                 <h3>@Model.GetMeta("subtitle")</h3>
             }
-            
+            @* Centralized translation/fallback + machine translation notices *@
+            @* Translation warning via generic localized Razor template helper *@
+            @(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
+
             @Raw(Model.Body)
         </div>
     </div>

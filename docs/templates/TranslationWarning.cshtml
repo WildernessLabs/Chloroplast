@@ -1,0 +1,18 @@
+@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+@using Chloroplast.Core
+
+@if (IsFallback && !IsDefaultLocale)
+{
+    <div class="translation-warning" role="alert">
+        <strong>⚠️ Translation Notice:</strong>
+    This content is not yet available in @GetLocaleDisplayNameEx(CurrentLocale). You are viewing the @GetLocaleDisplayNameEx(SiteConfig.DefaultLocale) version.
+    </div>
+}
+
+@if (IsMachineTranslated)
+{
+    <div class="machine-translation-warning" role="alert">
+        <strong>🤖 Machine Translation:</strong>
+        This content was automatically translated and may contain errors.
+    </div>
+}

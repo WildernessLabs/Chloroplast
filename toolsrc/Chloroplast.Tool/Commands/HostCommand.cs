@@ -33,31 +33,39 @@ namespace Chloroplast.Tool.Commands
 
         public int FindAvailablePort(int startPort = 5000)
         {
-            for (int port = startPort; port <= startPort + 100; port++)
+            var endPort = startPort + 200; // search window
+            for (int port = startPort; port <= endPort; port++)
             {
-                try
-                {
-                    using (var tcpListener = new TcpListener(IPAddress.Loopback, port))
-                    {
-                        tcpListener.Start();
-                        tcpListener.Stop();
-                        return port;
-                    }
-                }
-                catch (SocketException)
-                {
-                    // Port is in use, try the next one
-                    continue;
-                }
+                if (ProbePort(port))
+                    return port;
             }
-            
-            throw new ChloroplastException($"Unable to find an available port in range {startPort}-{startPort + 100}");
+            throw new ChloroplastException($"Unable to find an available port in range {startPort}-{endPort}");
+        }
+
+        /// <summary>
+        /// Attempts to determine if a port is available by binding and immediately releasing it.
+        /// Overridable for tests to avoid OS-level socket operations.
+        /// </summary>
+        protected virtual bool ProbePort(int port)
+        {
+            try
+            {
+                using var listener = new TcpListener(IPAddress.Loopback, port);
+                listener.Start();
+                listener.Stop();
+                return true;
+            }
+            catch (SocketException)
+            {
+                return false; // in use
+            }
         }
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
             // Set up build version for cache busting
             SetupBuildVersion(config);
+            Console.WriteLine($"BasePath effective: '{SiteConfig.BasePath}' (disabled={SiteConfig.DisableBasePath})");
             
             this.rootconfig = config;
             var outPath = config["out"].NormalizePath ();

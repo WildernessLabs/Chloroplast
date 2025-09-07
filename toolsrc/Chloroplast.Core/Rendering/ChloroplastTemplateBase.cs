@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Chloroplast.Core.Content;
 using Chloroplast.Core.Extensions;
 using MiniRazor;
@@ -39,6 +40,312 @@ namespace Chloroplast.Core.Rendering
     /// Builds an asset URL with BasePath and optional cache-busting version.
     /// </summary>
     protected string Asset(string path) => WithVersion(SiteConfig.ApplyBasePath(path));
+    
+    /// <summary>
+    /// Builds a localized URL with locale prefix and BasePath applied.
+    /// For the default locale, returns the standard path without locale prefix.
+    /// </summary>
+    /// <param name="path">The site-relative path</param>
+    /// <param name="locale">The locale code (e.g., "en", "es", "fr")</param>
+    protected string LocaleHref(string path, string locale) => SiteConfig.ApplyLocalePath(path, locale);
+    
+    /// <summary>
+    /// Gets the current page's locale.
+    /// </summary>
+    protected string CurrentLocale => Model?.Node?.Locale ?? SiteConfig.DefaultLocale;
+    
+    /// <summary>
+    /// Gets whether the current page was machine translated.
+    /// </summary>
+    protected bool IsMachineTranslated => Model?.Node?.IsMachineTranslated ?? false;
+    
+    /// <summary>
+    /// Gets whether the current page has a translation in the specified locale.
+    /// </summary>
+    /// <param name="locale">The locale to check for</param>
+    protected bool HasTranslation(string locale)
+    {
+        if (CurrentLocale == locale) return true;
+        return Model?.Node?.Translations?.Any(t => t.Locale == locale) ?? false;
+    }
+
+        /// <summary>
+        /// Builds a menu item href from a raw path string.
+        /// Performs:
+        ///  * Normalization (leading slash, strip .html)
+        ///  * Locale prefixing (if non-default and not already locale-prefixed)
+        ///  * BasePath application
+        /// </summary>
+        /// <param name="rawPath">The raw path value from menu metadata (may be null, relative, missing leading slash).</param>
+        protected string BuildMenuItemHref(string rawPath)
+        {
+            if (string.IsNullOrWhiteSpace(rawPath)) return string.Empty;
+
+            // Normalize menu path first (leading slash, remove .html)
+            var normalized = rawPath.NormalizeMenuPath();
+
+            var locale = CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+
+            // If non-default locale and path isn't already locale-prefixed, apply locale path; else standard href
+            if (locale != defaultLocale && !normalized.IsLocalePrefixed(locale))
+            {
+                return LocaleHref(normalized, locale);
+            }
+
+            // Already localized or default locale
+            return Href(normalized);
+        }
+    
+    /// <summary>
+    /// Gets the URL for the current page in the specified locale.
+    /// If the page doesn't exist in that locale, returns the default language version.
+    /// </summary>
+    /// <param name="locale">The target locale</param>
+    protected string GetLocalizedPageUrl(string locale)
+    {
+        // Try to find an authored translation first
+        if (Model?.Node?.Translations != null)
+        {
+            var translation = System.Array.Find(Model.Node.Translations, t => t.Locale == locale);
+            if (translation != null)
+            {
+                return BuildPrettyLocalizedUrl(translation.Target.RootRelativePath, locale);
+            }
+        }
+
+        // Use current node (may be fallback synthesized) and project into requested locale
+        var currentRootRelative = Model?.Node?.Target?.RootRelativePath;
+        if (!string.IsNullOrWhiteSpace(currentRootRelative))
+        {
+            return BuildPrettyLocalizedUrl(currentRootRelative, locale);
+        }
+
+        // Final fallback: root
+        return BuildPrettyLocalizedUrl("index.html", locale);
+    }
+
+    /// <summary>
+    /// Converts a target RootRelativePath (e.g., "cli/index.html", "es/cli/index.html", "installing.html")
+    /// into a pretty, locale-aware, base-path-applied URL.
+    /// Rules:
+    ///  * Strip .html
+    ///  * Collapse any trailing /index to just a trailing /
+    ///  * For non-default locales, ensure the leading /{locale}/ prefix (unless already present)
+    ///  * For default locale, ensure no locale prefix
+    ///  * Always return a leading '/'
+    ///  * Root index becomes '/'
+    /// </summary>
+    protected internal string BuildPrettyLocalizedUrl(string rootRelativePath, string locale)
+    {
+        if (string.IsNullOrWhiteSpace(rootRelativePath)) return SiteConfig.ApplyBasePath("/");
+
+        var defaultLocale = SiteConfig.DefaultLocale;
+
+        // Standardize separators
+        var p = rootRelativePath.Replace('\\', '/'); // e.g. es/cli/index.html
+
+        // Remove any leading ./ that might sneak in (defensive)
+        if (p.StartsWith("./")) p = p.Substring(1);
+
+        // Strip .html extension (only at end)
+        if (p.EndsWith(".html", System.StringComparison.OrdinalIgnoreCase))
+            p = p.Substring(0, p.Length - 5); // remove .html -> es/cli/index
+
+        // Ensure leading slash for further checks
+        if (!p.StartsWith('/')) p = "/" + p; // /es/cli/index OR /installing
+
+        // If we have a trailing /index, collapse it
+        if (p.EndsWith("/index", System.StringComparison.OrdinalIgnoreCase))
+        {
+            if (p.Equals("/index", System.StringComparison.OrdinalIgnoreCase))
+            {
+                p = "/"; // root
+            }
+            else
+            {
+                p = p.Substring(0, p.Length - 6); // drop '/index' -> /es/cli OR /cli
+                if (p.Length > 1 && !p.EndsWith('/')) p += '/'; // directory form ends with /
+            }
+        }
+
+        // Normalize locale prefix rules
+        if (locale != defaultLocale)
+        {
+            // If path already starts with /{locale}/ or equals /{locale}, keep it; else prefix
+            if (!(p.Equals($"/{locale}", System.StringComparison.OrdinalIgnoreCase) ||
+                  p.Equals($"/{locale}/", System.StringComparison.OrdinalIgnoreCase) ||
+                  p.StartsWith($"/{locale}/", System.StringComparison.OrdinalIgnoreCase)))
+            {
+                if (p == "/") p = $"/{locale}/"; // root in locale
+                else p = $"/{locale}" + (p.StartsWith("/") ? p : "/" + p); // /{locale}/... preserving existing leading slash
+            }
+        }
+        else
+        {
+            // Default locale should not retain a prefixed folder (in case content is authored under locale folder unexpectedly)
+            if (p.StartsWith($"/{defaultLocale}/", System.StringComparison.OrdinalIgnoreCase))
+            {
+                p = p.Substring(defaultLocale.Length + 1); // remove '/en'
+                if (!p.StartsWith('/')) p = "/" + p;
+            }
+            else if (p.Equals($"/{defaultLocale}", System.StringComparison.OrdinalIgnoreCase))
+            {
+                p = "/"; // default locale root
+            }
+        }
+
+        // Avoid double slashes (defensive)
+        while (p.Contains("//")) p = p.Replace("//", "/");
+
+        return SiteConfig.ApplyBasePath(p);
+    }
+    
+    /// <summary>
+    /// Gets the country flag emoji for a locale code.
+    /// This can be overridden by derived templates to provide custom locale representations.
+    /// </summary>
+    /// <param name="locale">The locale code (e.g., "en", "es", "fr")</param>
+    protected virtual string GetCountryFlag(string locale)
+    {
+        // Basic default implementation - customers can override this in their templates
+        return locale?.ToLower() switch
+        {
+            "en" => "🇺🇸",
+            "es" => "🇪🇸", 
+            _ => "🌐"
+        };
+    }
+    
+    /// <summary>
+    /// Gets the display name for a locale code.
+    /// This can be overridden by derived templates to provide custom locale names.
+    /// </summary>
+    /// <param name="locale">The locale code (e.g., "en", "es", "fr")</param>
+    protected virtual string GetLocaleDisplayName(string locale)
+    {
+        // Basic default implementation - customers can override this in their templates
+        return locale?.ToLower() switch
+        {
+            "en" => "English",
+            "es" => "Español",
+            _ => locale?.ToUpper() ?? "Unknown"
+        };
+    }
+
+        // Cached locale-config lookups (flags & display names) loaded once per process when first needed
+        static System.Collections.Concurrent.ConcurrentDictionary<string, (string flag, string name)> _localeConfigCache;
+        static bool _localeConfigTriedLoad = false;
+        static (string flag, string name) _localeConfigDefault = ("🌐", "Language");
+
+        void EnsureLocaleConfigLoaded()
+        {
+            if (_localeConfigTriedLoad) return;
+            _localeConfigTriedLoad = true; // even if it fails, don't keep retrying
+            try
+            {
+                var root = SiteConfig.Instance?["root"];
+                var templatesFolder = SiteConfig.Instance?["templates_folder"] ?? "templates";
+                if (string.IsNullOrWhiteSpace(root)) return;
+                var path = System.IO.Path.Combine(root, templatesFolder, "locale-config.yml");
+                if (!System.IO.File.Exists(path)) return;
+                var text = System.IO.File.ReadAllText(path);
+                // Very small and safe parse: look for lines under locales: with pattern "  xx:" then flag/displayName lines
+                var dict = new System.Collections.Concurrent.ConcurrentDictionary<string, (string flag, string name)>(System.StringComparer.OrdinalIgnoreCase);
+                string currentKey = null;
+                foreach (var rawLine in text.Split('\n'))
+                {
+                    var line = rawLine.TrimEnd('\r');
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    if (line.StartsWith("locales:")) continue; // root section
+                    if (!line.StartsWith(" ")) // top-level without indent; check for default section
+                    {
+                        if (line.StartsWith("default:")) currentKey = "__default__"; else currentKey = null;
+                        continue;
+                    }
+                    // Indented lines: either a key ("  en:") or a property ("    flag: ...")
+                    var trimmed = line.Trim();
+                    if (trimmed.EndsWith(":"))
+                    {
+                        // locale key
+                        currentKey = trimmed.Substring(0, trimmed.Length - 1);
+                        if (!string.IsNullOrWhiteSpace(currentKey) && !currentKey.Contains(" "))
+                        {
+                            dict.TryAdd(currentKey, (null, null));
+                        }
+                        continue;
+                    }
+                    if (currentKey != null)
+                    {
+                        int colon = trimmed.IndexOf(":");
+                        if (colon > 0)
+                        {
+                            var prop = trimmed.Substring(0, colon).Trim();
+                            var val = trimmed.Substring(colon + 1).Trim().Trim('"');
+                            if (dict.TryGetValue(currentKey, out var existing))
+                            {
+                                if (prop.Equals("flag", System.StringComparison.OrdinalIgnoreCase)) existing.flag = val;
+                                else if (prop.Equals("displayName", System.StringComparison.OrdinalIgnoreCase)) existing.name = val;
+                                dict[currentKey] = existing;
+                            }
+                            else if (currentKey == "__default__")
+                            {
+                                if (prop.Equals("flag", System.StringComparison.OrdinalIgnoreCase)) _localeConfigDefault.flag = val;
+                                else if (prop.Equals("displayName", System.StringComparison.OrdinalIgnoreCase)) _localeConfigDefault.name = val;
+                            }
+                        }
+                    }
+                }
+                _localeConfigCache = dict;
+            }
+            catch { /* swallow parse errors, fall back to defaults */ }
+        }
+
+        (string flag, string name)? LookupLocaleConfig(string locale)
+        {
+            if (string.IsNullOrWhiteSpace(locale)) return null;
+            EnsureLocaleConfigLoaded();
+            if (_localeConfigCache != null && _localeConfigCache.TryGetValue(locale, out var v))
+            {
+                var flag = string.IsNullOrWhiteSpace(v.flag) ? null : v.flag;
+                var name = string.IsNullOrWhiteSpace(v.name) ? null : v.name;
+                return (flag ?? _localeConfigDefault.flag, name ?? _localeConfigDefault.name);
+            }
+            return null;
+        }
+
+        // Enhanced lookups that first consult locale-config.yml and then fall back to the original virtual implementations.
+        // We keep the original virtual methods (above) as-is for consumers who already override them.
+        // These helper wrappers are what partials/templates should call for richer behavior.
+    // Preferred external call points (partials can still call original names; we keep Ex for backward compatibility if referenced elsewhere)
+    protected string GetCountryFlagEx(string locale)
+        {
+            var cfg = LookupLocaleConfig(locale);
+            if (cfg != null) return cfg.Value.flag;
+            return GetCountryFlag(locale); // call original virtual
+        }
+
+    protected string GetLocaleDisplayNameEx(string locale)
+        {
+            var cfg = LookupLocaleConfig(locale);
+            if (cfg != null) return cfg.Value.name;
+            return GetLocaleDisplayName(locale); // call original virtual
+        }
+
+        /// <summary>
+        /// Indicates whether the current content is a synthesized fallback (no authored translation yet).
+        /// </summary>
+        protected bool IsFallback => Model?.Node?.IsFallback ?? false;
+
+        /// <summary>
+        /// True when the current locale is the default locale.
+        /// </summary>
+        protected bool IsDefaultLocale => CurrentLocale == SiteConfig.DefaultLocale;
+
+        /// <summary>
+        /// True if there is an authored translation for the current locale (i.e. not fallback and locale matches node locale).
+        /// </summary>
+        protected bool HasAuthoredTranslation => !IsFallback && CurrentLocale == (Model?.Node?.Locale ?? SiteConfig.DefaultLocale);
 
         protected Task<RawString> PartialAsync<K>(string templateName, K model)
         {
@@ -66,12 +373,100 @@ namespace Chloroplast.Core.Rendering
                 Slug = "/" + Model.Node.Area.TargetPath.GetPathFileName ().CombinePath (Model.Node.Slug),
                 Source = new DiskFile (fullMenuPath, menuPath),
                 Target = new DiskFile (fullMenuPath, menuPath),
-                Parent = this.Model.Node
+                Parent = this.Model.Node,
+                Locale = this.Model.Node.Locale // propagate locale so menu links localize correctly
             };
             var r = await ContentRenderer.FromMarkdownAsync (node);
             r = await ContentRenderer.ToRazorAsync (r);
 
             return new RawString (r.Body);
+        }
+
+        /// <summary>
+        /// Resolves a localized variant of a content (typically Markdown) file path by inserting the locale
+        /// before the final extension: e.g. "source/menu.md" -> "source/menu.es.md". If the localized file
+        /// does not exist, falls back to the base path.
+        /// </summary>
+        /// <param name="basePath">The base relative path (using forward slashes) to the content file.</param>
+        /// <param name="locale">Optional locale override. Defaults to the current locale.</param>
+        /// <returns>The resolved (possibly localized) relative path.</returns>
+        protected string ResolveLocalizedContentPath(string basePath, string locale = null)
+        {
+            if (string.IsNullOrWhiteSpace(basePath)) return basePath;
+            locale ??= CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+            if (locale == defaultLocale) return basePath; // default locale just uses base
+
+            string localizedPath = InsertLocaleBeforeExtension(basePath, locale);
+
+            // Build physical path to test existence
+            try
+            {
+                var rootPath = SiteConfig.Instance?["root"] ?? string.Empty;
+                var full = System.IO.Path.Combine(rootPath, localizedPath.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString()));
+                if (System.IO.File.Exists(full)) return localizedPath;
+            }
+            catch { /* swallow and fall back */ }
+
+            return basePath; // fallback
+        }
+
+        /// <summary>
+        /// Inserts a locale identifier before the final extension of a path. If no extension, appends ".{locale}".
+        /// Example: "source/menu.md" + "es" => "source/menu.es.md".
+        /// </summary>
+        protected string InsertLocaleBeforeExtension(string path, string locale)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(locale)) return path;
+            int lastSlash = path.LastIndexOf('/');
+            string file = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+            int lastDotInFull = path.LastIndexOf('.');
+            if (lastDotInFull < 0 || (lastSlash >= 0 && lastDotInFull < lastSlash))
+            {
+                return path + "." + locale; // no extension
+            }
+            return path.Substring(0, lastDotInFull) + "." + locale + path.Substring(lastDotInFull);
+        }
+
+        /// <summary>
+        /// Renders a localized Markdown (or other content-file based) partial, falling back to the base file if the localized variant is absent.
+        /// Usage in templates: <c>@await LocalizedMarkdownPartialAsync("source/menu.md")</c>
+        /// </summary>
+        /// <param name="basePath">Base relative path (e.g. "source/menu.md").</param>
+        /// <param name="locale">Optional explicit locale; defaults to current locale.</param>
+        protected Task<RawString> LocalizedMarkdownPartialAsync(string basePath, string locale = null)
+        {
+            var resolved = ResolveLocalizedContentPath(basePath, locale);
+            return PartialAsync(resolved);
+        }
+
+        /// <summary>
+        /// Renders a localized Razor template partial, attempting baseName + ".{locale}" first for non-default locales,
+        /// then falling back to the base name. Example: baseName="TranslationWarning" -> tries "TranslationWarning.es".
+        /// </summary>
+        /// <typeparam name="K">Model type</typeparam>
+        /// <param name="baseName">Base template name without extension</param>
+        /// <param name="model">Model to pass to the template</param>
+        /// <param name="locale">Optional explicit locale override</param>
+        /// <param name="fallbackToBase">If false, rethrows when localized version missing</param>
+        protected async Task<RawString> LocalizedTemplatePartialAsync<K>(string baseName, K model, string locale = null, bool fallbackToBase = true)
+        {
+            if (string.IsNullOrWhiteSpace(baseName)) throw new System.ArgumentException("Base template name required", nameof(baseName));
+            locale ??= CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+            if (locale != defaultLocale)
+            {
+                var localized = baseName + "." + locale;
+                try
+                {
+                    return await PartialAsync(localized, model);
+                }
+                catch
+                {
+                    if (!fallbackToBase) throw;
+                }
+            }
+            return await PartialAsync(baseName, model);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>
+@using Chloroplast.Core
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@CurrentLocale">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,9 +9,21 @@
     <link href="@Asset("/assets/main.css")" rel="stylesheet" />
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1><a href="@Href("/")">Chloroplast Docs</a></h1>
+    <header class="site-header">
+        <div class="container site-header-container">
+            <h1 class="site-title"><a href="@LocaleHref("/", CurrentLocale)">Chloroplast Docs</a></h1>
+            <nav class="locale-nav" aria-label="Language selector">
+                <ul class="locale-nav-list">
+                @foreach (var loc in SiteConfig.SupportedLocales)
+                {
+                    var url = GetLocalizedPageUrl(loc);
+                    var isActive = string.Equals(loc, CurrentLocale, System.StringComparison.OrdinalIgnoreCase);
+                    <li class="locale-nav-item">
+                        <a href="@url" class="locale-nav-link@(isActive?" active":"")" title="@GetLocaleDisplayName(loc)"@(isActive?" aria-current=\"true\"":"")>@GetCountryFlag(loc) <span class="locale-code">@loc</span></a>
+                    </li>
+                }
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -19,7 +32,7 @@
     <footer>
         <div class="container">
             <ul class="nav justify-content-center border-bottom pb-3 mb-3">
-                <li class="nav-item"><a href="@Href("/")" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="@LocaleHref("/", CurrentLocale)" class="nav-link text-muted">Home</a></li>
                 <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
                 <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
                 <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
