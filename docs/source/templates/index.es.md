@@ -154,3 +154,117 @@ else
     <link href="/assets/main.css" rel="stylesheet" />
 }
 ```
+
+## Parciales y Plantillas Localizadas
+
+Chloroplast proporciona métodos auxiliares para simplificar el renderizado de parciales específicos por idioma (tanto archivos de contenido Markdown como parciales Razor) sin incrustar lógica específica de localización en cada archivo `.cshtml`.
+
+Estos helpers mantienen tus plantillas limpias y permiten que los autores agreguen variantes localizadas simplemente creando archivos que sigan una convención de nombres (por ejemplo `menu.es.md`).
+
+### Métodos Helper
+
+| Método | Propósito |
+| ------ | --------- |
+| `ResolveLocalizedContentPath(basePath, locale?)` | Devuelve la ruta relativa localizada si existe (por ejemplo `source/menu.es.md`), de lo contrario la ruta base. No renderiza nada. |
+| `InsertLocaleBeforeExtension(path, locale)` | Convierte `file.md` en `file.es.md` (usado internamente; disponible si necesitas lógica personalizada). |
+| `LocalizedMarkdownPartialAsync(basePath, locale?)` | Renderiza un parcial Markdown localizado, usando el archivo base si falta el localizado. |
+| `LocalizedTemplatePartialAsync<TModel>(baseName, model, locale?, fallbackToBase=true)` | Renderiza un parcial Razor, intentando `baseName.{locale}` primero cuando el locale != predeterminado, luego usando el base. |
+
+### Ejemplos de Uso
+
+Renderizar un menú Markdown localizado (intenta `source/menu.<locale>.md` primero):
+
+```razor
+@await LocalizedMarkdownPartialAsync("source/menu.md")
+```
+
+Renderizar un parcial Razor localizado (ej. `TranslationWarning.cshtml` + opcional `TranslationWarning.es.cshtml`):
+
+```razor
+@(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
+```
+
+Forzar un locale específico (útil para selectores de idioma o vistas previas):
+
+```razor
+@* Mostrar cómo se vería el menú de esta página en Español *@
+@await LocalizedMarkdownPartialAsync("source/menu.md", locale: "es")
+```
+
+### Convenciones de Nombres de Archivos
+
+Archivo base:
+
+```
+source/menu.md
+```
+
+Agregar una variante localizada insertando el locale antes de la extensión:
+
+```
+source/menu.es.md
+source/menu.fr.md
+```
+
+Para parciales Razor (sin extensión en la llamada):
+
+```
+TranslationWarning.cshtml
+TranslationWarning.es.cshtml
+TranslationWarning.fr.cshtml
+```
+
+### Comportamiento de Fallback
+
+1. Se solicita un locale no predeterminado → se busca la variante localizada.
+2. Si existe → se renderiza.
+3. Si falta → se usa el archivo base (fallback sin excepción).
+4. Puedes forzar una excepción en lugar de fallback con `fallbackToBase: false` en `LocalizedTemplatePartialAsync`.
+
+### Cuándo Usar Cada Uno
+
+| Situación | Usar |
+| --------- | ---- |
+| Renderizar un fragmento de contenido Markdown (ej. sidebar, footer) | `LocalizedMarkdownPartialAsync` |
+| Renderizar un parcial Razor (lógica dinámica, modelo personalizado) | `LocalizedTemplatePartialAsync` |
+| Solo necesitas la ruta resuelta para lógica personalizada | `ResolveLocalizedContentPath` |
+
+### Migrando Lógica Existente
+
+Si antes tenías lógica manual como:
+
+```razor
+@{
+  var baseMenu = "source/menu.md";
+  var localized = CurrentLocale != SiteConfig.DefaultLocale ? $"source/menu.{CurrentLocale}.md" : baseMenu;
+  // ... comprobaciones de existencia ...
+}
+@await PartialAsync(menuPathToUse)
+```
+
+Reemplázalo con:
+
+```razor
+@await LocalizedMarkdownPartialAsync("source/menu.md")
+```
+
+Y para avisos / advertencias localizadas:
+
+```razor
+@(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
+```
+
+### Personalización
+
+Todavía puedes construir abstracciones de nivel superior sobre estos métodos (ej. un helper `RenderSidebar()`) en una clase base de plantilla derivada. Los helpers proporcionados evitan deliberadamente suposiciones sobre nombres de archivos específicos más allá de la convención de inserción de locale.
+
+### Casos Borde y Notas
+
+* Si un archivo no tiene extensión (ej. `fragment`), una variante localizada se convierte en `fragment.es`.
+* `InsertLocaleBeforeExtension` solo modifica el segmento final; las rutas anidadas se preservan.
+* La comprobación de existencia usa la `root` configurada y respeta los separadores de directorio de la plataforma.
+* Estos helpers no modifican la localización de URLs—solo gestionan qué archivo de contenido fuente se renderiza.
+
+---
+
+Con estos helpers puedes mantener las plantillas concisas mientras permites que los colaboradores agreguen contenido localizado simplemente creando archivos con nombres apropiados.

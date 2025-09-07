@@ -153,3 +153,117 @@ else
     <link href="/assets/main.css" rel="stylesheet" />
 }
 ```
+
+## Localized Partials & Templates
+
+Chloroplast provides helper methods to simplify rendering locale-specific partials (both Markdown content files and Razor template partials) without hard-coding locale-specific logic in every `.cshtml` file.
+
+These helpers keep your templates clean and make it easy for site authors to add localized variants by simply creating files that follow a naming convention (e.g. `menu.es.md`).
+
+### Helper Methods
+
+| Method | Purpose |
+| ------ | ------- |
+| `ResolveLocalizedContentPath(basePath, locale?)` | Returns the localized relative path if it exists (e.g. `source/menu.es.md`), otherwise the base path. Does not render anything. |
+| `InsertLocaleBeforeExtension(path, locale)` | Utility that transforms `file.md` into `file.es.md` (used internally; available if you need custom logic). |
+| `LocalizedMarkdownPartialAsync(basePath, locale?)` | Renders a localized Markdown content partial, falling back to the base file. |
+| `LocalizedTemplatePartialAsync<TModel>(baseName, model, locale?, fallbackToBase=true)` | Renders a Razor template partial, trying `baseName.{locale}` first when locale != default, then falling back. |
+
+### Usage Examples
+
+Render a localized menu Markdown file (tries `source/menu.<locale>.md` first):
+
+```razor
+@await LocalizedMarkdownPartialAsync("source/menu.md")
+```
+
+Render a localized Razor partial (e.g. `TranslationWarning.cshtml` + optional `TranslationWarning.es.cshtml`):
+
+```razor
+@(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
+```
+
+Explicitly target a different locale (useful for language switchers or preview UIs):
+
+```razor
+@* Show how this page's menu would look in Spanish *@
+@await LocalizedMarkdownPartialAsync("source/menu.md", locale: "es")
+```
+
+### File Naming Conventions
+
+For a base file:
+
+```
+source/menu.md
+```
+
+Add a localized variant by inserting the locale before the extension:
+
+```
+source/menu.es.md
+source/menu.fr.md
+```
+
+For Razor partials (no extension required in calls):
+
+```
+TranslationWarning.cshtml
+TranslationWarning.es.cshtml
+TranslationWarning.fr.cshtml
+```
+
+### Fallback Behavior
+
+1. Non-default locale requested → framework looks for localized variant.
+2. If localized file exists → it is rendered.
+3. If missing → base file is rendered (graceful fallback, no exception).
+4. You can force an exception instead of fallback with `fallbackToBase: false` on `LocalizedTemplatePartialAsync`.
+
+### When to Use Which
+
+| Situation | Use |
+| --------- | --- |
+| Rendering a Markdown content fragment (e.g. a sidebar, footer) | `LocalizedMarkdownPartialAsync` |
+| Rendering a Razor partial (dynamic logic, custom model) | `LocalizedTemplatePartialAsync` |
+| Just need the resolved path for custom logic (e.g. building a list) | `ResolveLocalizedContentPath` |
+
+### Migrating Existing Logic
+
+If you previously had manual logic like:
+
+```razor
+@{
+  var baseMenu = "source/menu.md";
+  var localized = CurrentLocale != SiteConfig.DefaultLocale ? $"source/menu.{CurrentLocale}.md" : baseMenu;
+  // ... existence checks ...
+}
+@await PartialAsync(menuPathToUse)
+```
+
+Replace it with:
+
+```razor
+@await LocalizedMarkdownPartialAsync("source/menu.md")
+```
+
+And for localized warnings / notices:
+
+```razor
+@(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
+```
+
+### Customization
+
+You can still build higher-level abstractions on top of these methods (e.g. a `RenderSidebar()` helper) in a derived template base class. The provided helpers deliberately avoid assumptions about specific file names beyond the locale insertion convention.
+
+### Edge Cases & Notes
+
+* If a file has no extension (e.g. `fragment`), a locale variant becomes `fragment.es`.
+* `InsertLocaleBeforeExtension` only modifies the final segment; nested paths are preserved.
+* The existence check uses the configured site `root` and honors directory separators on the current platform.
+* These helpers do not alter URL localization—they strictly manage which source content file is rendered.
+
+---
+
+With these helpers, you can keep templates concise while enabling contributors to add localized content simply by creating appropriately named files.

@@ -2,15 +2,8 @@
 @using Chloroplast.Core
 <div class="container" style="margin-left:0; max-width:100%;">
     <div class="row">
-        @{
-            var baseMenu = "source/menu.md";
-            var localizedMenu = CurrentLocale != SiteConfig.DefaultLocale ? $"source/menu.{CurrentLocale}.md" : baseMenu;
-            // Try localized first; PartialAsync will throw if missing, so check file existence
-            var rootPath = SiteConfig.Instance["root"];
-            var localizedMenuFull = System.IO.Path.Combine(rootPath, localizedMenu.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString()));
-            var menuPathToUse = System.IO.File.Exists(localizedMenuFull) ? localizedMenu : baseMenu;
-        }
-        @await PartialAsync(menuPathToUse)
+    @* Render menu via generic localized content helper *@
+    @await LocalizedMarkdownPartialAsync("source/menu.md")
         <div class="main-content">
             <h2>@Model.GetMeta("title")</h2>
             @if (@Model.HasMeta("subtitle"))
@@ -18,21 +11,8 @@
                 <h3>@Model.GetMeta("subtitle")</h3>
             }
             @* Centralized translation/fallback + machine translation notices *@
-            @{
-                var baseName = "TranslationWarning";
-                var localizedName = baseName + "." + CurrentLocale;
-                MiniRazor.RawString _tw;
-                if (CurrentLocale != SiteConfig.DefaultLocale)
-                {
-                    try { _tw = await PartialAsync(localizedName, Model); }
-                    catch { _tw = await PartialAsync(baseName, Model); }
-                }
-                else
-                {
-                    _tw = await PartialAsync(baseName, Model);
-                }
-                @_tw;
-            }
+            @* Translation warning via generic localized Razor template helper *@
+            @(await LocalizedTemplatePartialAsync("TranslationWarning", Model))
 
             @Raw(Model.Body)
         </div>

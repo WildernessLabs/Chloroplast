@@ -381,5 +381,92 @@ namespace Chloroplast.Core.Rendering
 
             return new RawString (r.Body);
         }
+
+        /// <summary>
+        /// Resolves a localized variant of a content (typically Markdown) file path by inserting the locale
+        /// before the final extension: e.g. "source/menu.md" -> "source/menu.es.md". If the localized file
+        /// does not exist, falls back to the base path.
+        /// </summary>
+        /// <param name="basePath">The base relative path (using forward slashes) to the content file.</param>
+        /// <param name="locale">Optional locale override. Defaults to the current locale.</param>
+        /// <returns>The resolved (possibly localized) relative path.</returns>
+        protected string ResolveLocalizedContentPath(string basePath, string locale = null)
+        {
+            if (string.IsNullOrWhiteSpace(basePath)) return basePath;
+            locale ??= CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+            if (locale == defaultLocale) return basePath; // default locale just uses base
+
+            string localizedPath = InsertLocaleBeforeExtension(basePath, locale);
+
+            // Build physical path to test existence
+            try
+            {
+                var rootPath = SiteConfig.Instance?["root"] ?? string.Empty;
+                var full = System.IO.Path.Combine(rootPath, localizedPath.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString()));
+                if (System.IO.File.Exists(full)) return localizedPath;
+            }
+            catch { /* swallow and fall back */ }
+
+            return basePath; // fallback
+        }
+
+        /// <summary>
+        /// Inserts a locale identifier before the final extension of a path. If no extension, appends ".{locale}".
+        /// Example: "source/menu.md" + "es" => "source/menu.es.md".
+        /// </summary>
+        protected string InsertLocaleBeforeExtension(string path, string locale)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(locale)) return path;
+            int lastSlash = path.LastIndexOf('/');
+            string file = lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+            int lastDotInFull = path.LastIndexOf('.');
+            if (lastDotInFull < 0 || (lastSlash >= 0 && lastDotInFull < lastSlash))
+            {
+                return path + "." + locale; // no extension
+            }
+            return path.Substring(0, lastDotInFull) + "." + locale + path.Substring(lastDotInFull);
+        }
+
+        /// <summary>
+        /// Renders a localized Markdown (or other content-file based) partial, falling back to the base file if the localized variant is absent.
+        /// Usage in templates: <c>@await LocalizedMarkdownPartialAsync("source/menu.md")</c>
+        /// </summary>
+        /// <param name="basePath">Base relative path (e.g. "source/menu.md").</param>
+        /// <param name="locale">Optional explicit locale; defaults to current locale.</param>
+        protected Task<RawString> LocalizedMarkdownPartialAsync(string basePath, string locale = null)
+        {
+            var resolved = ResolveLocalizedContentPath(basePath, locale);
+            return PartialAsync(resolved);
+        }
+
+        /// <summary>
+        /// Renders a localized Razor template partial, attempting baseName + ".{locale}" first for non-default locales,
+        /// then falling back to the base name. Example: baseName="TranslationWarning" -> tries "TranslationWarning.es".
+        /// </summary>
+        /// <typeparam name="K">Model type</typeparam>
+        /// <param name="baseName">Base template name without extension</param>
+        /// <param name="model">Model to pass to the template</param>
+        /// <param name="locale">Optional explicit locale override</param>
+        /// <param name="fallbackToBase">If false, rethrows when localized version missing</param>
+        protected async Task<RawString> LocalizedTemplatePartialAsync<K>(string baseName, K model, string locale = null, bool fallbackToBase = true)
+        {
+            if (string.IsNullOrWhiteSpace(baseName)) throw new System.ArgumentException("Base template name required", nameof(baseName));
+            locale ??= CurrentLocale;
+            var defaultLocale = SiteConfig.DefaultLocale;
+            if (locale != defaultLocale)
+            {
+                var localized = baseName + "." + locale;
+                try
+                {
+                    return await PartialAsync(localized, model);
+                }
+                catch
+                {
+                    if (!fallbackToBase) throw;
+                }
+            }
+            return await PartialAsync(baseName, model);
+        }
     }
 }
