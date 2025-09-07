@@ -17,15 +17,23 @@
             {
                 <h3>@Model.GetMeta("subtitle")</h3>
             }
-            
-            @if (IsMachineTranslated)
-            {
-                <div class="machine-translation-warning" role="alert" style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 0.75rem; margin-bottom: 1rem; border-radius: 0.25rem;">
-                    <strong>🤖 Machine Translation:</strong> 
-                    This content was automatically translated and may contain errors.
-                </div>
+            @* Centralized translation/fallback + machine translation notices *@
+            @{
+                var baseName = "TranslationWarning";
+                var localizedName = baseName + "." + CurrentLocale;
+                MiniRazor.RawString _tw;
+                if (CurrentLocale != SiteConfig.DefaultLocale)
+                {
+                    try { _tw = await PartialAsync(localizedName, Model); }
+                    catch { _tw = await PartialAsync(baseName, Model); }
+                }
+                else
+                {
+                    _tw = await PartialAsync(baseName, Model);
+                }
+                @_tw;
             }
-            
+
             @Raw(Model.Body)
         </div>
     </div>

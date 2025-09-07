@@ -85,6 +85,49 @@ Behavior:
 ### Customizing the Warning
 Copy the existing partial and modify the text/markup. If you need richer logic, replicate the minimal conditions used internally (`has translation?`, `IsMachineTranslated`) and style to your needs.
 
+### Manual Snippets
+If you prefer not to use the partials, you can add explicit notices directly in a template:
+
+```razor
+@* Missing translation (fallback) *@
+@if (IsFallback && CurrentLocale != SiteConfig.DefaultLocale)
+{
+	<div class="translation-warning" role="alert">
+		<strong>⚠️ Translation Notice:</strong>
+		This content is not available in @GetLocaleDisplayName(CurrentLocale).
+		You are viewing the @GetLocaleDisplayName(SiteConfig.DefaultLocale) version.
+		<a href="@GetLocalizedPageUrl(SiteConfig.DefaultLocale)" class="translation-warning-link">
+			View in @GetLocaleDisplayName(SiteConfig.DefaultLocale)
+		</a>
+	</div>
+}
+
+@* Machine translation notice *@
+@if (IsMachineTranslated)
+{
+	<div class="machine-translation-warning" role="alert">
+		<strong>🤖 Machine Translation:</strong>
+		This content was automatically translated and may contain errors.
+	</div>
+}
+```
+
+Suggested minimal styling (merge / adapt to your main stylesheet):
+
+```css
+.translation-warning, .machine-translation-warning {
+	background: #fff3cd;
+	border: 1px solid #ffeaa7;
+	border-radius: 4px;
+	padding: 12px;
+	margin: 16px 0;
+	color: #856404;
+	font-size: 14px;
+}
+.translation-warning-link { color: #856404; text-decoration: underline; font-weight: 500; }
+.translation-warning-link:hover { color: #533f03; }
+```
+
 ## 6. Locale Picker
 
 Implement a user‑selectable language menu via a Razor partial (see the reference component documented separately). Key concepts:
@@ -101,6 +144,87 @@ Include the picker where appropriate:
 ```
 
 Keyboard + ARIA patterns are shown in the component reference (`LocalePickerComponent.md`).
+
+### Reference Implementation
+Below is an inline reference you can copy into a partial named `LocalePicker.cshtml` (the separate component doc has been inlined here for convenience):
+
+```razor
+@{
+	var supportedLocales = SiteConfig.SupportedLocales;
+	var currentLocale = Model?.Node?.Locale ?? SiteConfig.DefaultLocale;
+}
+
+@if (supportedLocales.Length > 1)
+{
+	<div class="locale-picker">
+		<button type="button" class="locale-picker-toggle" aria-expanded="false" aria-haspopup="true">
+			@GetCountryFlag(currentLocale) @GetLocaleDisplayName(currentLocale)
+			<span class="locale-picker-arrow">▼</span>
+		</button>
+		<ul class="locale-picker-menu" role="menu" aria-hidden="true">
+			@foreach (var locale in supportedLocales)
+			{
+				var isActive = locale == currentLocale;
+				var localizedUrl = GetLocalizedPageUrl(locale);
+				<li role="none">
+					<a href="@localizedUrl" role="menuitem" class="locale-picker-item @(isActive ? "active" : "")" @(isActive ? "aria-current=\"page\"" : "")>
+						@GetCountryFlag(locale) @GetLocaleDisplayName(locale)
+					</a>
+				</li>
+			}
+		</ul>
+	</div>
+}
+```
+
+Include the partial where desired:
+
+```razor
+@await PartialAsync("LocalePicker")
+```
+
+#### CSS (Add to your main stylesheet)
+```css
+.locale-picker { position: relative; display: inline-block; }
+.locale-picker-toggle { background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px; padding:8px 12px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:14px; color:#495057; }
+.locale-picker-toggle:hover { background:#e9ecef; border-color:#adb5bd; }
+.locale-picker-arrow { font-size:10px; transition: transform .2s ease; }
+.locale-picker[aria-expanded="true"] .locale-picker-arrow { transform: rotate(180deg); }
+.locale-picker-menu { position:absolute; top:100%; right:0; background:#fff; border:1px solid #dee2e6; border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.1); list-style:none; margin:4px 0 0; padding:4px 0; min-width:150px; z-index:1000; display:none; }
+.locale-picker[aria-expanded="true"] .locale-picker-menu { display:block; }
+.locale-picker-item { display:block; padding:8px 12px; color:#495057; text-decoration:none; font-size:14px; white-space:nowrap; }
+.locale-picker-item:hover { background:#f8f9fa; color:#212529; }
+.locale-picker-item.active { background:#007bff; color:#fff; }
+.locale-picker-item.active:hover { background:#0056b3; }
+```
+
+#### JavaScript (defer or inline near the end of `body`)
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  const picker = document.querySelector('.locale-picker');
+  if (!picker) return;
+  const toggle = picker.querySelector('.locale-picker-toggle');
+  const menu = picker.querySelector('.locale-picker-menu');
+  const open = () => { toggle.setAttribute('aria-expanded','true'); menu.setAttribute('aria-hidden','false'); picker.setAttribute('aria-expanded','true'); };
+  const close = () => { toggle.setAttribute('aria-expanded','false'); menu.setAttribute('aria-hidden','true'); picker.setAttribute('aria-expanded','false'); };
+  toggle.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); (toggle.getAttribute('aria-expanded')==='true') ? close() : open(); });
+  document.addEventListener('click', e => { if (!picker.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (e.key==='Escape') { close(); toggle.focus(); } });
+  menu.addEventListener('keydown', e => {
+	const items = menu.querySelectorAll('.locale-picker-item');
+	const list = Array.from(items);
+	const idx = list.indexOf(document.activeElement);
+	if (e.key==='ArrowDown') { e.preventDefault(); list[(idx+1)%list.length].focus(); }
+	else if (e.key==='ArrowUp') { e.preventDefault(); list[(idx-1+list.length)%list.length].focus(); }
+	else if (e.key===' ' || e.key==='Enter') { if (document.activeElement.classList.contains('locale-picker-item')) { e.preventDefault(); document.activeElement.click(); } }
+  });
+});
+```
+
+Accessibility notes:
+* Uses ARIA menu roles for screen reader clarity.
+* Keyboard navigation (ArrowUp/Down, Enter/Space, Escape) supported.
+* `aria-current="page"` marks the active locale.
 
 ## 7. Customizing Flags & Names
 
@@ -150,12 +274,29 @@ When a locale page is requested but no authored translation exists:
 
 Generated sitemaps include `hreflang` alternates for each set of translations so search engines properly index language variants. Ensure `baseUrl` is configured for sitemap generation.
 
-## 10. Authoring Workflow Tips
+Example excerpt:
 
+```xml
+<url>
+	<loc>https://example.com/docs/guide</loc>
+	<xhtml:link rel="alternate" hreflang="es" href="https://example.com/es/docs/guide" />
+	<xhtml:link rel="alternate" hreflang="fr" href="https://example.com/fr/docs/guide" />
+	<xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/docs/guide" />
+</url>
+```
+
+## 10. Authoring Workflow Tips & Best Practices
+
+- Start with your primary language: set `defaultLocale` to the language you author in.
 - Translate incrementally; untranslated pages work immediately via fallback.
 - Prefer consistent slug names across locales to maximize automatic grouping.
+- Choose one organization style (filename suffix OR sub-directory) for clarity.
+- Include the locale picker early for user discoverability.
+- Test with a configured `basePath` (e.g., GitHub Pages) to ensure prefixed locale URLs resolve.
 - Add machine translation flags early so you remember to revisit content later.
-- Keep custom locale assets (flags, names) in one code path for future additions.
+- Keep custom locale assets (flags, names) centralized (helpers or `locale-config.yml`).
+- Document a review process for machine-translated pages to graduate them to human-reviewed.
+- Periodically audit sitemap output to verify `hreflang` integrity after adding locales.
 
 ## 11. Quick Checklist
 
@@ -170,3 +311,16 @@ Generated sitemaps include `hreflang` alternates for each set of translations so
 Need the implementation reference? See the existing component and guide files in the repo (`LocalizationGuide.md`, `LocalePickerComponent.md`).
 
 Return to [Home](/).
+
+## 12. Migration from Existing Non-localized Sites
+
+You can add localization without breaking existing deployments:
+
+1. Add `defaultLocale` and `supportedLocales` to `SiteConfig.yml` (include the default in the list).
+2. Your existing content is automatically treated as the default locale.
+3. Add translated files using your chosen naming strategy (`file.es.md` or `es/file.md`).
+4. Introduce the locale picker & translation warning partials when ready (site builds fine without them).
+5. Add machine translation flags where applicable so you can queue human review later.
+6. Rebuild and confirm new localized URLs plus sitemap `hreflang` entries.
+
+No reorganization of existing default-language content is required; localization is additive and opt-in.

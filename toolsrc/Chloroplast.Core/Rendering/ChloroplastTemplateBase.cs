@@ -233,6 +233,120 @@ namespace Chloroplast.Core.Rendering
         };
     }
 
+        // Cached locale-config lookups (flags & display names) loaded once per process when first needed
+        static System.Collections.Concurrent.ConcurrentDictionary<string, (string flag, string name)> _localeConfigCache;
+        static bool _localeConfigTriedLoad = false;
+        static (string flag, string name) _localeConfigDefault = ("🌐", "Language");
+
+        void EnsureLocaleConfigLoaded()
+        {
+            if (_localeConfigTriedLoad) return;
+            _localeConfigTriedLoad = true; // even if it fails, don't keep retrying
+            try
+            {
+                var root = SiteConfig.Instance?["root"];
+                var templatesFolder = SiteConfig.Instance?["templates_folder"] ?? "templates";
+                if (string.IsNullOrWhiteSpace(root)) return;
+                var path = System.IO.Path.Combine(root, templatesFolder, "locale-config.yml");
+                if (!System.IO.File.Exists(path)) return;
+                var text = System.IO.File.ReadAllText(path);
+                // Very small and safe parse: look for lines under locales: with pattern "  xx:" then flag/displayName lines
+                var dict = new System.Collections.Concurrent.ConcurrentDictionary<string, (string flag, string name)>(System.StringComparer.OrdinalIgnoreCase);
+                string currentKey = null;
+                foreach (var rawLine in text.Split('\n'))
+                {
+                    var line = rawLine.TrimEnd('\r');
+                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
+                    if (line.StartsWith("locales:")) continue; // root section
+                    if (!line.StartsWith(" ")) // top-level without indent; check for default section
+                    {
+                        if (line.StartsWith("default:")) currentKey = "__default__"; else currentKey = null;
+                        continue;
+                    }
+                    // Indented lines: either a key ("  en:") or a property ("    flag: ...")
+                    var trimmed = line.Trim();
+                    if (trimmed.EndsWith(":"))
+                    {
+                        // locale key
+                        currentKey = trimmed.Substring(0, trimmed.Length - 1);
+                        if (!string.IsNullOrWhiteSpace(currentKey) && !currentKey.Contains(" "))
+                        {
+                            dict.TryAdd(currentKey, (null, null));
+                        }
+                        continue;
+                    }
+                    if (currentKey != null)
+                    {
+                        int colon = trimmed.IndexOf(":");
+                        if (colon > 0)
+                        {
+                            var prop = trimmed.Substring(0, colon).Trim();
+                            var val = trimmed.Substring(colon + 1).Trim().Trim('"');
+                            if (dict.TryGetValue(currentKey, out var existing))
+                            {
+                                if (prop.Equals("flag", System.StringComparison.OrdinalIgnoreCase)) existing.flag = val;
+                                else if (prop.Equals("displayName", System.StringComparison.OrdinalIgnoreCase)) existing.name = val;
+                                dict[currentKey] = existing;
+                            }
+                            else if (currentKey == "__default__")
+                            {
+                                if (prop.Equals("flag", System.StringComparison.OrdinalIgnoreCase)) _localeConfigDefault.flag = val;
+                                else if (prop.Equals("displayName", System.StringComparison.OrdinalIgnoreCase)) _localeConfigDefault.name = val;
+                            }
+                        }
+                    }
+                }
+                _localeConfigCache = dict;
+            }
+            catch { /* swallow parse errors, fall back to defaults */ }
+        }
+
+        (string flag, string name)? LookupLocaleConfig(string locale)
+        {
+            if (string.IsNullOrWhiteSpace(locale)) return null;
+            EnsureLocaleConfigLoaded();
+            if (_localeConfigCache != null && _localeConfigCache.TryGetValue(locale, out var v))
+            {
+                var flag = string.IsNullOrWhiteSpace(v.flag) ? null : v.flag;
+                var name = string.IsNullOrWhiteSpace(v.name) ? null : v.name;
+                return (flag ?? _localeConfigDefault.flag, name ?? _localeConfigDefault.name);
+            }
+            return null;
+        }
+
+        // Enhanced lookups that first consult locale-config.yml and then fall back to the original virtual implementations.
+        // We keep the original virtual methods (above) as-is for consumers who already override them.
+        // These helper wrappers are what partials/templates should call for richer behavior.
+    // Preferred external call points (partials can still call original names; we keep Ex for backward compatibility if referenced elsewhere)
+    protected string GetCountryFlagEx(string locale)
+        {
+            var cfg = LookupLocaleConfig(locale);
+            if (cfg != null) return cfg.Value.flag;
+            return GetCountryFlag(locale); // call original virtual
+        }
+
+    protected string GetLocaleDisplayNameEx(string locale)
+        {
+            var cfg = LookupLocaleConfig(locale);
+            if (cfg != null) return cfg.Value.name;
+            return GetLocaleDisplayName(locale); // call original virtual
+        }
+
+        /// <summary>
+        /// Indicates whether the current content is a synthesized fallback (no authored translation yet).
+        /// </summary>
+        protected bool IsFallback => Model?.Node?.IsFallback ?? false;
+
+        /// <summary>
+        /// True when the current locale is the default locale.
+        /// </summary>
+        protected bool IsDefaultLocale => CurrentLocale == SiteConfig.DefaultLocale;
+
+        /// <summary>
+        /// True if there is an authored translation for the current locale (i.e. not fallback and locale matches node locale).
+        /// </summary>
+        protected bool HasAuthoredTranslation => !IsFallback && CurrentLocale == (Model?.Node?.Locale ?? SiteConfig.DefaultLocale);
+
         protected Task<RawString> PartialAsync<K>(string templateName, K model)
         {
             return RazorRenderer.Instance.RenderTemplateContent (templateName, model);
