@@ -72,11 +72,11 @@ namespace Chloroplast.Core.Rendering
         }
         public static async Task<RenderedContent> FromMarkdownAsync(ContentNode node)
         {
-            var content = node.Source.ReadContentAsync ();
+            var content = await node.Source.ReadContentAsync ();
             var parsed = new RenderedContent 
             {
                 Node = node,
-                Body = content.Result
+                Body = content
             };
             
             // parse front-matter

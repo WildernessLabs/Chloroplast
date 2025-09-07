@@ -46,7 +46,7 @@ namespace Chloroplast.Core.Content
         public Task<string> ReadContentAsync () =>
             File.ReadAllTextAsync (this.FullPath);
 
-        public async Task WriteContentAsync (string content)
+        public Task WriteContentAsync (string content)
         {
             try
             {
@@ -56,10 +56,7 @@ namespace Chloroplast.Core.Content
                 // intermittent results (empty files) with the
                 // await version. So this sync workaround
                 // wfm
-                if (true)
-                    File.WriteAllText (this.FullPath, content);
-                else
-                    await File.WriteAllTextAsync (this.FullPath, content);
+                File.WriteAllText (this.FullPath, content);
             }
             catch (Exception ex)
             {
@@ -67,6 +64,8 @@ namespace Chloroplast.Core.Content
                 Console.WriteLine (ex.ToString());
                 Console.ResetColor ();
             }
+
+            return Task.CompletedTask;
         }
 
         public override string ToString ()
