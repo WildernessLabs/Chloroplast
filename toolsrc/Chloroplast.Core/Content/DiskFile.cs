@@ -52,10 +52,10 @@ namespace Chloroplast.Core.Content
             {
                 this.FullPath.EnsureFileDirectory ();
 
-                // This is extremely strange, but I was getting
-                // intermittent results (empty files) with the
-                // await version. So this sync workaround
-                // wfm
+                // Currently using synchronous file operations due to intermittent
+                // issues with empty files when using the async version. This is a
+                // temporary workaround until the underlying issue can be resolved.
+                // Intent is to return to a fully async implementation in the future.
                 File.WriteAllText (this.FullPath, content);
             }
             catch (Exception ex)
