@@ -21,7 +21,7 @@ namespace Chloroplast.Test
             nodes.Add (MakeNode ($"one".CombinePath ("three")));
             nodes.Add (MakeNode ($"one".CombinePath ("four")));
 
-            ContentArea area = new ContentArea (nodes);
+            GroupContentArea area = new GroupContentArea (nodes);
             var result = area.BuildHierarchy ();
 
             Assert.True (result.First ().Children.Count == 3);
@@ -40,7 +40,7 @@ namespace Chloroplast.Test
             nodes.Add (MakeNode ($"one".CombinePath ("four").CombinePath ("one")));
             nodes.Add (MakeNode ($"two"));
 
-            ContentArea area = new ContentArea (nodes);
+            GroupContentArea area = new GroupContentArea (nodes);
             var result = area.BuildHierarchy ().ToArray();
 
             Assert.True (result[0].Children.Count == 3); //one/*
@@ -50,6 +50,25 @@ namespace Chloroplast.Test
             Assert.True (result[0].Children[2].Children.Count == 1); // one/four/*
 
 
+        }
+
+        [Fact]
+        public void DuplicateKeysAreHandledGracefully ()
+        {
+            List<ContentNode> nodes = new List<ContentNode> ();
+            nodes.Add (MakeNode ("index.md"));
+            nodes.Add (MakeNode ($"cli".CombinePath ("index.md")));
+            nodes.Add (MakeNode ("index.md")); // duplicate
+            nodes.Add (MakeNode ($"templates".CombinePath ("index.md")));
+            nodes.Add (MakeNode ($"cli".CombinePath ("index.md"))); // duplicate
+
+            GroupContentArea area = new GroupContentArea (nodes);
+            // Should not throw an exception
+            var result = area.BuildHierarchy ().ToArray();
+
+            // Should have processed the unique items (1 top-level node with 2 children)
+            Assert.Equal (1, result.Length);
+            Assert.Equal (2, result[0].Children.Count);
         }
 
         private static ContentNode MakeNode (string path)
