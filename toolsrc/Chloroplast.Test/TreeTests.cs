@@ -66,8 +66,9 @@ namespace Chloroplast.Test
             // Should not throw an exception
             var result = area.BuildHierarchy ().ToArray();
 
-            // Should have processed the unique items
-            Assert.True (result.Length > 0);
+            // Should have processed the unique items (1 top-level node with 2 children)
+            Assert.Equal (1, result.Length);
+            Assert.Equal (2, result[0].Children.Count);
         }
 
         private static ContentNode MakeNode (string path)
