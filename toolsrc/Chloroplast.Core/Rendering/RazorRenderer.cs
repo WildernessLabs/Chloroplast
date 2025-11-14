@@ -70,7 +70,11 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
         {
-            var template = templates[templateName];
+            if (!templates.TryGetValue(templateName, out var template))
+            {
+                // Template not found - return empty string instead of throwing
+                return new RawString(string.Empty);
+            }
             return new RawString (await template.RenderAsync (model));
         }
 

@@ -80,5 +80,13 @@
       <Link>ProjectTemplates\conceptual\templates\Default.cshtml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\docs\templates\TranslationWarning.cshtml">
+      <Link>ProjectTemplates\conceptual\templates\TranslationWarning.cshtml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\templates\TranslationWarning.es.cshtml">
+      <Link>ProjectTemplates\conceptual\templates\TranslationWarning.es.cshtml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
