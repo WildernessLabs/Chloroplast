@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Chloroplast.Core.Rendering;
 using Xunit;
@@ -7,6 +8,31 @@ namespace Chloroplast.Test
 {
     public class RazorTests
     {
+        [Fact]
+        public async Task MissingTemplate_ReturnsEmptyStringAndLogsWarning()
+        {
+            // Arrange
+            RazorRenderer renderer = new RazorRenderer();
+            string missingTemplateName = "NonExistentTemplate";
+            var model = new { TestProperty = "TestValue" };
+            
+            // Capture console output
+            var originalOut = Console.Out;
+            using var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            // Act
+            var result = await renderer.RenderTemplateContent(missingTemplateName, model);
+
+            // Restore console output
+            Console.SetOut(originalOut);
+            var consoleOutput = stringWriter.ToString();
+
+            // Assert
+            Assert.Equal(string.Empty, result.ToString());
+            Assert.Contains("Warning: Template 'NonExistentTemplate' not found", consoleOutput);
+        }
+
         //[Fact]
         public async Task SimpleRender()
         {

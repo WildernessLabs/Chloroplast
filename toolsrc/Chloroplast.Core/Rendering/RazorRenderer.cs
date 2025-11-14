@@ -70,7 +70,14 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
         {
-            var template = templates[templateName];
+            if (!templates.TryGetValue(templateName, out var template))
+            {
+                // Template not found - log warning and return empty string instead of throwing
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"Warning: Template '{templateName}' not found. Rendering empty content.");
+                Console.ResetColor();
+                return new RawString(string.Empty);
+            }
             return new RawString (await template.RenderAsync (model));
         }
 
