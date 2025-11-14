@@ -280,7 +280,16 @@ namespace Chloroplast.Core.Content
                     currentParent = node;
                     nestDepth = thisDepth;
                     topDepth = thisDepth;
-                    items.Add (node.Source.RootRelativePath, node);
+                    
+                    // Check for duplicate keys before adding to avoid ArgumentException
+                    if (items.ContainsKey(node.Source.RootRelativePath))
+                    {
+                        Console.WriteLine($"Warning: Duplicate content node found with path '{node.Source.RootRelativePath}'. Skipping duplicate.");
+                    }
+                    else
+                    {
+                        items.Add (node.Source.RootRelativePath, node);
+                    }
                 }
                 else
                 {
