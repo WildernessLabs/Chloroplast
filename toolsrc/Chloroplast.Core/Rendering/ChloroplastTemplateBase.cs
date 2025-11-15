@@ -352,7 +352,24 @@ namespace Chloroplast.Core.Rendering
             return RazorRenderer.Instance.RenderTemplateContent (templateName, model);
         }
 
-        protected async Task<RawString> PartialAsync(string menuPath)
+        protected async Task<RawString> PartialAsync(string path)
+        {
+            // Route based on file extension to determine intent
+            var extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            
+            // If .cshtml or no extension and a template exists, render as template
+            if (extension == ".cshtml" || 
+                (string.IsNullOrEmpty(extension) && RazorRenderer.Instance.TemplateExists(path)))
+            {
+                // Render as Razor template with current Model
+                return await PartialAsync(path, Model);
+            }
+            
+            // Otherwise, render as markdown file (includes .md or paths to content files)
+            return await RenderMarkdownPartialAsync(path);
+        }
+
+        private async Task<RawString> RenderMarkdownPartialAsync(string menuPath)
         {
             string fullMenuPath;
 

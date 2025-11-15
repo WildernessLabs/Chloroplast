@@ -246,6 +246,55 @@ namespace Chloroplast.Test
             }
         }
 
+        [Fact]
+        public async Task TemplateResolution_StripsTemplatesPrefix()
+        {
+            // Test that "templates/TemplateName" works as fallback by stripping the prefix
+            // Arrange - Create a template
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var templatesDir = Path.Combine(tempDir, "templates");
+            
+            Directory.CreateDirectory(templatesDir);
+            
+            var templateContent = "@inherits MiniRazor.TemplateBase<string>\nTemplate: @Model";
+            var templatePath = Path.Combine(templatesDir, "MyTemplate.cshtml");
+            await File.WriteAllTextAsync(templatePath, templateContent);
+            
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    { "root", tempDir },
+                    { "templates_folder", "templates" }
+                })
+                .Build();
+            
+            var renderer = new RazorRenderer();
+            
+            try
+            {
+                var originalOut = Console.Out;
+                using var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+                
+                await renderer.InitializeAsync(config);
+                
+                // Act - Try to reference with "templates/" prefix (user mistake)
+                var result = await renderer.RenderTemplateContent("templates/MyTemplate", "Test Content");
+                
+                Console.SetOut(originalOut);
+                
+                // Assert - Should still work by stripping the prefix
+                Assert.Contains("Template: Test Content", result.ToString());
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
         //[Fact]
         public async Task SimpleRender()
         {

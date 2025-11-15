@@ -100,6 +100,11 @@ namespace Chloroplast.Core.Rendering
             return new RawString (await template.RenderAsync (model));
         }
 
+        public bool TemplateExists(string templateName)
+        {
+            return FindTemplate(templateName) != null;
+        }
+
         private TemplateDescriptor FindTemplate(string templateName)
         {
             // Try multiple lookup strategies to find the template
@@ -135,6 +140,14 @@ namespace Chloroplast.Core.Rendering
             if (templates.TryGetValue(normalizedName, out template))
             {
                 return template;
+            }
+
+            // 5. Last resort: if path starts with "templates/", strip it and try all lookups again
+            // This helps users who mistakenly include the templates folder in their path
+            if (normalizedName.StartsWith("templates/", StringComparison.OrdinalIgnoreCase))
+            {
+                string withoutTemplatesPrefix = normalizedName.Substring("templates/".Length);
+                return FindTemplate(withoutTemplatesPrefix); // Recursive call with stripped path
             }
 
             return null;
