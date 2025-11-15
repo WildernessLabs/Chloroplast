@@ -66,7 +66,7 @@ namespace Chloroplast.Tool.Commands
 
         public string Name => "New";
 
-        public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
+        public Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
             this.config = config;
             CommandLineConfigurationProvider s = config.Providers.First() as CommandLineConfigurationProvider;
@@ -116,7 +116,7 @@ namespace Chloroplast.Tool.Commands
                 
             }
 
-            return copyTasks;
+            return Task.FromResult(copyTasks.AsEnumerable());
         }
 
 
