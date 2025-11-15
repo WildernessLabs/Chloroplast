@@ -76,19 +76,26 @@ Available to all templates are the following functions:
   - This is the main HTML content being rendered in this template. You should output this through the `Raw` method since it will likely contain HTML.
 - `@Model.GetMeta("title")`
   - with this you can access any value in the front matter (for example, `title`).
-- `@await PartialAsync("TemplateName", "model value")`
+- `@await PartialAsync("TemplateName", Model)`
   - This lets you render sub templates. 
-  - the template name parameter will match the razor fil.e name ... so in the example above, it would be looking for a file named `Templates/TemplateName.cshtml`
-  - the second parameter can be any kind of object really, whatever the template in question is expecting.
+  - the template name parameter will match the razor file name ... so in the example above, it would be looking for a file named `Templates/TemplateName.cshtml`
+  - the second parameter is the model to pass to the template (typically `Model` to pass the current model).
+  - **Note:** Template names are relative to the `templates_folder`, so you reference them without the `templates/` prefix. For example, use `"TranslationWarning"` not `"templates/TranslationWarning"` (though the latter will work as a fallback).
+- `@await PartialAsync("path")`
+  - **Smart routing based on file extension:**
+    - `.cshtml` extension → renders as a Razor template with current `Model`
+    - `.md` extension → renders as markdown file (can define its own template, defaults to `Default`, no `SiteFrame.cshtml`)
+    - No extension → checks if a template exists, otherwise treats as markdown file path
+  - Examples:
+    - `@await PartialAsync("topNav")` → renders template if `topNav.cshtml` exists
+    - `@await PartialAsync("source/menu.md")` → renders markdown file
+    - `@await PartialAsync("template/nav.cshtml")` → explicitly renders template
 - `@Model.Headers` collection
   - Each `h1`-`h6` will be parsed and added to this headers collection.
   - Every `Header` object has the following properties:
     - Level: the numeric value of the header
     - Value: the text
     - Slug: a slug version of the `Value`, which corresponds to an anchor added to the HTML before the header.
-- `@await PartialAsync("Docs/area/menu.md")`
-  - This overload of the `PartialAsync` method assumes you're rendering a markdown file.
-  - The markdown file can define its own template (will default to `Default`), and will only render the contents of that specific template (ie. no `SiteFrame.cshtml`).
 
 ## URL and Asset Methods
 

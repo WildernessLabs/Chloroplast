@@ -77,19 +77,26 @@ Disponibles para todas las plantillas están las siguientes funciones:
   - Este es el contenido HTML principal que se está renderizando en esta plantilla. Debes generar esto a través del método `Raw` ya que probablemente contendrá HTML.
 - `@Model.GetMeta("title")`
   - con esto puedes acceder a cualquier valor en el front matter (por ejemplo, `title`).
-- `@await PartialAsync("NombrePlantilla", "valor del modelo")`
+- `@await PartialAsync("NombrePlantilla", Model)`
   - Esto te permite renderizar sub plantillas.
   - el parámetro del nombre de plantilla coincidirá con el nombre del archivo razor... así que en el ejemplo anterior, estaría buscando un archivo llamado `Templates/NombrePlantilla.cshtml`
-  - el segundo parámetro puede ser cualquier tipo de objeto realmente, lo que sea que la plantilla en cuestión esté esperando.
+  - el segundo parámetro es el modelo a pasar a la plantilla (típicamente `Model` para pasar el modelo actual).
+  - **Nota:** Los nombres de plantilla son relativos a `templates_folder`, así que los referencias sin el prefijo `templates/`. Por ejemplo, usa `"TranslationWarning"` no `"templates/TranslationWarning"` (aunque esto último funcionará como respaldo).
+- `@await PartialAsync("ruta")`
+  - **Enrutamiento inteligente basado en extensión de archivo:**
+    - Extensión `.cshtml` → renderiza como plantilla Razor con el `Model` actual
+    - Extensión `.md` → renderiza como archivo markdown (puede definir su propia plantilla, por defecto `Default`, sin `SiteFrame.cshtml`)
+    - Sin extensión → verifica si existe una plantilla, de lo contrario trata como ruta de archivo markdown
+  - Ejemplos:
+    - `@await PartialAsync("topNav")` → renderiza plantilla si existe `topNav.cshtml`
+    - `@await PartialAsync("source/menu.md")` → renderiza archivo markdown
+    - `@await PartialAsync("template/nav.cshtml")` → renderiza explícitamente como plantilla
 - Colección `@Model.Headers`
   - Cada `h1`-`h6` será parseado y agregado a esta colección de headers.
   - Cada objeto `Header` tiene las siguientes propiedades:
     - Level: el valor numérico del header
     - Value: el texto
     - Slug: una versión slug del `Value`, que corresponde a un ancla agregada al HTML antes del header.
-- `@await PartialAsync("Docs/area/menu.md")`
-  - Esta sobrecarga del método `PartialAsync` asume que estás renderizando un archivo markdown.
-  - El archivo markdown puede definir su propia plantilla (por defecto será `Default`), y solo renderizará los contenidos de esa plantilla específica (es decir, no `SiteFrame.cshtml`).
 
 ## Métodos de URL y Recursos
 

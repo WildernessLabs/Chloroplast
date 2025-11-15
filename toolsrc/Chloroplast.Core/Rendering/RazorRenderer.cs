@@ -14,16 +14,34 @@ namespace Chloroplast.Core.Rendering
         public static RazorRenderer Instance;
 
         Dictionary<string, TemplateDescriptor> templates = new Dictionary<string, TemplateDescriptor> ();
+        string templatesFolderPath;
         //TemplateEngine engine = new TemplateEngine ();
 
-        public async Task AddTemplateAsync (string templatePath)
+        public async Task AddTemplateAsync (string templatePath, string templatesFolderPath)
         {
             string fileName = Path.GetFileNameWithoutExtension (templatePath);
-            if (!templates.ContainsKey (fileName))
+            
+            // Calculate the relative path from templates folder
+            string relativePath = Path.GetRelativePath(templatesFolderPath, templatePath);
+            // Normalize to forward slashes and remove .cshtml extension
+            string relativeKey = relativePath.Replace('\\', '/').Replace(".cshtml", "");
+            
+            // Store with both the relative path and the filename for backward compatibility
+            var compiledTemplate = Razor.Compile (await File.ReadAllTextAsync (templatePath));
+            
+            // Store by relative path (e.g., "template/topNav")
+            if (!templates.ContainsKey (relativeKey))
             {
                 Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
                 Console.WriteLine (ns.ToString ());
-                templates[fileName] = Razor.Compile (await File.ReadAllTextAsync (templatePath));
+                templates[relativeKey] = compiledTemplate;
+            }
+            
+            // Also store by filename only for backward compatibility (e.g., "topNav")
+            // But only if there's no conflict
+            if (!templates.ContainsKey (fileName))
+            {
+                templates[fileName] = compiledTemplate;
             }
         }
 
@@ -35,13 +53,13 @@ namespace Chloroplast.Core.Rendering
                 templateFolderSetting = "templates";
 
             // Rely on CombinePath/NormalizePath to handle absolute/relative + separator normalization
-            string fullTemplatePath = rootPath
+            templatesFolderPath = rootPath
                 .CombinePath(templateFolderSetting)
                 .NormalizePath();
 
-            foreach (var razorPath in Directory.EnumerateFiles (fullTemplatePath, "*.cshtml", SearchOption.AllDirectories))
+            foreach (var razorPath in Directory.EnumerateFiles (templatesFolderPath, "*.cshtml", SearchOption.AllDirectories))
             {
-                await this.AddTemplateAsync (razorPath);
+                await this.AddTemplateAsync (razorPath, templatesFolderPath);
             }
 
             // danger will robinson ...
@@ -70,7 +88,8 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
         {
-            if (!templates.TryGetValue(templateName, out var template))
+            var template = FindTemplate(templateName);
+            if (template == null)
             {
                 // Template not found - log warning and return empty string instead of throwing
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -79,6 +98,59 @@ namespace Chloroplast.Core.Rendering
                 return new RawString(string.Empty);
             }
             return new RawString (await template.RenderAsync (model));
+        }
+
+        public bool TemplateExists(string templateName)
+        {
+            return FindTemplate(templateName) != null;
+        }
+
+        private TemplateDescriptor FindTemplate(string templateName)
+        {
+            // Try multiple lookup strategies to find the template
+            
+            // 1. Try exact match (could be relative path like "template/topNav")
+            if (templates.TryGetValue(templateName, out var template))
+            {
+                return template;
+            }
+
+            // 2. Try with .cshtml extension if not already present
+            if (!templateName.EndsWith(".cshtml"))
+            {
+                string withExtension = templateName + ".cshtml";
+                if (templates.TryGetValue(withExtension.Replace('\\', '/').Replace(".cshtml", ""), out template))
+                {
+                    return template;
+                }
+            }
+
+            // 3. Try removing .cshtml if present
+            if (templateName.EndsWith(".cshtml"))
+            {
+                string withoutExtension = templateName.Substring(0, templateName.Length - 7);
+                if (templates.TryGetValue(withoutExtension.Replace('\\', '/'), out template))
+                {
+                    return template;
+                }
+            }
+
+            // 4. Normalize path separators and try again
+            string normalizedName = templateName.Replace('\\', '/');
+            if (templates.TryGetValue(normalizedName, out template))
+            {
+                return template;
+            }
+
+            // 5. Last resort: if path starts with "templates/", strip it and try all lookups again
+            // This helps users who mistakenly include the templates folder in their path
+            if (normalizedName.StartsWith("templates/", StringComparison.OrdinalIgnoreCase))
+            {
+                string withoutTemplatesPrefix = normalizedName.Substring("templates/".Length);
+                return FindTemplate(withoutTemplatesPrefix); // Recursive call with stripped path
+            }
+
+            return null;
         }
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
@@ -94,10 +166,10 @@ namespace Chloroplast.Core.Rendering
                 if (parsed.Metadata.ContainsKey ("layout"))
                     templateName = parsed.Metadata["layout"];
 
-                TemplateDescriptor template;
+                TemplateDescriptor template = FindTemplate(templateName);
 
-                if (!templates.TryGetValue (templateName, out template))
-                    template = templates[defaultTemplateName];
+                if (template == null)
+                    template = FindTemplate(defaultTemplateName);
 
                 // Render template
                 var result = await template.RenderAsync (parsed);
