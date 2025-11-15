@@ -150,14 +150,26 @@ namespace Chloroplast.Tool
             SiteConfig.Instance = config;
 
             // Runtime flag: --no-basepath to temporarily ignore configured basePath/baseUrl.
-            // We look for the presence of the flag (no value) in the original argument list after the subcommand.
-            if (subtaskargs.Any(a => string.Equals(a, "--no-basepath", StringComparison.OrdinalIgnoreCase)))
+            // For 'host' command, automatically disable basePath for local development (issue #63)
+            // unless explicitly overridden by user
+            bool hasNoBasePathFlag = subtaskargs.Any(a => string.Equals(a, "--no-basepath", StringComparison.OrdinalIgnoreCase));
+            bool hasBasePathFlag = subtaskargs.Any(a => string.Equals(a, "--basepath", StringComparison.OrdinalIgnoreCase));
+            
+            if (hasNoBasePathFlag || (subtask == "host" && !hasBasePathFlag))
             {
                 SiteConfig.DisableBasePath = true;
                 try
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("BasePath override active: base path application disabled for this run.");
+                    if (subtask == "host" && !hasNoBasePathFlag)
+                    {
+                        Console.WriteLine("Host command: automatically disabling basePath for local development.");
+                        Console.WriteLine("(Use --basepath to override this behavior)");
+                    }
+                    else
+                    {
+                        Console.WriteLine("BasePath override active: base path application disabled for this run.");
+                    }
                 }
                 catch { }
                 finally
