@@ -137,7 +137,24 @@ namespace Chloroplast.Tool
 
             if (subtask == "build" || subtask == "host")
             {
-                var sitePath = subtaskargs.Skip (1).First ().NormalizePath ();
+                // Find the --root parameter value, or use positional arg
+                string sitePath = null;
+                var rootIndex = Array.FindIndex(subtaskargs, a => a == "--root");
+                if (rootIndex >= 0 && rootIndex + 1 < subtaskargs.Length)
+                {
+                    sitePath = subtaskargs[rootIndex + 1].NormalizePath();
+                }
+                else if (subtaskargs.Length > 0 && !subtaskargs[0].StartsWith("--"))
+                {
+                    // Fallback to positional argument
+                    sitePath = subtaskargs[0].NormalizePath();
+                }
+                
+                if (sitePath == null)
+                {
+                    throw new ChloroplastException("No root path specified. Use --root <path> or provide as positional argument");
+                }
+                
                 if (!System.IO.Directory.Exists (sitePath))
                 {
                     throw new ChloroplastException ("path doesn't exist: " + sitePath);
