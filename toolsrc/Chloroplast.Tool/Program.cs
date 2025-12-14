@@ -138,7 +138,7 @@ namespace Chloroplast.Tool
             var builder = new ConfigurationBuilder ()
                 .AddCommandLine (subtaskargs);
 
-            if (subtask == "build" || subtask == "host")
+            if (subtask == "build" || subtask == "host" || subtask == "validate")
             {
                 // Find the --root parameter value, or use positional arg
                 string sitePath = null;

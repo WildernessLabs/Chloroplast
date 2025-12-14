@@ -96,7 +96,8 @@ namespace Chloroplast.Tool.Commands
 
             // Run validation before starting the host server
             Console.WriteLine("\nRunning site validation before hosting...");
-            var validator = new SiteValidator(pathToUse);
+            var basePath = config["basePath"];
+            var validator = new SiteValidator(pathToUse, basePath);
             validator.Validate();
             validator.WriteIssuesToConsole();
             Console.WriteLine();

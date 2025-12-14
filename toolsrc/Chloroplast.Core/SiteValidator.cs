@@ -9,11 +9,13 @@ namespace Chloroplast.Core
     public class SiteValidator
     {
         private readonly string _outputPath;
+        private readonly string _basePath;
         private readonly List<ValidationIssue> _issues = new List<ValidationIssue>();
 
-        public SiteValidator(string outputPath)
+        public SiteValidator(string outputPath, string basePath = null)
         {
             _outputPath = outputPath ?? throw new ArgumentNullException(nameof(outputPath));
+            _basePath = basePath?.TrimStart('/').TrimEnd('/');
         }
 
         public IReadOnlyList<ValidationIssue> Issues => _issues.AsReadOnly();
@@ -119,8 +121,13 @@ namespace Chloroplast.Core
             string assetPath;
             if (cleanUrl.StartsWith("/"))
             {
-                // Absolute path from site root
-                assetPath = Path.Combine(_outputPath, cleanUrl.TrimStart('/'));
+                // Absolute path from site root - strip basePath if present
+                var urlToCheck = cleanUrl.TrimStart('/');
+                if (!string.IsNullOrEmpty(_basePath) && urlToCheck.StartsWith(_basePath + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    urlToCheck = urlToCheck.Substring(_basePath.Length + 1);
+                }
+                assetPath = Path.Combine(_outputPath, urlToCheck);
             }
             else
             {
@@ -154,8 +161,18 @@ namespace Chloroplast.Core
             string targetPath;
             if (cleanUrl.StartsWith("/"))
             {
-                // Absolute path from site root
-                targetPath = Path.Combine(_outputPath, cleanUrl.TrimStart('/'));
+                // Absolute path from site root - strip basePath if present
+                var urlToCheck = cleanUrl.TrimStart('/');
+                if (!string.IsNullOrEmpty(_basePath) && urlToCheck.StartsWith(_basePath + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    urlToCheck = urlToCheck.Substring(_basePath.Length + 1);
+                }
+                else if (!string.IsNullOrEmpty(_basePath) && urlToCheck.Equals(_basePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Link to the base path itself should check root index
+                    urlToCheck = "";
+                }
+                targetPath = Path.Combine(_outputPath, urlToCheck);
             }
             else
             {
@@ -186,11 +203,40 @@ namespace Chloroplast.Core
                 var ext = Path.GetExtension(cleanUrl);
                 if (string.IsNullOrEmpty(ext) || ext == ".html" || ext == ".htm")
                 {
-                    _issues.Add(new ValidationIssue(
-                        ValidationSeverity.Warning,
-                        "Broken navigation link",
-                        $"In '{relativePath}': Navigation link target not found: {cleanUrl}",
-                        null));
+                    // If the link ends with a slash, it's a directory link - check for index.html
+                    if (cleanUrl.EndsWith("/"))
+                    {
+                        var indexPath = Path.Combine(targetPath, "index.html");
+                        if (!File.Exists(indexPath))
+                        {
+                            _issues.Add(new ValidationIssue(
+                                ValidationSeverity.Warning,
+                                "Broken navigation link",
+                                $"In '{relativePath}': Navigation link target not found: {cleanUrl}",
+                                null));
+                        }
+                    }
+                    else if (string.IsNullOrEmpty(ext))
+                    {
+                        // No extension - try adding .html
+                        var htmlPath = targetPath + ".html";
+                        if (!File.Exists(htmlPath))
+                        {
+                            _issues.Add(new ValidationIssue(
+                                ValidationSeverity.Warning,
+                                "Broken navigation link",
+                                $"In '{relativePath}': Navigation link target not found: {cleanUrl}",
+                                null));
+                        }
+                    }
+                    else
+                    {
+                        _issues.Add(new ValidationIssue(
+                            ValidationSeverity.Warning,
+                            "Broken navigation link",
+                            $"In '{relativePath}': Navigation link target not found: {cleanUrl}",
+                            null));
+                    }
                 }
             }
         }
@@ -218,23 +264,44 @@ namespace Chloroplast.Core
             if (errors.Any())
             {
                 Console.WriteLine("ERRORS:");
-                foreach (var issue in errors)
-                {
-                    Console.WriteLine($"  [{issue.Category}] {issue.Message}");
-                    if (!string.IsNullOrEmpty(issue.Details))
-                    {
-                        Console.WriteLine($"    Details: {issue.Details}");
-                    }
-                }
+                WriteAggregatedIssues(errors);
                 Console.WriteLine();
             }
 
             if (warnings.Any())
             {
                 Console.WriteLine("WARNINGS:");
-                foreach (var issue in warnings)
+                WriteAggregatedIssues(warnings);
+            }
+        }
+
+        private void WriteAggregatedIssues(List<ValidationIssue> issues)
+        {
+            // Group by category and message to aggregate similar issues
+            var grouped = issues.GroupBy(i => new { i.Category, i.Message })
+                                .OrderByDescending(g => g.Count())
+                                .ThenBy(g => g.Key.Category)
+                                .ThenBy(g => g.Key.Message);
+
+            foreach (var group in grouped)
+            {
+                if (group.Count() == 1)
                 {
+                    var issue = group.First();
                     Console.WriteLine($"  [{issue.Category}] {issue.Message}");
+                    if (!string.IsNullOrEmpty(issue.Details))
+                    {
+                        Console.WriteLine($"    Details: {issue.Details}");
+                    }
+                }
+                else
+                {
+                    var issue = group.First();
+                    Console.WriteLine($"  [{issue.Category}] {issue.Message} (×{group.Count()})");
+                    if (!string.IsNullOrEmpty(issue.Details))
+                    {
+                        Console.WriteLine($"    Details: {issue.Details}");
+                    }
                 }
             }
         }

@@ -30,7 +30,8 @@ namespace Chloroplast.Tool.Commands
 
             Console.WriteLine($"Validating site output at: {outPath}");
             
-            var validator = new SiteValidator(outPath);
+            var basePath = config["basePath"];
+            var validator = new SiteValidator(outPath, basePath);
             validator.Validate();
             validator.WriteIssuesToConsole();
 

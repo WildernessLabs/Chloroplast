@@ -244,7 +244,8 @@ namespace Chloroplast.Tool.Commands
             if (!string.IsNullOrWhiteSpace(outPath) && Directory.Exists(outPath))
             {
                 Console.WriteLine("\nRunning site validation...");
-                var validator = new SiteValidator(outPath);
+                var basePath = config["basePath"];
+                var validator = new SiteValidator(outPath, basePath);
                 validator.Validate();
                 validator.WriteIssuesToConsole();
             }
