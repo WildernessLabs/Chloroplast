@@ -43,6 +43,53 @@ namespace Chloroplast.Core.Rendering
             string value = Metadata[key];
             return !string.IsNullOrWhiteSpace(value);
         }
+
+        /// <summary>
+        /// Creates a merged metadata configuration by combining parent and child metadata.
+        /// Child metadata values override parent values for the same keys.
+        /// </summary>
+        /// <param name="parentMetadata">Parent configuration (can be null)</param>
+        /// <param name="childMetadata">Child configuration (can be null)</param>
+        /// <returns>A new merged IConfigurationRoot, or null if both inputs are null</returns>
+        public static IConfigurationRoot MergeMetadata(IConfigurationRoot parentMetadata, IConfigurationRoot childMetadata)
+        {
+            // If both are null, return null
+            if (parentMetadata == null && childMetadata == null)
+                return null;
+
+            // If only one is provided, return it
+            if (parentMetadata == null)
+                return childMetadata;
+            if (childMetadata == null)
+                return parentMetadata;
+
+            // Both exist - merge them with child overriding parent
+            var builder = new ConfigurationBuilder();
+
+            // Convert parent metadata to dictionary
+            var parentDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in parentMetadata.AsEnumerable())
+            {
+                if (kvp.Value != null)
+                    parentDict[kvp.Key] = kvp.Value;
+            }
+
+            // Add parent metadata first
+            builder.AddInMemoryCollection(parentDict);
+
+            // Convert child metadata to dictionary
+            var childDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in childMetadata.AsEnumerable())
+            {
+                if (kvp.Value != null)
+                    childDict[kvp.Key] = kvp.Value;
+            }
+
+            // Add child metadata second (overrides parent)
+            builder.AddInMemoryCollection(childDict);
+
+            return builder.Build();
+        }
     }
 
     public class EcmaXmlContent<T> : RenderedContent
