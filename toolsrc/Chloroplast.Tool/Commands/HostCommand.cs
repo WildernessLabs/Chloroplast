@@ -94,6 +94,13 @@ namespace Chloroplast.Tool.Commands
                 }
             }
 
+            // Run validation before starting the host server
+            Console.WriteLine("\nRunning site validation before hosting...");
+            var validator = new SiteValidator(pathToUse);
+            validator.Validate();
+            validator.WriteIssuesToConsole();
+            Console.WriteLine();
+
             // Find an available port
             int availablePort;
             try

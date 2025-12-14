@@ -239,6 +239,16 @@ namespace Chloroplast.Tool.Commands
                 }
             }
 
+            // Run validation after build completes
+            var outPath = config["out"]?.NormalizePath();
+            if (!string.IsNullOrWhiteSpace(outPath) && Directory.Exists(outPath))
+            {
+                Console.WriteLine("\nRunning site validation...");
+                var validator = new SiteValidator(outPath);
+                validator.Validate();
+                validator.WriteIssuesToConsole();
+            }
+
             return tasks;
         }
 
