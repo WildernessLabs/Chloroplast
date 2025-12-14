@@ -33,7 +33,23 @@ If this value is either incorrect, or omitted, it will default to look for a tem
 
 # SiteFrame.cshtml
 
-For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` ... this will render
+For the main site's chrome, Chloroplast will look for a template named `SiteFrame.cshtml` by default. This is the outer "frame" or "chrome" that wraps your content.
+
+You can also specify a different frame template for individual content files by adding a `frame:` property to the frontmatter:
+
+```
+---
+template: TemplateName
+frame: CustomFrame
+title: Document title
+---
+```
+
+If no `frame:` is specified, Chloroplast defaults to `SiteFrame.cshtml`.
+
+## Frame Template Example
+
+The SiteFrame template renders the full page structure:
 
 ```
 <html>
@@ -47,6 +63,16 @@ For the main site's chrome, Chloroplast will look for a template named `SiteFram
 </body>
 </html>
 ```
+
+## Error Handling
+
+If a specified frame template is not found:
+- An error message is logged to the console
+- The affected content file is skipped (no incomplete page is rendered)
+- The build continues processing other files
+- The error is included in the build error summary
+
+This ensures the build process doesn't stop completely due to a missing frame, but you'll be notified of the issue.
 
 # Customizing Templates
 
