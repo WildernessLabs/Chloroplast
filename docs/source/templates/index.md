@@ -274,3 +274,158 @@ You can still build higher-level abstractions on top of these methods (e.g. a `R
 ---
 
 With these helpers, you can keep templates concise while enabling contributors to add localized content simply by creating appropriately named files.
+
+## Partial Metadata Inheritance
+
+**New in version 1.x**: Partials now automatically inherit metadata from their parent content page or layout. This enables advanced use cases like active navigation state management, breadcrumbs, and dynamic behavior based on page context.
+
+### How It Works
+
+When a partial is rendered (especially markdown partials that have their own front matter), Chloroplast merges the parent's metadata with the partial's metadata:
+
+1. The partial first inherits all metadata from its parent (content page, layout, or outer partial)
+2. The partial's own front matter is then layered on top
+3. Child metadata values override parent values for the same keys
+4. This process works recursively through nested partials
+
+### Why This Matters
+
+Previously, partials could only access their own front matter. This made it difficult to:
+- Mark the active navigation item based on the current page
+- Display context-aware breadcrumbs
+- Show/hide elements based on page-level flags
+- Pass configuration from content pages to shared widgets
+
+Now, partials have full access to the parent page's metadata **in addition to** their own metadata.
+
+### Example: Active Navigation State
+
+A common use case is highlighting the active page in a navigation menu. With metadata inheritance, the nav partial can check the parent page's `activeNav` value:
+
+**Content Page (index.md)**:
+```markdown
+---
+title: Home
+activeNav: home
+---
+
+# Welcome Home
+```
+
+**Nav Partial (source/nav.md)**:
+```markdown
+---
+template: nav
+---
+
+Navigation content here
+```
+
+**Nav Template (templates/nav.cshtml)**:
+```razor
+@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+<nav>
+@{
+    // Access parent page's activeNav metadata
+    var activeNav = Model.GetMeta("activeNav");
+}
+    <a href="@Href("/")" class="@(activeNav == "home" ? "active" : "")">Home</a>
+    <a href="@Href("/about")" class="@(activeNav == "about" ? "active" : "")">About</a>
+    <a href="@Href("/contact")" class="@(activeNav == "contact" ? "active" : "")">Contact</a>
+</nav>
+```
+
+**Usage in Layout (templates/Default.cshtml)**:
+```razor
+@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+<div class="page">
+    @await PartialAsync("source/nav.md")
+    <main>
+        <h1>@Model.GetMeta("title")</h1>
+        @Raw(Model.Body)
+    </main>
+</div>
+```
+
+The nav partial will render with "Home" marked as active because it inherits the `activeNav: home` metadata from index.md.
+
+### Metadata Override Behavior
+
+Child metadata always overrides parent metadata for the same key:
+
+**Parent Page**:
+```markdown
+---
+title: Parent Title
+activeNav: home
+sharedKey: parentValue
+---
+```
+
+**Child Partial**:
+```markdown
+---
+template: widget
+sharedKey: childValue
+newKey: childOnlyValue
+---
+```
+
+**Result**: The partial sees:
+- `title`: "Parent Title" (inherited)
+- `activeNav`: "home" (inherited)
+- `sharedKey`: "childValue" (child overrides parent)
+- `newKey`: "childOnlyValue" (child-only)
+
+### Nested Partials
+
+The metadata chain works through multiple levels:
+
+```
+Page (title: "Main", level: "page")
+ └─ Partial 1 (level: "partial1", key: "value1")
+     └─ Partial 2 (level: "partial2", key: "value2")
+```
+
+When Partial 2 renders, it sees:
+- `title`: "Main" (from Page)
+- `level`: "partial2" (overridden at each level)
+- `key`: "value2" (from Partial 2)
+
+### Best Practices
+
+1. **Use Descriptive Keys**: Choose metadata key names that clearly indicate their purpose (e.g., `activeNav`, `breadcrumbSection`, `showSidebar`)
+
+2. **Document Expectations**: If your partial requires specific parent metadata, document it in comments:
+   ```razor
+   @* This partial expects parent metadata: activeNav (string) *@
+   ```
+
+3. **Provide Defaults**: Always check for metadata existence and provide sensible defaults:
+   ```razor
+   @{
+       var activeNav = Model.GetMeta("activeNav");
+       if (string.IsNullOrEmpty(activeNav)) activeNav = "home";
+   }
+   ```
+
+4. **Avoid Conflicts**: Be mindful of common key names that might conflict between partials and pages
+
+5. **Test Inheritance**: Create test pages with various metadata combinations to ensure partials behave correctly
+
+### Backward Compatibility
+
+This feature is fully backward compatible. Existing templates and partials work exactly as before:
+- Partials without parent metadata work unchanged
+- Partials that don't reference parent metadata are unaffected
+- No code changes required to existing templates
+
+### Technical Details
+
+For developers extending Chloroplast:
+- Metadata merging happens in `RenderedContent.MergeMetadata()` using `ConfigurationBuilder`
+- The merge occurs in `ChloroplastTemplateBase.RenderMarkdownPartialAsync()` before template rendering
+- Razor template partials called with `PartialAsync(templateName, Model)` already pass the parent Model and thus inherit metadata naturally
+- Only markdown partials with their own front matter needed special handling for metadata inheritance
+
+---
