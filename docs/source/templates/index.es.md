@@ -301,3 +301,147 @@ Todavía puedes construir abstracciones de nivel superior sobre estos métodos (
 ---
 
 Con estos helpers puedes mantener las plantillas concisas mientras permites que los colaboradores agreguen contenido localizado simplemente creando archivos con nombres apropiados.
+
+## Herencia de Metadatos de Parciales
+
+Los parciales heredan automáticamente metadatos de su página de contenido padre o diseño, habilitando componentes conscientes del contexto como estados de navegación activos, breadcrumbs y widgets condicionales.
+
+### Cómo Funciona
+
+Cuando se renderiza un parcial, Chloroplast fusiona los metadatos del padre con los metadatos del parcial:
+
+1. El parcial primero hereda todos los metadatos de su padre (página de contenido, diseño, o parcial externo)
+2. El front matter propio del parcial se superpone encima
+3. Los valores de metadatos del hijo sobrescriben los valores del padre para las mismas claves
+4. Este proceso funciona recursivamente a través de parciales anidados
+
+### Casos de Uso
+
+Los parciales pueden acceder a metadatos de la página padre para:
+- Marcar el elemento de navegación activo basado en la página actual
+- Mostrar breadcrumbs conscientes del contexto
+- Mostrar/ocultar elementos basados en banderas a nivel de página
+- Pasar configuración desde páginas de contenido a widgets compartidos
+
+### Ejemplo: Estado de Navegación Activo
+
+Un caso de uso común es resaltar la página activa en un menú de navegación. Con la herencia de metadatos, el parcial de navegación puede verificar el valor `activeNav` de la página padre:
+
+**Página de Contenido (index.md)**:
+```markdown
+---
+title: Inicio
+activeNav: home
+---
+
+# Bienvenido a Inicio
+```
+
+**Parcial de Navegación (source/nav.md)**:
+```markdown
+---
+template: nav
+---
+
+Contenido de navegación aquí
+```
+
+**Plantilla de Navegación (templates/nav.cshtml)**:
+```razor
+@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+<nav>
+@{
+    // Acceder a metadatos activeNav de la página padre
+    var activeNav = Model.GetMeta("activeNav");
+}
+    <a href="@Href("/")" class="@(activeNav == "home" ? "active" : "")">Inicio</a>
+    <a href="@Href("/about")" class="@(activeNav == "about" ? "active" : "")">Acerca de</a>
+    <a href="@Href("/contact")" class="@(activeNav == "contact" ? "active" : "")">Contacto</a>
+</nav>
+```
+
+**Uso en Diseño (templates/Default.cshtml)**:
+```razor
+@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
+<div class="page">
+    @await LocalizedMarkdownPartialAsync("source/nav.md")
+    <main>
+        <h1>@Model.GetMeta("title")</h1>
+        @Raw(Model.Body)
+    </main>
+</div>
+```
+
+_Nota: Consulta [Parciales y Plantillas Localizadas](#parciales-y-plantillas-localizadas) para más detalles sobre cuándo usar `LocalizedMarkdownPartialAsync` versus `PartialAsync`._
+
+El parcial de navegación se renderizará con "Inicio" marcado como activo porque hereda los metadatos `activeNav: home` de index.md.
+
+### Comportamiento de Sobrescritura de Metadatos
+
+Los metadatos del hijo siempre sobrescriben los metadatos del padre para la misma clave:
+
+**Página Padre**:
+```markdown
+---
+title: Título Padre
+activeNav: home
+sharedKey: valorPadre
+---
+```
+
+**Parcial Hijo**:
+```markdown
+---
+template: widget
+sharedKey: valorHijo
+newKey: valorSoloHijo
+---
+```
+
+**Resultado**: El parcial ve:
+- `title`: "Título Padre" (heredado)
+- `activeNav`: "home" (heredado)
+- `sharedKey`: "valorHijo" (hijo sobrescribe padre)
+- `newKey`: "valorSoloHijo" (solo del hijo)
+
+### Parciales Anidados
+
+La herencia de metadatos funciona a través de múltiples niveles. Al renderizar parciales anidados, cada nivel ve los metadatos acumulados de todos los niveles padres, con valores del hijo sobrescribiendo valores del padre en cada nivel.
+
+### Mejores Prácticas
+
+1. **Usa Claves Descriptivas**: Elige nombres de claves de metadatos que indiquen claramente su propósito (ej., `activeNav`, `breadcrumbSection`, `showSidebar`)
+
+2. **Documenta Expectativas**: Si tu parcial requiere metadatos específicos del padre, documéntalo en comentarios:
+   ```razor
+   @* Este parcial espera metadatos del padre: activeNav (string) *@
+   ```
+
+3. **Proporciona Valores Predeterminados**: Siempre verifica la existencia de metadatos y proporciona valores predeterminados sensibles:
+   ```razor
+   @{
+       var activeNav = Model.GetMeta("activeNav");
+       if (string.IsNullOrEmpty(activeNav)) activeNav = "home";
+   }
+   ```
+
+4. **Evita Conflictos**: Ten en cuenta nombres de claves comunes que podrían entrar en conflicto entre parciales y páginas
+
+5. **Prueba la Herencia**: Crea páginas de prueba con varias combinaciones de metadatos para asegurar que los parciales se comporten correctamente
+
+### Compatibilidad con Versiones Anteriores
+
+Las plantillas y parciales existentes funcionan sin cambios:
+- Los parciales sin metadatos del padre funcionan como antes
+- Los parciales que no referencian metadatos del padre no se ven afectados
+- No se requieren cambios de código en las plantillas existentes
+
+### Detalles Técnicos
+
+Para desarrolladores que extienden Chloroplast:
+- La fusión de metadatos ocurre en `RenderedContent.MergeMetadata()` usando `ConfigurationBuilder`
+- La fusión ocurre en `ChloroplastTemplateBase.RenderMarkdownPartialAsync()` antes del renderizado de la plantilla
+- Los parciales de plantilla Razor llamados con `PartialAsync(templateName, Model)` ya pasan el Model padre y heredan metadatos naturalmente
+- Solo los parciales de markdown con su propio front matter necesitan manejo especial para la herencia de metadatos
+
+---

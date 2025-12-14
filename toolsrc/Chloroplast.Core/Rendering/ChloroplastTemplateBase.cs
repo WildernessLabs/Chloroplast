@@ -387,16 +387,39 @@ namespace Chloroplast.Core.Rendering
             // load the menu path
             var node = new ContentNode
             {
-                Slug = "/" + Model.Node.Area.TargetPath.GetPathFileName ().CombinePath (Model.Node.Slug),
+                Slug = GeneratePartialSlug(),
                 Source = new DiskFile (fullMenuPath, menuPath),
                 Target = new DiskFile (fullMenuPath, menuPath),
                 Parent = this.Model.Node,
-                Locale = this.Model.Node.Locale // propagate locale so menu links localize correctly
+                Locale = this.Model.Node?.Locale ?? SiteConfig.DefaultLocale,
+                Area = this.Model.Node?.Area // propagate area
             };
             var r = await ContentRenderer.FromMarkdownAsync (node);
+            
+            // Merge parent metadata with partial's metadata
+            // This allows partials to access parent page metadata while still having their own metadata
+            r.Metadata = RenderedContent.MergeMetadata(this.Model.Metadata, r.Metadata);
+            
             r = await ContentRenderer.ToRazorAsync (r);
 
             return new RawString (r.Body);
+        }
+
+        /// <summary>
+        /// Generates a slug for a partial content node, handling cases where Area or Node properties may be null.
+        /// </summary>
+        private string GeneratePartialSlug()
+        {
+            // If we have full node context with area and target path, build complete slug
+            if (Model.Node?.Area?.TargetPath != null)
+            {
+                var targetFileName = Model.Node.Area.TargetPath.GetPathFileName();
+                var nodeSlug = Model.Node.Slug ?? "";
+                return "/" + targetFileName.CombinePath(nodeSlug);
+            }
+            
+            // Fallback to simple slug if area/target path unavailable (common in test scenarios)
+            return "/" + (Model.Node?.Slug ?? "");
         }
 
         /// <summary>
