@@ -277,26 +277,24 @@ With these helpers, you can keep templates concise while enabling contributors t
 
 ## Partial Metadata Inheritance
 
-**New in version 1.x**: Partials now automatically inherit metadata from their parent content page or layout. This enables advanced use cases like active navigation state management, breadcrumbs, and dynamic behavior based on page context.
+Partials automatically inherit metadata from their parent content page or layout, enabling context-aware components like active navigation states, breadcrumbs, and conditional widgets.
 
 ### How It Works
 
-When a partial is rendered (especially markdown partials that have their own front matter), Chloroplast merges the parent's metadata with the partial's metadata:
+When a partial is rendered, Chloroplast merges the parent's metadata with the partial's metadata:
 
 1. The partial first inherits all metadata from its parent (content page, layout, or outer partial)
 2. The partial's own front matter is then layered on top
 3. Child metadata values override parent values for the same keys
 4. This process works recursively through nested partials
 
-### Why This Matters
+### Use Cases
 
-Previously, partials could only access their own front matter. This made it difficult to:
+Partials can access parent page metadata to:
 - Mark the active navigation item based on the current page
 - Display context-aware breadcrumbs
 - Show/hide elements based on page-level flags
 - Pass configuration from content pages to shared widgets
-
-Now, partials have full access to the parent page's metadata **in addition to** their own metadata.
 
 ### Example: Active Navigation State
 
@@ -339,13 +337,15 @@ Navigation content here
 ```razor
 @inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
 <div class="page">
-    @await PartialAsync("source/nav.md")
+    @await LocalizedMarkdownPartialAsync("source/nav.md")
     <main>
         <h1>@Model.GetMeta("title")</h1>
         @Raw(Model.Body)
     </main>
 </div>
 ```
+
+_Note: See [Localized Partials & Templates](#localized-partials--templates) for more details on when to use `LocalizedMarkdownPartialAsync` versus `PartialAsync`._
 
 The nav partial will render with "Home" marked as active because it inherits the `activeNav: home` metadata from index.md.
 
@@ -379,18 +379,7 @@ newKey: childOnlyValue
 
 ### Nested Partials
 
-The metadata chain works through multiple levels:
-
-```
-Page (title: "Main", level: "page")
- └─ Partial 1 (level: "partial1", key: "value1")
-     └─ Partial 2 (level: "partial2", key: "value2")
-```
-
-When Partial 2 renders, it sees:
-- `title`: "Main" (from Page)
-- `level`: "partial2" (overridden at each level)
-- `key`: "value2" (from Partial 2)
+Metadata inheritance works through multiple levels. When rendering nested partials, each level sees the accumulated metadata from all parent levels, with child values overriding parent values at each level.
 
 ### Best Practices
 
@@ -415,8 +404,8 @@ When Partial 2 renders, it sees:
 
 ### Backward Compatibility
 
-This feature is fully backward compatible. Existing templates and partials work exactly as before:
-- Partials without parent metadata work unchanged
+Existing templates and partials work unchanged:
+- Partials without parent metadata work as before
 - Partials that don't reference parent metadata are unaffected
 - No code changes required to existing templates
 
@@ -425,7 +414,7 @@ This feature is fully backward compatible. Existing templates and partials work 
 For developers extending Chloroplast:
 - Metadata merging happens in `RenderedContent.MergeMetadata()` using `ConfigurationBuilder`
 - The merge occurs in `ChloroplastTemplateBase.RenderMarkdownPartialAsync()` before template rendering
-- Razor template partials called with `PartialAsync(templateName, Model)` already pass the parent Model and thus inherit metadata naturally
-- Only markdown partials with their own front matter needed special handling for metadata inheritance
+- Razor template partials called with `PartialAsync(templateName, Model)` already pass the parent Model and inherit metadata naturally
+- Only markdown partials with their own front matter need special handling for metadata inheritance
 
 ---
