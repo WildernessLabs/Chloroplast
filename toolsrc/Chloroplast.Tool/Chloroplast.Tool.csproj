@@ -9,7 +9,7 @@
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <IsPackable>true</IsPackable>
 
-  <Version Condition="'$(Version)' == ''">0.12.0</Version>
+  <Version Condition="'$(Version)' == ''">0.13.0</Version>
     <Authors>Wilderness Labs</Authors>
     <Company>Wilderness Labs</Company>
     <PackageDescription>Markdown-based static site generator</PackageDescription>
@@ -48,8 +48,16 @@
       <Link>ProjectTemplates\conceptual\source\menu.md</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\docs\source\menu.es.md">
+      <Link>ProjectTemplates\conceptual\source\menu.es.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\docs\source\index.md">
       <Link>ProjectTemplates\conceptual\source\index.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\source\index.es.md">
+      <Link>ProjectTemplates\conceptual\source\index.es.md</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\docs\source\cli\index.md">
@@ -58,6 +66,14 @@
     </None>
     <None Include="..\..\docs\source\templates\index.md">
       <Link>ProjectTemplates\conceptual\source\templates\index.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\source\localization\index.md">
+      <Link>ProjectTemplates\conceptual\source\localization\index.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\docs\source\localization\index.es.md">
+      <Link>ProjectTemplates\conceptual\source\localization\index.es.md</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\docs\source\assets\main.css">

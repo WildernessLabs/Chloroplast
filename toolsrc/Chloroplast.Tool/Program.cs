@@ -22,7 +22,7 @@ namespace Chloroplast.Tool
             if (args.Length == 1 && args[0].EndsWith ("version", StringComparison.CurrentCultureIgnoreCase))
                 return;
 
-            if (args.Length < 1 || args.Length == 1 && (args[0] == "build" || args[0] == "host"))
+            if (args.Length < 1 || args.Length == 1 && (args[0] == "build" || args[0] == "host" || args[0] == "validate"))
             {
                 string configPath = Directory.GetCurrentDirectory ().CombinePath ("SiteConfig.yml");
                 Console.WriteLine ($"looking for {configPath}");
@@ -66,8 +66,11 @@ namespace Chloroplast.Tool
                     case "new":
                         command = new NewCommand (args);
                         break;
+                    case "validate":
+                        command = new ValidateCommand ();
+                        break;
                     default:
-                        throw new ChloroplastException ("usage: pass 'build', or 'watch'");
+                        throw new ChloroplastException ("usage: pass 'build', 'watch', 'host', 'new', or 'validate'");
                 }
 
                 Stopwatch stopwatch = new Stopwatch ();
@@ -135,7 +138,7 @@ namespace Chloroplast.Tool
             var builder = new ConfigurationBuilder ()
                 .AddCommandLine (subtaskargs);
 
-            if (subtask == "build" || subtask == "host")
+            if (subtask == "build" || subtask == "host" || subtask == "validate")
             {
                 // Find the --root parameter value, or use positional arg
                 string sitePath = null;

@@ -51,7 +51,7 @@ The parameters above will default to the current working directory for the root 
 
 The build command will render all `index.md` files into corresponding `index.html` files, and copy everything else to the same corresponding location (images, styles, etc).
 
-Additionally, the build command will automatically generate sitemap XML files if a `baseUrl` is configured in your `SiteConfig.yml`. This helps with SEO and search engine indexing.
+Additionally, the build command automatically runs site validation after completing the build to check for broken links and missing assets. The build command will automatically generate sitemap XML files if a `baseUrl` is configured in your `SiteConfig.yml`. This helps with SEO and search engine indexing.
 
 ### Error Handling
 
@@ -108,6 +108,8 @@ Error details written to: /tmp/build-errors.log
 
 The host sub command starts a simple HTML web server. Useful for local preview during development or even authoring. If you update markdown files, the content will automatically be rebuilt so you can just refresh the browser.
 
+The host command automatically runs site validation before starting the web server to help identify any broken links or missing assets.
+
 ```
 chloroplast host --root path/to/root --out path/to/html 
 ```
@@ -121,6 +123,26 @@ If you are updating razor templates, you can also just run this command in a sep
 - `out`: This should be the same value as the `out` parameter used in the `build` command.
 
 The parameter above will default to the `out/` folder in the current working directory, if omitted.
+
+## `validate` sub command
+
+The validate subcommand checks the generated site for common issues such as broken links, missing CSS/JavaScript files, and missing images. This helps catch asset and path problems early in development.
+
+```
+chloroplast validate --out path/to/out
+```
+
+The validation checks include:
+- **CSS and JavaScript references**: Ensures all linked stylesheets and scripts exist
+- **Navigation links**: Verifies internal links point to existing pages
+- **Images**: Checks that all image references point to existing files
+- **Directory links**: Ensures directory links have an index.html file
+
+### parameters
+
+- `out`: the path to the directory containing the built site output (defaults to `out/` in the current directory)
+
+The validate command is automatically run at the end of the `build` command and before starting the `host` server, but can also be run standalone to spot-check site output.
 
 ## Sitemap Generation
 
