@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interfaz de L&#237;nea de Comandos</title>
+    <link href="/assets/main.css?v=20251214001119" rel="stylesheet" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container site-header-container">
+            <h1 class="site-title"><a href="/es/">Chloroplast Docs</a></h1>
+            <nav class="locale-nav" aria-label="Language selector">
+                <ul class="locale-nav-list">
+                    <li class="locale-nav-item">
+                        <a href="/cli/" class="locale-nav-link" title="English">&#127482;&#127480; <span class="locale-code">en</span></a>
+                    </li>
+                    <li class="locale-nav-item">
+                        <a href="/es/cli/" class="locale-nav-link active" title="Espa&#241;ol" aria-current=&quot;true&quot;>&#127466;&#127480; <span class="locale-code">es</span></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" style="margin-left:0; max-width:100%;">
+    <div class="row">
+    
+
+<div id="leftnav">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a href="/es/installing/" class="nav-link">Instalaci&#243;n</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/cli/" class="nav-link">L&#237;nea de Comandos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/templates/" class="nav-link">Plantillas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/localization/" class="nav-link">Localizaci&#243;n</a>
+                </li>
+        </ul>
+
+</div>
+        <div class="main-content">
+            <h2>Interfaz de L&#237;nea de Comandos</h2>
+            
+
+    <div class="machine-translation-warning" role="alert">
+        <strong>🤖 Traducción Automática:</strong>
+        Este contenido fue traducido automáticamente y puede contener errores.
+    </div>
+
+
+            <p>Chloroplast soporta varios subcomandos. Se recomienda primero hacer <code>cd</code> a la carpeta raíz de tu proyecto, y ejecutar los comandos con los valores predeterminados según sea apropiado.</p>
+<a name="Subcomando_new"></a><h2>Subcomando <code>new</code></h2>
+<p>El subcomando new te permite arrancar un sitio chloroplast copiando archivos a una carpeta de destino.</p>
+<pre><code>chloroplast new conceptual carpetaObjetivo
+</code></pre>
+<p>Esto creará <code>carpetaObjetivo</code> (si no existe ya), y copiará archivos de la plantilla <code>conceptual</code>. Luego puedes ejecutar los siguientes comandos para construir y previsualizar el sitio localmente:</p>
+<pre><code>cd carpetaObjetivo
+chloroplast build
+chloroplast host
+</code></pre>
+<a name="parámetros"></a><h3>parámetros</h3>
+<ul>
+<li><code>conceptual</code>: El segundo parámetro posicional después de <code>new</code>.
+<ul>
+<li>Actualmente esto solo soportará <code>conceptual</code>, que será una copia de esta documentación.</li>
+<li>Eventualmente tendremos más plantillas, y eventualmente abriremos a contribuciones de la comunidad.</li>
+</ul>
+</li>
+<li><code>carpetaObjetivo</code>: el tercer parámetro posicional después de <code>new</code> es el nombre de la carpeta objetivo donde se colocarán los archivos de plantilla.</li>
+</ul>
+<a name="Subcomando_build"></a><h2>Subcomando <code>build</code></h2>
+<p>El subcomando build construirá un sitio Chloroplast</p>
+<pre><code>chloroplast build --root ruta/a/SiteConfig/ --out ruta/a/salida
+</code></pre>
+<a name="parámetros"></a><h3>parámetros</h3>
+<ul>
+<li><code>root</code>: la ruta al directorio que contiene un archivo <code>SiteConfig.yml</code></li>
+<li><code>out</code>: la ruta al directorio donde se generará el HTML resultante.</li>
+<li><code>normalizePaths</code>: por defecto <code>true</code>, que normaliza todas las rutas a minúsculas. Establece esto a false para que las rutas de salida coincidan con las mayúsculas y minúsculas de origen.</li>
+<li><code>errorLogPath</code>: ruta opcional para escribir información detallada de errores a un archivo de registro</li>
+<li><code>buildVersion</code>: cadena de versión opcional para agregar a las referencias CSS y JavaScript para invalidar la caché. Si no se proporciona, se genera automáticamente una marca de tiempo en el formato <code>yyyyMMddHHmmss</code>.</li>
+</ul>
+<p>Los parámetros anteriores utilizarán por defecto el directorio de trabajo actual para la ruta raíz, y un directorio <code>out/</code> en esa misma ruta si ambos parámetros se omiten.</p>
+<p>El comando build renderizará todos los archivos <code>index.md</code> en archivos <code>index.html</code> correspondientes, y copiará todo lo demás a la misma ubicación correspondiente (imágenes, estilos, etc).</p>
+<p>Además, el comando build generará automáticamente archivos XML de sitemap si un <code>baseUrl</code> está configurado en tu <code>SiteConfig.yml</code>. Esto ayuda con el SEO y la indexación de motores de búsqueda.</p>
+<a name="Manejo_de_Errores"></a><h3>Manejo de Errores</h3>
+<p>El comando build proporciona manejo integral de errores para ayudar a diagnosticar problemas sin sobrecargar la salida de consola:</p>
+<ul>
+<li><strong>Salida de Consola</strong>: Mensajes de error limpios y concisos que muestran la información esencial necesaria para solucionar problemas</li>
+<li><strong>Archivo de Registro de Errores</strong>: Información detallada de errores incluyendo trazas completas de pila y código fuente generado</li>
+</ul>
+<h4>Configurando el Registro de Errores</h4>
+<p>Puedes configurar el registro de errores de dos maneras:</p>
+<p><strong>1. Parámetro de Línea de Comandos:</strong></p>
+<pre><code class="language-bash">chloroplast build --errorLogPath /ruta/a/registro-errores.txt
+</code></pre>
+<p><strong>2. Configuración en SiteConfig.yml:</strong></p>
+<pre><code class="language-yaml"># Configuración de registro de errores
+errorLogPath: logs/build-errors.log
+</code></pre>
+<h4>Beneficios del Registro de Errores</h4>
+<ul>
+<li><strong>La consola se mantiene legible</strong>: Solo se muestra información esencial de errores en la terminal</li>
+<li><strong>Información completa de depuración</strong>: Trazas completas de pila, código fuente generado e información detallada de excepciones se escriben al archivo de registro</li>
+<li><strong>Recolección de múltiples errores</strong>: Todos los errores encontrados durante la construcción se recolectan y muestran juntos</li>
+<li><strong>Seguimiento de marcas de tiempo</strong>: Cada error incluye información de marca de tiempo para solución de problemas</li>
+</ul>
+<h4>Ejemplo de Salida de Errores</h4>
+<p><strong>Salida de Consola:</strong></p>
+<pre><code>=== ERRORES DE CONSTRUCCIÓN ===
+Se encontraron 1 error(es) durante la construcción:
+
+[20:17:21] Error en 'Inicialización de plantilla': Falló la inicialización del renderizador de contenido
+    Falló la compilación de plantilla:
+    Error(es):
+    - Template.cs(4,26): error CS1010: Nueva línea en constante
+    - Template.cs(4,61): error CS1002: ; esperado
+
+Detalles del error escritos en: /tmp/build-errors.log
+</code></pre>
+<p><strong>Contenido del Archivo de Registro de Errores:</strong></p>
+<ul>
+<li>Trazas completas de pila de excepciones</li>
+<li>Código fuente completo generado para errores de compilación de plantillas</li>
+<li>Rutas de archivos detalladas y contexto de procesamiento</li>
+<li>Marcas de tiempo para todos los errores encontrados</li>
+</ul>
+<a name="Subcomando_host"></a><h2>Subcomando <code>host</code></h2>
+<p>El subcomando host inicia un servidor web HTML simple. Útil para previsualización local durante el desarrollo o incluso creación. Si actualizas archivos markdown, el contenido se reconstruirá automáticamente para que solo tengas que actualizar el navegador.</p>
+<pre><code>chloroplast host --root ruta/a/raíz --out ruta/a/html 
+</code></pre>
+<p>Puedes simplemente presionar la tecla enter para terminar esta tarea después de detener el servidor web con Ctrl+C en cualquier momento.</p>
+<p>Si estás actualizando plantillas razor, también puedes ejecutar este comando en una ventana de terminal separada y dejarlo ejecutándose. De esa manera, mientras ejecutas el subcomando completo <code>build</code>, el contenido y los estilos del front-end se actualizarán, y puedes simplemente actualizar el navegador después de que esa construcción se haya completado.</p>
+<a name="parámetros"></a><h3>parámetros</h3>
+<ul>
+<li><code>out</code>: Este debe ser el mismo valor que el parámetro <code>out</code> usado en el comando <code>build</code>.</li>
+</ul>
+<p>El parámetro anterior utilizará por defecto la carpeta <code>out/</code> en el directorio de trabajo actual, si se omite.</p>
+<a name="Generación_de_Sitemap"></a><h2>Generación de Sitemap</h2>
+<p>El comando build genera automáticamente archivos XML de sitemap cuando un <code>baseUrl</code> está configurado en tu <code>SiteConfig.yml</code>. Esto ayuda a los motores de búsqueda a descubrir e indexar el contenido de tu sitio.</p>
+<a name="Configuración"></a><h3>Configuración</h3>
+<p>Agrega lo siguiente a tu <code>SiteConfig.yml</code> para configurar la generación de sitemap:</p>
+<pre><code class="language-yaml"># URL base para tu sitio (requerido para la generación de sitemap)
+baseUrl: https://tu-sitio.com
+
+# Configuración opcional de sitemap
+sitemap:
+  enabled: true              # Habilitar/deshabilitar generación de sitemap (por defecto: true)
+  maxUrlsPerSitemap: 50000   # URLs máximas por archivo de sitemap (por defecto: 50000)
+</code></pre>
+<a name="Comportamiento"></a><h3>Comportamiento</h3>
+<ul>
+<li><strong>Sitemap único</strong>: Para sitios con menos URLs que el umbral configurado, se genera un único archivo <code>sitemap.xml</code></li>
+<li><strong>Múltiples sitemaps</strong>: Para sitios más grandes, se crean múltiples archivos de sitemap (<code>sitemap1.xml</code>, <code>sitemap2.xml</code>, etc.) con un archivo índice de sitemap (<code>sitemap.xml</code>) que los referencia</li>
+<li><strong>Filtrado de contenido</strong>: Solo se incluyen archivos HTML en los sitemaps; recursos como CSS, imágenes y otros archivos se excluyen</li>
+<li><strong>Marcas de tiempo</strong>: Cada entrada de URL incluye una marca de tiempo de última modificación basada en la fecha de modificación del archivo</li>
+</ul>
+<a name="Invalidación_de_Caché"></a><h2>Invalidación de Caché</h2>
+<p>Chloroplast agrega automáticamente parámetros de versión a las referencias CSS y JavaScript para asegurar la invalidación de la caché del navegador cuando se actualizan los recursos. Esta característica ayuda a prevenir que los usuarios vean estilos o scripts obsoletos después de los despliegues.</p>
+<a name="Configuración"></a><h3>Configuración</h3>
+<p>Agrega lo siguiente a tu <code>SiteConfig.yml</code> para controlar el comportamiento de invalidación de caché:</p>
+<pre><code class="language-yaml"># Configuración de invalidación de caché
+cacheBusting:
+  enabled: true  # Habilitar/deshabilitar invalidación de caché (por defecto: true)
+</code></pre>
+<a name="Uso_en_Plantillas"></a><h3>Uso en Plantillas</h3>
+<p>En tus plantillas Razor, usa el método <code>WithVersion()</code> para agregar parámetros de versión a las URLs de recursos:</p>
+<pre><code class="language-html">&lt;!-- CSS con invalidación de caché --&gt;
+&lt;link href=&quot;@WithVersion(&quot;/assets/main.css&quot;)&quot; rel=&quot;stylesheet&quot; /&gt;
+
+&lt;!-- JavaScript con invalidación de caché --&gt;
+&lt;script src=&quot;@WithVersion(&quot;/assets/site.js&quot;)&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+</code></pre>
+<a name="Uso_en_Línea_de_Comandos"></a><h3>Uso en Línea de Comandos</h3>
+<p>Puedes especificar una versión de construcción personalizada al ejecutar el comando build:</p>
+<pre><code class="language-bash"># Usar una versión personalizada
+chloroplast build --buildVersion &quot;v1.2.3&quot;
+
+# Usar versión de marca de tiempo automática (por defecto)
+chloroplast build
+</code></pre>
+<a name="Comportamiento"></a><h3>Comportamiento</h3>
+<ul>
+<li><strong>Cuando está habilitado</strong>: Las URLs de recursos se anexan con el parámetro <code>?v={version}</code> (ej., <code>/assets/main.css?v=20231215123456</code>)</li>
+<li><strong>Cuando está deshabilitado</strong>: Las URLs de recursos permanecen sin cambios (ej., <code>/assets/main.css</code>)</li>
+<li><strong>Versionado automático</strong>: Si no se especifica <code>--buildVersion</code>, se genera automáticamente una marca de tiempo en formato <code>yyyyMMddHHmmss</code></li>
+<li><strong>Manejo de parámetros de consulta</strong>: El parámetro de versión se anexa correctamente con <code>&amp;</code> si la URL ya contiene parámetros de consulta</li>
+</ul>
+
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <div class="container">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="/es/" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
+                <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
+                <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
+                <li class="nav-item"><a href="https://blog.wildernesslabs.co/" class="nav-link text-muted">Blog</a></li>
+            </ul>
+            <p class="text-center text-muted">Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a></p>
+        </div>
+    </footer>
+</body>
+</html>

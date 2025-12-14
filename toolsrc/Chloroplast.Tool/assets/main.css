@@ -1,0 +1,450 @@
+/* Wilderness Labs Design System */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+/* CSS Variables for Wilderness Labs Color Palette */
+:root {
+    --wl-navy-deep: #0a2342;
+    --wl-navy-dark: #081c33;
+    --wl-orange: #f26722;
+    --wl-blue: #00a6d6;
+    --wl-white: #ffffff;
+    --wl-steel-blue: #b0c4de;
+    --wl-card-overlay: rgba(255, 255, 255, 0.05);
+    --wl-border-radius: 6px;
+}
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+    background-color: var(--wl-navy-deep);
+    color: var(--wl-white);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Poppins", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--wl-white);
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+p {
+    color: var(--wl-white);
+    margin-bottom: 1rem;
+}
+
+/* Code Styling */
+code, pre {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: var(--wl-border-radius);
+}
+
+code {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+    color: var(--wl-steel-blue);
+}
+
+pre {
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+pre code {
+    background: none;
+    padding: 0;
+}
+
+/* Links */
+a {
+    color: var(--wl-blue);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--wl-orange);
+}
+
+/* Header */
+header {
+    background-color: var(--wl-navy-deep);
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Site Header Enhancements */
+.site-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.site-title {
+    font-size: 1.8rem;
+    margin: 0;
+    line-height: 1;
+}
+
+/* Locale Navigation */
+.locale-nav {
+    display: block;
+}
+
+.locale-nav-list {
+    list-style: none;
+    display: flex;
+    gap: .75rem;
+    margin: 0;
+    padding: 0;
+}
+
+.locale-nav-item { margin: 0; }
+
+.locale-nav-link {
+    text-decoration: none;
+    color: var(--wl-white);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .4rem .6rem;
+    border-radius: var(--wl-border-radius);
+    line-height: 1;
+    transition: background .2s ease, color .2s ease, font-weight .2s ease;
+}
+
+.locale-nav-link:hover {
+    background: var(--wl-card-overlay);
+    color: var(--wl-blue);
+}
+
+.locale-nav-link.active {
+    font-weight: 700;
+    background: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+.locale-nav-link.active:hover {
+    background: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+.locale-code { text-transform: lowercase; }
+
+@media (max-width: 640px) {
+    .site-header-container { flex-direction: column; align-items: flex-start; }
+    .locale-nav-list { flex-wrap: wrap; }
+    .locale-nav-link { padding: .35rem .5rem; font-size: .9rem; }
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+header h1 a {
+    color: var(--wl-white);
+    text-decoration: none;
+}
+
+header h1 a:hover {
+    color: var(--wl-orange);
+}
+
+/* Layout */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
+/* Sidebar Navigation */
+#leftnav {
+    background-color: var(--wl-navy-dark);
+    min-height: calc(100vh - 120px);
+    padding: 2rem 1rem;
+    width: 280px;
+    flex-shrink: 0;
+}
+
+.nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--wl-white);
+    text-decoration: none;
+    border-radius: var(--wl-border-radius);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: var(--wl-blue);
+    background-color: var(--wl-card-overlay);
+}
+
+.nav-link.active,
+.nav-link:focus {
+    background-color: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    background-color: var(--wl-navy-deep);
+}
+
+/* Cards and Content Blocks */
+.card {
+    background-color: var(--wl-navy-deep);
+    background-image: linear-gradient(var(--wl-card-overlay), var(--wl-card-overlay));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--wl-border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--wl-border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--wl-orange);
+    color: var(--wl-white);
+}
+
+.btn-primary:hover {
+    background-color: #e55a1d;
+    color: var(--wl-white);
+}
+
+.btn-secondary {
+    background-color: var(--wl-blue);
+    color: var(--wl-white);
+}
+
+.btn-secondary:hover {
+    background-color: #0095c1;
+    color: var(--wl-white);
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background-color: var(--wl-card-overlay);
+    border-radius: var(--wl-border-radius);
+    overflow: hidden;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+    background-color: var(--wl-navy-dark);
+    font-weight: 600;
+    color: var(--wl-white);
+}
+
+td {
+    color: var(--wl-steel-blue);
+}
+
+/* Footer */
+footer {
+    background-color: var(--wl-navy-dark);
+    padding: 2rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+footer p {
+    margin: 0;
+    color: var(--wl-steel-blue);
+    text-align: center;
+}
+
+footer a {
+    color: var(--wl-orange);
+}
+
+footer a:hover {
+    color: var(--wl-blue);
+}
+
+/* Basic spacing utilities (used in footer markup) */
+.pb-3 { padding-bottom: 1rem; }
+.mb-3 { margin-bottom: 1rem; }
+
+/* Secondary text styling */
+.text-muted {
+    color: var(--wl-steel-blue) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .row {
+        flex-direction: column;
+    }
+    
+    #leftnav {
+        width: 100%;
+        min-height: auto;
+        padding: 1rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    header {
+        padding: 0.5rem 0;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.pb-3 {
+    padding-bottom: 1rem;
+}
+
+.py-3 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.my-4 {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.border-bottom {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav.justify-content-center {
+    /* Footer horizontal nav: use flex ONLY when combined with justify-content-center */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav.justify-content-center .nav-item {
+    margin: 0 0.5rem;
+}
+
+/* Special styling for navigation in footer */
+.nav.justify-content-center .nav-link {
+    padding: 0.5rem;
+    background: none;
+    border-radius: 0;
+}
+
+.nav.justify-content-center .nav-link:hover {
+    background: none;
+    color: var(--wl-orange);
+}
+
+/* Localization: Translation & Machine Translation Warnings */
+.translation-warning, .machine-translation-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 16px 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+.translation-warning-link {
+    color: #856404;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.translation-warning-link:hover {
+    color: #533f03;
+}

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Templating</title>
+    <link href="/assets/main.css?v=20251214001119" rel="stylesheet" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container site-header-container">
+            <h1 class="site-title"><a href="/">Chloroplast Docs</a></h1>
+            <nav class="locale-nav" aria-label="Language selector">
+                <ul class="locale-nav-list">
+                    <li class="locale-nav-item">
+                        <a href="/templates/" class="locale-nav-link active" title="English" aria-current=&quot;true&quot;>&#127482;&#127480; <span class="locale-code">en</span></a>
+                    </li>
+                    <li class="locale-nav-item">
+                        <a href="/es/templates/" class="locale-nav-link" title="Espa&#241;ol">&#127466;&#127480; <span class="locale-code">es</span></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" style="margin-left:0; max-width:100%;">
+    <div class="row">
+    
+
+<div id="leftnav">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a href="/installing/" class="nav-link">Installing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/cli/" class="nav-link">Command Line</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/templates/" class="nav-link">Templates</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/localization/" class="nav-link">Localization</a>
+                </li>
+        </ul>
+
+</div>
+        <div class="main-content">
+            <h2>Templating</h2>
+            
+
+
+
+            <p>Chloroplast templates are built using ASP.NET's Razor templates.</p>
+<a name="Configuration"></a><h1>Configuration</h1>
+<p>The <code>SiteConfig.yml</code> file lets you configure the location of templates and the folders to find content files to process.</p>
+<pre><code class="language-yaml"># razor templates
+templates_folder: templates
+
+areas:
+  - source_folder: /source
+    output_folder: /
+</code></pre>
+<a name="Markdown_front_matter"></a><h1>Markdown front matter</h1>
+<p>The template will be defined by the content's front matter.</p>
+<pre><code>---
+template: TemplateName
+title: Document title
+---
+</code></pre>
+<p>If this value is either incorrect, or omitted, it will default to look for a template named <code>Default.cshtml</code>. These templates are assumed to be just for the content area itself.</p>
+<a name="SiteFrame_cshtml"></a><h1>SiteFrame.cshtml</h1>
+<p>For the main site's chrome, Chloroplast will look for a template named <code>SiteFrame.cshtml</code> by default. This is the outer &quot;frame&quot; or &quot;chrome&quot; that wraps your content.</p>
+<p>You can also specify a different frame template for individual content files by adding a <code>frame:</code> property to the frontmatter:</p>
+<pre><code>---
+template: TemplateName
+frame: CustomFrame
+title: Document title
+---
+</code></pre>
+<p>If no <code>frame:</code> is specified, Chloroplast defaults to <code>SiteFrame.cshtml</code>.</p>
+<a name="Frame_Template_Example"></a><h2>Frame Template Example</h2>
+<p>The SiteFrame template renders the full page structure:</p>
+<pre><code>&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;@Model.GetMeta(&quot;Title&quot;)&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;maincontent&quot;&gt;
+    @Raw(Model.Body)
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<a name="Error_Handling"></a><h2>Error Handling</h2>
+<p>If a specified frame template is not found:</p>
+<ul>
+<li>An error message is logged to the console</li>
+<li>The affected content file is skipped (no incomplete page is rendered)</li>
+<li>The build continues processing other files</li>
+<li>The error is included in the build error summary</li>
+</ul>
+<p>This ensures the build process doesn't stop completely due to a missing frame, but you'll be notified of the issue.</p>
+<a name="Customizing_Templates"></a><h1>Customizing Templates</h1>
+<p>When designing custom templates for Chloroplast, focus on leveraging the available template methods and ensuring your templates handle the full range of Chloroplast features effectively.</p>
+<a name="Template_Structure_Reference"></a><h2>Template Structure Reference</h2>
+<p>For recommended template structure and patterns, refer to the included templates:</p>
+<ul>
+<li><strong>SiteFrame.cshtml</strong> - The main site chrome template that provides the overall page structure, navigation, and asset loading</li>
+<li><strong>Default.cshtml</strong> - The default content template that demonstrates content area layout and metadata handling</li>
+</ul>
+<p>These templates serve as the de-facto recommended structure and demonstrate best practices for:</p>
+<ul>
+<li>Using <code>@Href()</code> for internal navigation links with BasePath handling</li>
+<li>Using <code>@Asset()</code> for asset references with automatic cache busting</li>
+<li>Handling content metadata with <code>@Model.GetMeta()</code></li>
+<li>Rendering content with <code>@Raw(Model.Body)</code></li>
+<li>Working with the <code>@Model.Headers</code> collection for table of contents</li>
+</ul>
+<a name="Template_Properties_and_Methods"></a><h1>Template Properties and Methods</h1>
+<p>Available to all templates are the following functions:</p>
+<ul>
+<li><code>@Raw(&quot;&lt;some string&gt;&quot;)</code>
+<ul>
+<li>the <code>Raw</code> method will avoid HTML encoding content (which is the default).</li>
+</ul>
+</li>
+<li><code>@Model.Body</code>
+<ul>
+<li>This is the main HTML content being rendered in this template. You should output this through the <code>Raw</code> method since it will likely contain HTML.</li>
+</ul>
+</li>
+<li><code>@Model.GetMeta(&quot;title&quot;)</code>
+<ul>
+<li>with this you can access any value in the front matter (for example, <code>title</code>).</li>
+</ul>
+</li>
+<li><code>@await PartialAsync(&quot;TemplateName&quot;, Model)</code>
+<ul>
+<li>This lets you render sub templates.</li>
+<li>the template name parameter will match the razor file name ... so in the example above, it would be looking for a file named <code>Templates/TemplateName.cshtml</code></li>
+<li>the second parameter is the model to pass to the template (typically <code>Model</code> to pass the current model).</li>
+<li><strong>Note:</strong> Template names are relative to the <code>templates_folder</code>, so you reference them without the <code>templates/</code> prefix. For example, use <code>&quot;TranslationWarning&quot;</code> not <code>&quot;templates/TranslationWarning&quot;</code> (though the latter will work as a fallback).</li>
+</ul>
+</li>
+<li><code>@await PartialAsync(&quot;path&quot;)</code>
+<ul>
+<li><strong>Smart routing based on file extension:</strong>
+<ul>
+<li><code>.cshtml</code> extension → renders as a Razor template with current <code>Model</code></li>
+<li><code>.md</code> extension → renders as markdown file (can define its own template, defaults to <code>Default</code>, no <code>SiteFrame.cshtml</code>)</li>
+<li>No extension → checks if a template exists, otherwise treats as markdown file path</li>
+</ul>
+</li>
+<li>Examples:
+<ul>
+<li><code>@await PartialAsync(&quot;topNav&quot;)</code> → renders template if <code>topNav.cshtml</code> exists</li>
+<li><code>@await PartialAsync(&quot;source/menu.md&quot;)</code> → renders markdown file</li>
+<li><code>@await PartialAsync(&quot;template/nav.cshtml&quot;)</code> → explicitly renders template</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>@Model.Headers</code> collection
+<ul>
+<li>Each <code>h1</code>-<code>h6</code> will be parsed and added to this headers collection.</li>
+<li>Every <code>Header</code> object has the following properties:
+<ul>
+<li>Level: the numeric value of the header</li>
+<li>Value: the text</li>
+<li>Slug: a slug version of the <code>Value</code>, which corresponds to an anchor added to the HTML before the header.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<a name="URL_and_Asset_Methods"></a><h2>URL and Asset Methods</h2>
+<p>For generating URLs and asset references in your templates:</p>
+<ul>
+<li><code>@Href(&quot;/path/to/page&quot;)</code>
+<ul>
+<li>Prefixes a site-relative URL with the configured BasePath</li>
+<li>Use this for internal site navigation links</li>
+<li>Example: <code>&lt;a href=&quot;@Href(&quot;/about&quot;)&quot;&gt;About&lt;/a&gt;</code></li>
+</ul>
+</li>
+<li><code>@Asset(&quot;/path/to/asset.css&quot;)</code>
+<ul>
+<li>Builds an asset URL with BasePath and automatic cache-busting version</li>
+<li>Combines both BasePath application and version parameter addition</li>
+<li><strong>Important</strong>: Do not manually append query parameters to Asset() results, as this will conflict with the automatic version parameter</li>
+<li>Example: <code>&lt;link href=&quot;@Asset(&quot;/css/main.css&quot;)&quot; rel=&quot;stylesheet&quot; /&gt;</code></li>
+</ul>
+</li>
+</ul>
+<a name="URL_Method_Examples"></a><h3>URL Method Examples</h3>
+<pre><code class="language-html">&lt;!-- Navigation links using Href --&gt;
+&lt;nav&gt;
+    &lt;a href=&quot;@Href(&quot;/&quot;)&quot;&gt;Home&lt;/a&gt;
+    &lt;a href=&quot;@Href(&quot;/docs&quot;)&quot;&gt;Documentation&lt;/a&gt;
+    &lt;a href=&quot;@Href(&quot;/about&quot;)&quot;&gt;About&lt;/a&gt;
+&lt;/nav&gt;
+
+&lt;!-- Asset references using Asset (preferred for CSS/JS) --&gt;
+&lt;link href=&quot;@Asset(&quot;/css/main.css&quot;)&quot; rel=&quot;stylesheet&quot; /&gt;
+&lt;script src=&quot;@Asset(&quot;/js/app.js&quot;)&quot;&gt;&lt;/script&gt;
+
+&lt;!-- Manual approach using Href + WithVersion for more control --&gt;
+&lt;link href=&quot;@WithVersion(Href(&quot;/css/main.css&quot;))&quot; rel=&quot;stylesheet&quot; /&gt;
+</code></pre>
+<p><strong>⚠️ Cache Busting Conflict Warning</strong>: When using <code>Asset()</code>, do not manually append query parameters or call <code>WithVersion()</code> on the result, as <code>Asset()</code> already includes cache busting. This would result in malformed URLs like <code>/basePath/assets/script/samples?v=123/mysample.js</code>.</p>
+<a name="Cache_Busting_Methods"></a><h2>Cache Busting Methods</h2>
+<p>For managing asset versioning and cache invalidation:</p>
+<ul>
+<li><code>@WithVersion(&quot;/path/to/asset.css&quot;)</code>
+<ul>
+<li>Adds a version parameter to asset URLs for cache busting (e.g., <code>/path/to/asset.css?v=20231215123456</code>)</li>
+<li>Only adds the version parameter when cache busting is enabled in configuration</li>
+<li>Properly handles existing query parameters by using <code>&amp;</code> instead of <code>?</code> when appropriate</li>
+</ul>
+</li>
+<li><code>@BuildVersion</code>
+<ul>
+<li>Gets the current build version string, or <code>null</code> if cache busting is disabled</li>
+<li>Useful for displaying version information or custom cache busting logic</li>
+</ul>
+</li>
+</ul>
+<a name="Cache_Busting_Example"></a><h3>Cache Busting Example</h3>
+<pre><code class="language-html">&lt;!-- Recommended approach using WithVersion --&gt;
+&lt;link href=&quot;@WithVersion(&quot;/assets/main.css&quot;)&quot; rel=&quot;stylesheet&quot; /&gt;
+&lt;script src=&quot;@WithVersion(&quot;/assets/site.js&quot;)&quot;&gt;&lt;/script&gt;
+
+&lt;!-- Manual approach using BuildVersion --&gt;
+@if (BuildVersion != null)
+{
+    &lt;link href=&quot;/assets/main.css?v=@BuildVersion&quot; rel=&quot;stylesheet&quot; /&gt;
+}
+else
+{
+    &lt;link href=&quot;/assets/main.css&quot; rel=&quot;stylesheet&quot; /&gt;
+}
+</code></pre>
+<a name="Localized_Partials_and_Templates"></a><h2>Localized Partials &amp; Templates</h2>
+<p>Chloroplast provides helper methods to simplify rendering locale-specific partials (both Markdown content files and Razor template partials) without hard-coding locale-specific logic in every <code>.cshtml</code> file.</p>
+<p>These helpers keep your templates clean and make it easy for site authors to add localized variants by simply creating files that follow a naming convention (e.g. <code>menu.es.md</code>).</p>
+<a name="Helper_Methods"></a><h3>Helper Methods</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ResolveLocalizedContentPath(basePath, locale?)</code></td>
+<td>Returns the localized relative path if it exists (e.g. <code>source/menu.es.md</code>), otherwise the base path. Does not render anything.</td>
+</tr>
+<tr>
+<td><code>InsertLocaleBeforeExtension(path, locale)</code></td>
+<td>Utility that transforms <code>file.md</code> into <code>file.es.md</code> (used internally; available if you need custom logic).</td>
+</tr>
+<tr>
+<td><code>LocalizedMarkdownPartialAsync(basePath, locale?)</code></td>
+<td>Renders a localized Markdown content partial, falling back to the base file.</td>
+</tr>
+<tr>
+<td><code>LocalizedTemplatePartialAsync&lt;TModel&gt;(baseName, model, locale?, fallbackToBase=true)</code></td>
+<td>Renders a Razor template partial, trying <code>baseName.{locale}</code> first when locale != default, then falling back.</td>
+</tr>
+</tbody>
+</table>
+<a name="Usage_Examples"></a><h3>Usage Examples</h3>
+<p>Render a localized menu Markdown file (tries <code>source/menu.&lt;locale&gt;.md</code> first):</p>
+<pre><code class="language-razor">@await LocalizedMarkdownPartialAsync(&quot;source/menu.md&quot;)
+</code></pre>
+<p>Render a localized Razor partial (e.g. <code>TranslationWarning.cshtml</code> + optional <code>TranslationWarning.es.cshtml</code>):</p>
+<pre><code class="language-razor">@(await LocalizedTemplatePartialAsync(&quot;TranslationWarning&quot;, Model))
+</code></pre>
+<p>Explicitly target a different locale (useful for language switchers or preview UIs):</p>
+<pre><code class="language-razor">@* Show how this page's menu would look in Spanish *@
+@await LocalizedMarkdownPartialAsync(&quot;source/menu.md&quot;, locale: &quot;es&quot;)
+</code></pre>
+<a name="File_Naming_Conventions"></a><h3>File Naming Conventions</h3>
+<p>For a base file:</p>
+<pre><code>source/menu.md
+</code></pre>
+<p>Add a localized variant by inserting the locale before the extension:</p>
+<pre><code>source/menu.es.md
+source/menu.fr.md
+</code></pre>
+<p>For Razor partials (no extension required in calls):</p>
+<pre><code>TranslationWarning.cshtml
+TranslationWarning.es.cshtml
+TranslationWarning.fr.cshtml
+</code></pre>
+<a name="Fallback_Behavior"></a><h3>Fallback Behavior</h3>
+<ol>
+<li>Non-default locale requested → framework looks for localized variant.</li>
+<li>If localized file exists → it is rendered.</li>
+<li>If missing → base file is rendered (graceful fallback, no exception).</li>
+<li>You can force an exception instead of fallback with <code>fallbackToBase: false</code> on <code>LocalizedTemplatePartialAsync</code>.</li>
+</ol>
+<a name="When_to_Use_Which"></a><h3>When to Use Which</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rendering a Markdown content fragment (e.g. a sidebar, footer)</td>
+<td><code>LocalizedMarkdownPartialAsync</code></td>
+</tr>
+<tr>
+<td>Rendering a Razor partial (dynamic logic, custom model)</td>
+<td><code>LocalizedTemplatePartialAsync</code></td>
+</tr>
+<tr>
+<td>Just need the resolved path for custom logic (e.g. building a list)</td>
+<td><code>ResolveLocalizedContentPath</code></td>
+</tr>
+</tbody>
+</table>
+<a name="Migrating_Existing_Logic"></a><h3>Migrating Existing Logic</h3>
+<p>If you previously had manual logic like:</p>
+<pre><code class="language-razor">@{
+  var baseMenu = &quot;source/menu.md&quot;;
+  var localized = CurrentLocale != SiteConfig.DefaultLocale ? $&quot;source/menu.{CurrentLocale}.md&quot; : baseMenu;
+  // ... existence checks ...
+}
+@await PartialAsync(menuPathToUse)
+</code></pre>
+<p>Replace it with:</p>
+<pre><code class="language-razor">@await LocalizedMarkdownPartialAsync(&quot;source/menu.md&quot;)
+</code></pre>
+<p>And for localized warnings / notices:</p>
+<pre><code class="language-razor">@(await LocalizedTemplatePartialAsync(&quot;TranslationWarning&quot;, Model))
+</code></pre>
+<a name="Customization"></a><h3>Customization</h3>
+<p>You can still build higher-level abstractions on top of these methods (e.g. a <code>RenderSidebar()</code> helper) in a derived template base class. The provided helpers deliberately avoid assumptions about specific file names beyond the locale insertion convention.</p>
+<a name="Edge_Cases_and_Notes"></a><h3>Edge Cases &amp; Notes</h3>
+<ul>
+<li>If a file has no extension (e.g. <code>fragment</code>), a locale variant becomes <code>fragment.es</code>.</li>
+<li><code>InsertLocaleBeforeExtension</code> only modifies the final segment; nested paths are preserved.</li>
+<li>The existence check uses the configured site <code>root</code> and honors directory separators on the current platform.</li>
+<li>These helpers do not alter URL localization—they strictly manage which source content file is rendered.</li>
+</ul>
+<hr>
+<p>With these helpers, you can keep templates concise while enabling contributors to add localized content simply by creating appropriately named files.</p>
+
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <div class="container">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="/" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
+                <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
+                <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
+                <li class="nav-item"><a href="https://blog.wildernesslabs.co/" class="nav-link text-muted">Blog</a></li>
+            </ul>
+            <p class="text-center text-muted">Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a></p>
+        </div>
+    </footer>
+</body>
+</html>

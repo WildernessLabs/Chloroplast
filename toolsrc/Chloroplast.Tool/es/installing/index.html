@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Installing Chloroplast</title>
+    <link href="/assets/main.css?v=20251214001119" rel="stylesheet" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container site-header-container">
+            <h1 class="site-title"><a href="/es/">Chloroplast Docs</a></h1>
+            <nav class="locale-nav" aria-label="Language selector">
+                <ul class="locale-nav-list">
+                    <li class="locale-nav-item">
+                        <a href="/installing/" class="locale-nav-link" title="English">&#127482;&#127480; <span class="locale-code">en</span></a>
+                    </li>
+                    <li class="locale-nav-item">
+                        <a href="/es/installing/" class="locale-nav-link active" title="Espa&#241;ol" aria-current=&quot;true&quot;>&#127466;&#127480; <span class="locale-code">es</span></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" style="margin-left:0; max-width:100%;">
+    <div class="row">
+    
+
+<div id="leftnav">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a href="/es/installing/" class="nav-link">Instalaci&#243;n</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/cli/" class="nav-link">L&#237;nea de Comandos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/templates/" class="nav-link">Plantillas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/es/localization/" class="nav-link">Localizaci&#243;n</a>
+                </li>
+        </ul>
+
+</div>
+        <div class="main-content">
+            <h2>Installing Chloroplast</h2>
+            
+    <div class="translation-warning" role="alert">
+        <strong>⚠️ Aviso de Traducción:</strong>
+    Este contenido aún no está disponible en Espa&#241;ol. Estás viendo la versión en English.
+    </div>
+
+
+
+            <a name="Dependencies"></a><h1>Dependencies</h1>
+<p>You must have the <code>dotnet</code> CLI installed ... to do so, you need only install <em>.NET Core</em> on your machine. The instructions for that can be found here:</p>
+<p><a href="https://docs.microsoft.com/en-us/dotnet/core/install/">https://docs.microsoft.com/en-us/dotnet/core/install/</a></p>
+<a name="Installing_Chloroplast"></a><h1>Installing Chloroplast</h1>
+<p>You can acquire Chloroplast by installing it as either a <a href="https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install">local or global
+tool</a>.</p>
+<a name="Wilderness_Labs_package_registry"></a><h2>Wilderness Labs package registry</h2>
+<a name="Recommended"></a><h3>Recommended</h3>
+<p>Chloroplast can be found on the public nuget.org package registry at:<br>
+<a href="https://www.nuget.org/packages/Chloroplast.Tool/">https://www.nuget.org/packages/Chloroplast.Tool/</a></p>
+<a name="Package_Repository"></a><h3>Package Repository</h3>
+<p>However you can also choose to install it through the Wilderness Labs package
+registry. This means you'll need to add the authenticated NuGet source as follows if you wish to do so.</p>
+<pre><code>dotnet nuget add source https://nuget.pkg.github.com/WildernessLabs/index.json --name “wildernesslabs” --username &lt;&lt; your github username &gt;&gt; --password &lt;&lt; a personal access token &gt;&gt;
+</code></pre>
+<a name="Global"></a><h2>Global</h2>
+<p>Regardless of which package registry you choose, you can install Chloroplast as a global tool.</p>
+<pre><code>dotnet tool install Chloroplast.Tool -g
+</code></pre>
+<p>If you install it as a global tool, you can invoke it with the tool name
+<code>chloroplast</code>.</p>
+<a name="Local"></a><h2>Local</h2>
+<p>Alternatively, you can install it as a local tool by first creating a local
+tool manifest in the project folder, as follows:</p>
+<pre><code>dotnet new tool-manifest
+dotnet tool install Chloroplast.Tool
+</code></pre>
+<p>If you install it as a local tool, you must prefix the tool name, so you can invoke it with <code>dotnet chloroplast</code>.</p>
+<a name="Updating"></a><h2>Updating</h2>
+<p>You can update to the latest release at any point by running the following command (with or without the <code>-g</code> depending on your preference):</p>
+<pre><code>dotnet tool update Chloroplast.Tool -g
+</code></pre>
+
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <div class="container">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="/es/" class="nav-link text-muted">Home</a></li>
+                <li class="nav-item"><a href="https://github.com/WildernessLabs/Chloroplast" class="nav-link text-muted">GitHub</a></li>
+                <li class="nav-item"><a href="https://www.wildernesslabs.co/" class="nav-link text-muted">Wilderness Labs</a></li>
+                <li class="nav-item"><a href="https://community.wildernesslabs.co/" class="nav-link text-muted">Community</a></li>
+                <li class="nav-item"><a href="https://blog.wildernesslabs.co/" class="nav-link text-muted">Blog</a></li>
+            </ul>
+            <p class="text-center text-muted">Made with ♥ at <a href="https://wildernesslabs.co">wildernesslabs.co</a></p>
+        </div>
+    </footer>
+</body>
+</html>
