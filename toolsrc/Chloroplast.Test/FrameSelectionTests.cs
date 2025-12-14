@@ -55,22 +55,7 @@ namespace Chloroplast.Test
             return renderer;
         }
 
-        private T SuppressConsoleOutput<T>(Func<T> action)
-        {
-            var originalOut = Console.Out;
-            using var stringWriter = new StringWriter();
-            try
-            {
-                Console.SetOut(stringWriter);
-                return action();
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-        }
-
-        private async Task<T> SuppressConsoleOutputAsync<T>(Func<Task<T>> action)
+        private async Task<T> WithSuppressedConsoleAsync<T>(Func<Task<T>> action)
         {
             var originalOut = Console.Out;
             using var stringWriter = new StringWriter();
@@ -85,23 +70,7 @@ namespace Chloroplast.Test
             }
         }
 
-        private (string output, T result) CaptureConsoleOutput<T>(Func<T> action)
-        {
-            var originalOut = Console.Out;
-            using var stringWriter = new StringWriter();
-            try
-            {
-                Console.SetOut(stringWriter);
-                var result = action();
-                return (stringWriter.ToString(), result);
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-        }
-
-        private async Task<(string output, T result)> CaptureConsoleOutputAsync<T>(Func<Task<T>> action)
+        private async Task<(string output, T result)> WithCapturedConsoleAsync<T>(Func<Task<T>> action)
         {
             var originalOut = Console.Out;
             using var stringWriter = new StringWriter();
@@ -121,7 +90,7 @@ namespace Chloroplast.Test
         public async Task DefaultFrameIsUsed_WhenNoFrameSpecified()
         {
             // Arrange
-            var renderer = await SuppressConsoleOutputAsync(async () => 
+            var renderer = await WithSuppressedConsoleAsync(async () => 
                 await CreateRendererWithTemplates(("SiteFrame", SiteFrameTemplate)));
 
             var content = new FrameRenderedContent(
@@ -135,7 +104,7 @@ namespace Chloroplast.Test
             );
 
             // Act
-            var result = await SuppressConsoleOutputAsync(async () => 
+            var result = await WithSuppressedConsoleAsync(async () => 
                 await renderer.RenderContentAsync(content));
 
             // Assert
@@ -148,7 +117,7 @@ namespace Chloroplast.Test
         public async Task CustomFrameIsUsed_WhenFrameSpecified()
         {
             // Arrange
-            var renderer = await SuppressConsoleOutputAsync(async () => 
+            var renderer = await WithSuppressedConsoleAsync(async () => 
                 await CreateRendererWithTemplates(
                     ("SiteFrame", SiteFrameTemplate),
                     ("CustomFrame", CustomFrameTemplate)));
@@ -171,7 +140,7 @@ namespace Chloroplast.Test
             );
 
             // Act
-            var result = await SuppressConsoleOutputAsync(async () => 
+            var result = await WithSuppressedConsoleAsync(async () => 
                 await renderer.RenderContentAsync(content));
 
             // Assert
@@ -185,7 +154,7 @@ namespace Chloroplast.Test
         public async Task MissingFrame_ReturnsNull_AndLogsError()
         {
             // Arrange
-            var renderer = await SuppressConsoleOutputAsync(async () => 
+            var renderer = await WithSuppressedConsoleAsync(async () => 
                 await CreateRendererWithTemplates(("SiteFrame", SiteFrameTemplate)));
 
             var metadata = new ConfigurationBuilder()
@@ -206,7 +175,7 @@ namespace Chloroplast.Test
             );
 
             // Act
-            var (consoleOutput, result) = await CaptureConsoleOutputAsync(async () => 
+            var (consoleOutput, result) = await WithCapturedConsoleAsync(async () => 
                 await renderer.RenderContentAsync(content));
 
             // Assert
@@ -220,7 +189,7 @@ namespace Chloroplast.Test
         public async Task MissingSiteFrame_ReturnsNull_AndLogsError()
         {
             // Arrange - Create renderer without SiteFrame
-            var renderer = await SuppressConsoleOutputAsync(async () => 
+            var renderer = await WithSuppressedConsoleAsync(async () => 
                 await CreateRendererWithTemplates()); // No templates
 
             var content = new FrameRenderedContent(
@@ -234,7 +203,7 @@ namespace Chloroplast.Test
             );
 
             // Act
-            var (consoleOutput, result) = await CaptureConsoleOutputAsync(async () => 
+            var (consoleOutput, result) = await WithCapturedConsoleAsync(async () => 
                 await renderer.RenderContentAsync(content));
 
             // Assert
