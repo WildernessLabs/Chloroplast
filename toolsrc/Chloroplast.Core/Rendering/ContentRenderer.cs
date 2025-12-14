@@ -63,32 +63,28 @@ namespace Chloroplast.Core.Rendering
             if (childMetadata == null)
                 return parentMetadata;
 
-            // Both exist - merge them with child overriding parent
-            var builder = new ConfigurationBuilder();
-
-            // Convert parent metadata to dictionary
-            var parentDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // Both exist - merge them efficiently by building a single combined dictionary
+            // This avoids creating intermediate dictionaries and enumerating twice
+            var combined = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            
+            // Add parent values first
             foreach (var kvp in parentMetadata.AsEnumerable())
             {
                 if (kvp.Value != null)
-                    parentDict[kvp.Key] = kvp.Value;
+                    combined[kvp.Key] = kvp.Value;
             }
 
-            // Add parent metadata first
-            builder.AddInMemoryCollection(parentDict);
-
-            // Convert child metadata to dictionary
-            var childDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // Add child values second (they override parent values with same keys)
             foreach (var kvp in childMetadata.AsEnumerable())
             {
                 if (kvp.Value != null)
-                    childDict[kvp.Key] = kvp.Value;
+                    combined[kvp.Key] = kvp.Value;
             }
 
-            // Add child metadata second (overrides parent)
-            builder.AddInMemoryCollection(childDict);
-
-            return builder.Build();
+            // Build once with the combined dictionary
+            return new ConfigurationBuilder()
+                .AddInMemoryCollection(combined)
+                .Build();
         }
     }
 
