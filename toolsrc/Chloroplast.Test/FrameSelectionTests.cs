@@ -10,286 +10,238 @@ using Xunit;
 
 namespace Chloroplast.Test
 {
-    public class FrameSelectionTests
+    public class FrameSelectionTests : IDisposable
     {
-        [Fact]
-        public async Task DefaultFrameIsUsed_WhenNoFrameSpecified()
+        // Template content constants
+        private const string SiteFrameTemplate = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nSiteFrame: @Model.Body";
+        private const string CustomFrameTemplate = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nCustomFrame: @Model.Body";
+
+        private readonly string _tempDir;
+        private readonly string _templatesDir;
+        
+        public FrameSelectionTests()
         {
-            // Arrange - Create a temporary directory structure with templates
-            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            var templatesDir = Path.Combine(tempDir, "templates");
-            
-            Directory.CreateDirectory(templatesDir);
-            
-            // Create SiteFrame template
-            var siteFrameContent = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nSiteFrame: @Model.Body";
-            var siteFramePath = Path.Combine(templatesDir, "SiteFrame.cshtml");
-            await File.WriteAllTextAsync(siteFramePath, siteFrameContent);
-            
-            // Create configuration
+            _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            _templatesDir = Path.Combine(_tempDir, "templates");
+            Directory.CreateDirectory(_templatesDir);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(_tempDir))
+            {
+                Directory.Delete(_tempDir, true);
+            }
+        }
+
+        private async Task<RazorRenderer> CreateRendererWithTemplates(params (string name, string content)[] templates)
+        {
+            foreach (var (name, content) in templates)
+            {
+                var templatePath = Path.Combine(_templatesDir, $"{name}.cshtml");
+                await File.WriteAllTextAsync(templatePath, content);
+            }
+
             var config = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    { "root", tempDir },
+                    { "root", _tempDir },
                     { "templates_folder", "templates" }
                 })
                 .Build();
-            
+
             var renderer = new RazorRenderer();
-            
+            await renderer.InitializeAsync(config);
+            return renderer;
+        }
+
+        private T SuppressConsoleOutput<T>(Func<T> action)
+        {
+            var originalOut = Console.Out;
+            using var stringWriter = new StringWriter();
             try
             {
-                // Suppress console output
-                var originalOut = Console.Out;
-                using var stringWriter = new StringWriter();
                 Console.SetOut(stringWriter);
-                
-                // Act
-                await renderer.InitializeAsync(config);
-                
-                // Create test content without frame metadata
-                var content = new FrameRenderedContent(
-                    new RenderedContent 
-                    { 
-                        Body = "<p>Test content</p>",
-                        Metadata = new ConfigurationBuilder().Build(),
-                        Node = new ContentNode { Title = "Test" }
-                    },
-                    new List<ContentNode>()
-                );
-                
-                var result = await renderer.RenderContentAsync(content);
-                
-                Console.SetOut(originalOut);
-                
-                // Assert
-                Assert.NotNull(result);
-                Assert.Contains("SiteFrame:", result);
-                Assert.Contains("Test content", result);
+                return action();
             }
             finally
             {
-                // Cleanup
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
+                Console.SetOut(originalOut);
             }
+        }
+
+        private async Task<T> SuppressConsoleOutputAsync<T>(Func<Task<T>> action)
+        {
+            var originalOut = Console.Out;
+            using var stringWriter = new StringWriter();
+            try
+            {
+                Console.SetOut(stringWriter);
+                return await action();
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+
+        private (string output, T result) CaptureConsoleOutput<T>(Func<T> action)
+        {
+            var originalOut = Console.Out;
+            using var stringWriter = new StringWriter();
+            try
+            {
+                Console.SetOut(stringWriter);
+                var result = action();
+                return (stringWriter.ToString(), result);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+
+        private async Task<(string output, T result)> CaptureConsoleOutputAsync<T>(Func<Task<T>> action)
+        {
+            var originalOut = Console.Out;
+            using var stringWriter = new StringWriter();
+            try
+            {
+                Console.SetOut(stringWriter);
+                var result = await action();
+                return (stringWriter.ToString(), result);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+
+        [Fact]
+        public async Task DefaultFrameIsUsed_WhenNoFrameSpecified()
+        {
+            // Arrange
+            var renderer = await SuppressConsoleOutputAsync(async () => 
+                await CreateRendererWithTemplates(("SiteFrame", SiteFrameTemplate)));
+
+            var content = new FrameRenderedContent(
+                new RenderedContent 
+                { 
+                    Body = "<p>Test content</p>",
+                    Metadata = new ConfigurationBuilder().Build(),
+                    Node = new ContentNode { Title = "Test" }
+                },
+                new List<ContentNode>()
+            );
+
+            // Act
+            var result = await SuppressConsoleOutputAsync(async () => 
+                await renderer.RenderContentAsync(content));
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("SiteFrame:", result);
+            Assert.Contains("Test content", result);
         }
 
         [Fact]
         public async Task CustomFrameIsUsed_WhenFrameSpecified()
         {
-            // Arrange - Create templates
-            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            var templatesDir = Path.Combine(tempDir, "templates");
-            
-            Directory.CreateDirectory(templatesDir);
-            
-            // Create SiteFrame and CustomFrame templates
-            var siteFrameContent = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nSiteFrame: @Model.Body";
-            var siteFramePath = Path.Combine(templatesDir, "SiteFrame.cshtml");
-            await File.WriteAllTextAsync(siteFramePath, siteFrameContent);
-            
-            var customFrameContent = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nCustomFrame: @Model.Body";
-            var customFramePath = Path.Combine(templatesDir, "CustomFrame.cshtml");
-            await File.WriteAllTextAsync(customFramePath, customFrameContent);
-            
-            // Create configuration
-            var config = new ConfigurationBuilder()
+            // Arrange
+            var renderer = await SuppressConsoleOutputAsync(async () => 
+                await CreateRendererWithTemplates(
+                    ("SiteFrame", SiteFrameTemplate),
+                    ("CustomFrame", CustomFrameTemplate)));
+
+            var metadata = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    { "root", tempDir },
-                    { "templates_folder", "templates" }
+                    { "frame", "CustomFrame" }
                 })
                 .Build();
-            
-            var renderer = new RazorRenderer();
-            
-            try
-            {
-                // Suppress console output
-                var originalOut = Console.Out;
-                using var stringWriter = new StringWriter();
-                Console.SetOut(stringWriter);
-                
-                // Act
-                await renderer.InitializeAsync(config);
-                
-                // Create test content with custom frame metadata
-                var metadata = new ConfigurationBuilder()
-                    .AddInMemoryCollection(new Dictionary<string, string>
-                    {
-                        { "frame", "CustomFrame" }
-                    })
-                    .Build();
-                
-                var content = new FrameRenderedContent(
-                    new RenderedContent 
-                    { 
-                        Body = "<p>Test content with custom frame</p>",
-                        Metadata = metadata,
-                        Node = new ContentNode { Title = "Test" }
-                    },
-                    new List<ContentNode>()
-                );
-                
-                var result = await renderer.RenderContentAsync(content);
-                
-                Console.SetOut(originalOut);
-                
-                // Assert
-                Assert.NotNull(result);
-                Assert.Contains("CustomFrame:", result);
-                Assert.Contains("Test content with custom frame", result);
-                Assert.DoesNotContain("SiteFrame:", result);
-            }
-            finally
-            {
-                // Cleanup
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
-            }
+
+            var content = new FrameRenderedContent(
+                new RenderedContent 
+                { 
+                    Body = "<p>Test content with custom frame</p>",
+                    Metadata = metadata,
+                    Node = new ContentNode { Title = "Test" }
+                },
+                new List<ContentNode>()
+            );
+
+            // Act
+            var result = await SuppressConsoleOutputAsync(async () => 
+                await renderer.RenderContentAsync(content));
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("CustomFrame:", result);
+            Assert.Contains("Test content with custom frame", result);
+            Assert.DoesNotContain("SiteFrame:", result);
         }
 
         [Fact]
         public async Task MissingFrame_ReturnsNull_AndLogsError()
         {
-            // Arrange - Create templates but not the requested one
-            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            var templatesDir = Path.Combine(tempDir, "templates");
-            
-            Directory.CreateDirectory(templatesDir);
-            
-            // Create only SiteFrame, not NonExistentFrame
-            var siteFrameContent = "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.FrameRenderedContent>\nSiteFrame: @Model.Body";
-            var siteFramePath = Path.Combine(templatesDir, "SiteFrame.cshtml");
-            await File.WriteAllTextAsync(siteFramePath, siteFrameContent);
-            
-            // Create configuration
-            var config = new ConfigurationBuilder()
+            // Arrange
+            var renderer = await SuppressConsoleOutputAsync(async () => 
+                await CreateRendererWithTemplates(("SiteFrame", SiteFrameTemplate)));
+
+            var metadata = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    { "root", tempDir },
-                    { "templates_folder", "templates" }
+                    { "frame", "NonExistentFrame" }
                 })
                 .Build();
-            
-            var renderer = new RazorRenderer();
-            
-            try
-            {
-                // Capture console output
-                var originalOut = Console.Out;
-                using var stringWriter = new StringWriter();
-                Console.SetOut(stringWriter);
-                
-                // Act
-                await renderer.InitializeAsync(config);
-                
-                // Create test content with non-existent frame
-                var metadata = new ConfigurationBuilder()
-                    .AddInMemoryCollection(new Dictionary<string, string>
-                    {
-                        { "frame", "NonExistentFrame" }
-                    })
-                    .Build();
-                
-                var content = new FrameRenderedContent(
-                    new RenderedContent 
-                    { 
-                        Body = "<p>Test content</p>",
-                        Metadata = metadata,
-                        Node = new ContentNode { Title = "Test Page" }
-                    },
-                    new List<ContentNode>()
-                );
-                
-                var result = await renderer.RenderContentAsync(content);
-                
-                Console.SetOut(originalOut);
-                var consoleOutput = stringWriter.ToString();
-                
-                // Assert
-                Assert.Null(result); // Should return null when frame is missing
-                Assert.Contains("ERROR", consoleOutput);
-                Assert.Contains("NonExistentFrame", consoleOutput);
-                Assert.Contains("not found", consoleOutput);
-            }
-            finally
-            {
-                // Cleanup
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
-            }
+
+            var content = new FrameRenderedContent(
+                new RenderedContent 
+                { 
+                    Body = "<p>Test content</p>",
+                    Metadata = metadata,
+                    Node = new ContentNode { Title = "Test Page" }
+                },
+                new List<ContentNode>()
+            );
+
+            // Act
+            var (consoleOutput, result) = await CaptureConsoleOutputAsync(async () => 
+                await renderer.RenderContentAsync(content));
+
+            // Assert
+            Assert.Null(result);
+            Assert.Contains("ERROR", consoleOutput);
+            Assert.Contains("NonExistentFrame", consoleOutput);
+            Assert.Contains("not found", consoleOutput);
         }
 
         [Fact]
         public async Task MissingSiteFrame_ReturnsNull_AndLogsError()
         {
-            // Arrange - Create templates directory without SiteFrame
-            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            var templatesDir = Path.Combine(tempDir, "templates");
-            
-            Directory.CreateDirectory(templatesDir);
-            
-            // Don't create SiteFrame.cshtml
-            
-            // Create configuration
-            var config = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string>
-                {
-                    { "root", tempDir },
-                    { "templates_folder", "templates" }
-                })
-                .Build();
-            
-            var renderer = new RazorRenderer();
-            
-            try
-            {
-                // Capture console output
-                var originalOut = Console.Out;
-                using var stringWriter = new StringWriter();
-                Console.SetOut(stringWriter);
-                
-                // Act
-                await renderer.InitializeAsync(config);
-                
-                // Create test content without frame metadata (should use default SiteFrame)
-                var content = new FrameRenderedContent(
-                    new RenderedContent 
-                    { 
-                        Body = "<p>Test content</p>",
-                        Metadata = new ConfigurationBuilder().Build(),
-                        Node = new ContentNode { Title = "Test Page" }
-                    },
-                    new List<ContentNode>()
-                );
-                
-                var result = await renderer.RenderContentAsync(content);
-                
-                Console.SetOut(originalOut);
-                var consoleOutput = stringWriter.ToString();
-                
-                // Assert
-                Assert.Null(result); // Should return null when default frame is missing
-                Assert.Contains("ERROR", consoleOutput);
-                Assert.Contains("SiteFrame", consoleOutput);
-                Assert.Contains("not found", consoleOutput);
-            }
-            finally
-            {
-                // Cleanup
-                if (Directory.Exists(tempDir))
-                {
-                    Directory.Delete(tempDir, true);
-                }
-            }
+            // Arrange - Create renderer without SiteFrame
+            var renderer = await SuppressConsoleOutputAsync(async () => 
+                await CreateRendererWithTemplates()); // No templates
+
+            var content = new FrameRenderedContent(
+                new RenderedContent 
+                { 
+                    Body = "<p>Test content</p>",
+                    Metadata = new ConfigurationBuilder().Build(),
+                    Node = new ContentNode { Title = "Test Page" }
+                },
+                new List<ContentNode>()
+            );
+
+            // Act
+            var (consoleOutput, result) = await CaptureConsoleOutputAsync(async () => 
+                await renderer.RenderContentAsync(content));
+
+            // Assert
+            Assert.Null(result);
+            Assert.Contains("ERROR", consoleOutput);
+            Assert.Contains("SiteFrame", consoleOutput);
+            Assert.Contains("not found", consoleOutput);
         }
     }
 }

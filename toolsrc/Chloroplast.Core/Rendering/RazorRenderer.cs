@@ -73,7 +73,7 @@ namespace Chloroplast.Core.Rendering
             {
                 // Check for custom frame in metadata, default to "SiteFrame"
                 string frameName = "SiteFrame";
-                if (parsed.Metadata != null && parsed.Metadata["frame"] != null)
+                if (parsed.Metadata != null && !string.IsNullOrEmpty(parsed.Metadata["frame"]))
                 {
                     frameName = parsed.Metadata["frame"];
                 }
