@@ -49,7 +49,7 @@ Los parámetros anteriores utilizarán por defecto el directorio de trabajo actu
 
 El comando build renderizará todos los archivos `index.md` en archivos `index.html` correspondientes, y copiará todo lo demás a la misma ubicación correspondiente (imágenes, estilos, etc).
 
-Además, el comando build generará automáticamente archivos XML de sitemap si un `baseUrl` está configurado en tu `SiteConfig.yml`. Esto ayuda con el SEO y la indexación de motores de búsqueda.
+Además, el comando build ejecuta automáticamente la validación del sitio después de completar la construcción para verificar enlaces rotos y recursos faltantes. El comando build generará automáticamente archivos XML de sitemap si un `baseUrl` está configurado en tu `SiteConfig.yml`. Esto ayuda con el SEO y la indexación de motores de búsqueda.
 
 ### Manejo de Errores
 
@@ -106,6 +106,8 @@ Detalles del error escritos en: /tmp/build-errors.log
 
 El subcomando host inicia un servidor web HTML simple. Útil para previsualización local durante el desarrollo o incluso creación. Si actualizas archivos markdown, el contenido se reconstruirá automáticamente para que solo tengas que actualizar el navegador.
 
+El comando host ejecuta automáticamente la validación del sitio antes de iniciar el servidor web para ayudar a identificar cualquier enlace roto o recurso faltante.
+
 ```
 chloroplast host --root ruta/a/raíz --out ruta/a/html 
 ```
@@ -119,6 +121,26 @@ Si estás actualizando plantillas razor, también puedes ejecutar este comando e
 - `out`: Este debe ser el mismo valor que el parámetro `out` usado en el comando `build`.
 
 El parámetro anterior utilizará por defecto la carpeta `out/` en el directorio de trabajo actual, si se omite.
+
+## Subcomando `validate`
+
+El subcomando validate verifica el sitio generado en busca de problemas comunes como enlaces rotos, archivos CSS/JavaScript faltantes e imágenes faltantes. Esto ayuda a detectar problemas de recursos y rutas temprano en el desarrollo.
+
+```
+chloroplast validate --out ruta/a/salida
+```
+
+Las verificaciones de validación incluyen:
+- **Referencias CSS y JavaScript**: Asegura que todas las hojas de estilo y scripts enlazados existan
+- **Enlaces de navegación**: Verifica que los enlaces internos apunten a páginas existentes
+- **Imágenes**: Verifica que todas las referencias de imágenes apunten a archivos existentes
+- **Enlaces de directorios**: Asegura que los enlaces de directorios tengan un archivo index.html
+
+### parámetros
+
+- `out`: la ruta al directorio que contiene la salida del sitio construido (por defecto es `out/` en el directorio actual)
+
+El comando validate se ejecuta automáticamente al final del comando `build` y antes de iniciar el servidor `host`, pero también se puede ejecutar de forma independiente para verificar la salida del sitio.
 
 ## Generación de Sitemap
 
