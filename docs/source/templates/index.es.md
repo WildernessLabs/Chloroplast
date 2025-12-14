@@ -34,7 +34,23 @@ Si este valor es incorrecto, u omitido, buscará por defecto una plantilla llama
 
 # SiteFrame.cshtml
 
-Para el chrome principal del sitio, Chloroplast buscará una plantilla llamada `SiteFrame.cshtml` ... esto renderizará
+Para el chrome principal del sitio, Chloroplast buscará una plantilla llamada `SiteFrame.cshtml` por defecto. Este es el marco o "chrome" exterior que envuelve tu contenido.
+
+También puedes especificar una plantilla de marco diferente para archivos de contenido individuales agregando una propiedad `frame:` al front matter:
+
+```
+---
+template: NombrePlantilla
+frame: MarcoPersonalizado
+title: Título del documento
+---
+```
+
+Si no se especifica `frame:`, Chloroplast usa `SiteFrame.cshtml` por defecto.
+
+## Ejemplo de Plantilla de Marco
+
+La plantilla SiteFrame renderiza la estructura completa de la página:
 
 ```
 <html>
@@ -48,6 +64,16 @@ Para el chrome principal del sitio, Chloroplast buscará una plantilla llamada `
 </body>
 </html>
 ```
+
+## Manejo de Errores
+
+Si no se encuentra una plantilla de marco especificada:
+- Se registra un mensaje de error en la consola
+- El archivo de contenido afectado se omite (no se renderiza una página incompleta)
+- La compilación continúa procesando otros archivos
+- El error se incluye en el resumen de errores de compilación
+
+Esto asegura que el proceso de compilación no se detenga completamente debido a un marco faltante, pero serás notificado del problema.
 
 # Personalizando Plantillas
 

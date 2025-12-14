@@ -187,6 +187,16 @@ namespace Chloroplast.Tool.Commands
                             Console.WriteLine ($"\tframe rendering: {item.Node.Title}");
 
                             var result = await ContentRenderer.ToRazorAsync (item);
+                            
+                            // If result.Body is null, the frame was missing - skip writing the file
+                            if (result.Body == null)
+                            {
+                                _buildErrors.AddError(item.Node.Source.RootRelativePath,
+                                    $"Frame template not found. File skipped.", null);
+                                Console.WriteLine($"\tSKIPPED (missing frame): {item.Node.Title}");
+                                return null;
+                            }
+                            
                             await item.Node.Target.WriteContentAsync (result.Body);
 
                             return result;

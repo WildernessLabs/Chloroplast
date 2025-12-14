@@ -71,8 +71,24 @@ namespace Chloroplast.Core.Rendering
         {
             try
             {
-                // now render into site frame
-                var frame = templates["SiteFrame"];
+                // Check for custom frame in metadata, default to "SiteFrame"
+                string frameName = parsed.Metadata?["frame"] ?? "SiteFrame";
+                if (string.IsNullOrEmpty(frameName))
+                {
+                    frameName = "SiteFrame";
+                }
+
+                // Try to find the frame template
+                var frame = FindTemplate(frameName);
+                
+                if (frame == null)
+                {
+                    // Log error and return null to signal the file should be skipped
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"ERROR: Frame template '{frameName}' not found for content '{parsed.Node?.Title ?? "unknown"}'. Skipping this file.");
+                    Console.ResetColor();
+                    return null;
+                }
 
                 var result = await frame.RenderAsync (parsed);
                 return result;
