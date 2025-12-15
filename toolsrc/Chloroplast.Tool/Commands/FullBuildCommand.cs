@@ -281,12 +281,31 @@ namespace Chloroplast.Tool.Commands
                 
                 foreach (var file in dirInfo.GetFiles())
                 {
-                    file.Delete();
+                    try
+                    {
+                        // Clear read-only attribute if set
+                        if (file.IsReadOnly)
+                        {
+                            file.IsReadOnly = false;
+                        }
+                        file.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not delete file {file.Name}: {ex.Message}");
+                    }
                 }
                 
                 foreach (var dir in dirInfo.GetDirectories())
                 {
-                    dir.Delete(recursive: true);
+                    try
+                    {
+                        dir.Delete(recursive: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not delete directory {dir.Name}: {ex.Message}");
+                    }
                 }
                 
                 Console.WriteLine("Output directory cleared successfully");
