@@ -100,9 +100,11 @@ Subdirectories:
             EnsureArtifactsDirectory();
 
             // Generate a unique but meaningful artifact filename
+            // Include milliseconds and a short GUID to avoid collisions during parallel compilation
             var templateRelativeName = Path.GetFileName(templatePath);
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-            var artifactFileName = $"{Path.GetFileNameWithoutExtension(templateRelativeName)}_{timestamp}.cs";
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
+            var shortGuid = Guid.NewGuid().ToString("N").Substring(0, 8);
+            var artifactFileName = $"{Path.GetFileNameWithoutExtension(templateRelativeName)}_{timestamp}_{shortGuid}.cs";
             var artifactPath = Path.Combine(_artifactsPath, artifactFileName);
 
             // First, transpile to get the generated C# code
