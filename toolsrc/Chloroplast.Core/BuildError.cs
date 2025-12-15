@@ -66,8 +66,68 @@ namespace Chloroplast.Core
                 {
                     var message = error.Exception.Message;
                     
-                    // For template compilation errors, extract just the compilation errors, not the full generated source
-                    if (message.Contains("Failed to compile template") && message.Contains("Generated source code:"))
+                    // For template compilation errors with artifact paths
+                    if (message.Contains("Failed to compile Razor template") && message.Contains("Generated C# source code saved to:"))
+                    {
+                        var lines = message.Split('\n');
+                        string artifactPath = null;
+                        var errorLines = new List<string>();
+                        
+                        foreach (var line in lines)
+                        {
+                            var trimmedLine = line.Trim();
+                            
+                            // Extract artifact path
+                            if (trimmedLine.StartsWith("Generated C# source code saved to:"))
+                            {
+                                artifactPath = trimmedLine.Substring("Generated C# source code saved to:".Length).Trim();
+                            }
+                            // Extract error details from inner exception
+                            else if (trimmedLine.StartsWith("Error(s):") || trimmedLine.StartsWith("- "))
+                            {
+                                errorLines.Add(trimmedLine);
+                            }
+                        }
+                        
+                        Console.Error.WriteLine("    Template compilation failed:");
+                        if (!string.IsNullOrEmpty(artifactPath))
+                        {
+                            Console.Error.WriteLine($"    Generated source: {artifactPath}");
+                        }
+                        
+                        // Show compilation errors from the inner exception if available
+                        if (error.Exception.InnerException != null && error.Exception.InnerException.Message.Contains("Error(s):"))
+                        {
+                            var innerLines = error.Exception.InnerException.Message.Split('\n');
+                            bool inErrorSection = false;
+                            foreach (var line in innerLines)
+                            {
+                                var trimmed = line.Trim();
+                                if (trimmed.StartsWith("Error(s):"))
+                                {
+                                    inErrorSection = true;
+                                    Console.Error.WriteLine($"    {trimmed}");
+                                }
+                                else if (inErrorSection && trimmed.StartsWith("- "))
+                                {
+                                    Console.Error.WriteLine($"    {trimmed}");
+                                }
+                                else if (inErrorSection && trimmed.StartsWith("Generated source code:"))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else if (errorLines.Any())
+                        {
+                            foreach (var line in errorLines)
+                            {
+                                Console.Error.WriteLine($"    {line}");
+                            }
+                        }
+                    }
+                    // Legacy handling for old MiniRazor error format
+                    else if (message.Contains("Failed to compile template") && message.Contains("Generated source code:"))
                     {
                         var lines = message.Split('\n');
                         bool inErrorSection = false;

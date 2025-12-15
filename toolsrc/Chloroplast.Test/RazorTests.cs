@@ -295,6 +295,136 @@ namespace Chloroplast.Test
             }
         }
 
+        [Fact]
+        public async Task RazorArtifacts_AreGeneratedDuringCompilation()
+        {
+            // Arrange - Create a temporary directory structure with templates
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var templatesDir = Path.Combine(tempDir, "templates");
+            
+            Directory.CreateDirectory(templatesDir);
+            
+            // Create a valid template
+            var templateContent = "@inherits MiniRazor.TemplateBase<string>\n<h1>@Model</h1>";
+            var templatePath = Path.Combine(templatesDir, "TestTemplate.cshtml");
+            await File.WriteAllTextAsync(templatePath, templateContent);
+            
+            // Create configuration
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    { "root", tempDir },
+                    { "templates_folder", "templates" }
+                })
+                .Build();
+            
+            var renderer = new RazorRenderer();
+            
+            try
+            {
+                // Suppress console output during initialization
+                var originalOut = Console.Out;
+                using var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+                
+                // Act
+                await renderer.InitializeAsync(config);
+                
+                Console.SetOut(originalOut);
+                
+                // Assert - Check that artifacts were generated
+                var artifactsPath = Path.Combine(tempDir, ".chloroplast", "artifacts", "razor");
+                Assert.True(Directory.Exists(artifactsPath), "Artifacts directory should be created");
+                
+                var artifactFiles = Directory.GetFiles(artifactsPath, "*.cs");
+                Assert.NotEmpty(artifactFiles);
+                Assert.Contains(artifactFiles, f => f.Contains("TestTemplate"));
+                
+                // Check that .gitignore was created
+                var gitignorePath = Path.Combine(tempDir, ".chloroplast", ".gitignore");
+                Assert.True(File.Exists(gitignorePath), ".gitignore should be created");
+                Assert.Equal("*\n", File.ReadAllText(gitignorePath));
+                
+                // Check that README.txt was created
+                var readmePath = Path.Combine(tempDir, ".chloroplast", "README.txt");
+                Assert.True(File.Exists(readmePath), "README.txt should be created");
+                var readmeContent = File.ReadAllText(readmePath);
+                Assert.Contains("build artifacts", readmeContent.ToLower());
+            }
+            finally
+            {
+                // Cleanup
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RazorCompilationError_IncludesArtifactPath()
+        {
+            // Arrange - Create a template with a compilation error
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var templatesDir = Path.Combine(tempDir, "templates");
+            
+            Directory.CreateDirectory(templatesDir);
+            
+            // Create a template with an error (accessing non-existent property)
+            var templateContent = "@inherits MiniRazor.TemplateBase<string>\n@Model.NonExistentProperty";
+            var templatePath = Path.Combine(templatesDir, "BrokenTemplate.cshtml");
+            await File.WriteAllTextAsync(templatePath, templateContent);
+            
+            // Create configuration
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    { "root", tempDir },
+                    { "templates_folder", "templates" }
+                })
+                .Build();
+            
+            var renderer = new RazorRenderer();
+            
+            try
+            {
+                // Suppress console output during initialization
+                var originalOut = Console.Out;
+                using var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+                
+                // Act & Assert
+                var exception = await Assert.ThrowsAsync<Exception>(async () =>
+                {
+                    await renderer.InitializeAsync(config);
+                });
+                
+                Console.SetOut(originalOut);
+                
+                // Verify the exception message includes the artifact path
+                Assert.Contains("Failed to compile Razor template", exception.Message);
+                Assert.Contains("Generated C# source code saved to:", exception.Message);
+                Assert.Contains(".chloroplast/artifacts/razor/BrokenTemplate_", exception.Message);
+                
+                // Verify the artifact file was actually created
+                var artifactsPath = Path.Combine(tempDir, ".chloroplast", "artifacts", "razor");
+                var artifactFiles = Directory.GetFiles(artifactsPath, "BrokenTemplate_*.cs");
+                Assert.NotEmpty(artifactFiles);
+                
+                // Verify the generated file contains the problematic code
+                var artifactContent = File.ReadAllText(artifactFiles[0]);
+                Assert.Contains("NonExistentProperty", artifactContent);
+            }
+            finally
+            {
+                // Cleanup
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
         //[Fact]
         public async Task SimpleRender()
         {
