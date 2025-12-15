@@ -39,6 +39,8 @@ The build subcommand will build a Chloroplast site
 chloroplast build --root path/to/SiteConfig/ --out path/to/out
 ```
 
+**Note:** The build command will clear all contents of the output directory before building. This ensures that no old or extraneous files remain in the output from previous builds.
+
 ### parameters
 
 - `root`: the path to the directory that contains a `SiteConfig.yml` file
