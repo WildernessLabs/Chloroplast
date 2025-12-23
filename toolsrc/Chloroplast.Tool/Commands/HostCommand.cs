@@ -205,7 +205,7 @@ namespace Chloroplast.Tool.Commands
         private static void Watcher_Error (object sender, ErrorEventArgs e) =>
             PrintException (e.GetException ());
 
-        private static void PrintException (Exception? ex)
+        private static void PrintException (Exception ex)
         {
             if (ex != null)
             {

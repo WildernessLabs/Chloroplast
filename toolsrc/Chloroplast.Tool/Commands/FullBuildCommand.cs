@@ -215,7 +215,7 @@ namespace Chloroplast.Tool.Commands
                 Task.WaitAll (tasks.ToArray ());
                 
                 // Generate sitemap files after all content is processed
-                await GenerateSitemapsAsync(area, config);
+                GenerateSitemaps(area, config);
             }
 
             // Display error summary at the end
@@ -309,7 +309,7 @@ namespace Chloroplast.Tool.Commands
             }
         }
 
-        private async Task GenerateSitemapsAsync(ContentArea area, IConfigurationRoot config)
+        private void GenerateSitemaps(ContentArea area, IConfigurationRoot config)
         {
             try
             {
