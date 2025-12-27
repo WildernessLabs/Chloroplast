@@ -25,6 +25,9 @@ namespace Chloroplast.Tool.Commands
 
         public async Task<IEnumerable<Task>> RunAsync (IConfigurationRoot config)
         {
+            // Clear the output directory before building
+            ClearOutputDirectory(config);
+            
             // Set up build version for cache busting
             SetupBuildVersion(config);
             
@@ -251,6 +254,67 @@ namespace Chloroplast.Tool.Commands
             }
 
             return tasks;
+        }
+
+        private void ClearOutputDirectory(IConfigurationRoot config)
+        {
+            var outPath = config["out"]?.NormalizePath();
+            
+            if (string.IsNullOrWhiteSpace(outPath))
+            {
+                Console.WriteLine("Warning: Output path not configured, skipping directory clearing");
+                return;
+            }
+            
+            if (!Directory.Exists(outPath))
+            {
+                Console.WriteLine($"Output directory does not exist yet: {outPath}");
+                return;
+            }
+            
+            try
+            {
+                Console.WriteLine($"Clearing output directory: {outPath}");
+                
+                // Delete all files and subdirectories in the output directory
+                var dirInfo = new DirectoryInfo(outPath);
+                
+                foreach (var file in dirInfo.GetFiles())
+                {
+                    try
+                    {
+                        // Clear read-only attribute if set
+                        if (file.IsReadOnly)
+                        {
+                            file.IsReadOnly = false;
+                        }
+                        file.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not delete file {file.Name}: {ex.Message}");
+                    }
+                }
+                
+                foreach (var dir in dirInfo.GetDirectories())
+                {
+                    try
+                    {
+                        dir.Delete(recursive: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not delete directory {dir.Name}: {ex.Message}");
+                    }
+                }
+                
+                Console.WriteLine("Output directory cleared successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to clear output directory: {ex.Message}");
+                // Don't fail the build if clearing fails - just warn
+            }
         }
 
         private void SetupBuildVersion(IConfigurationRoot config)
