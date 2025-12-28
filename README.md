@@ -1,5 +1,6 @@
 # Chloroplast
-Wilderness Labs docs engine that converts and hosts Markdown and (soon) XML API docs into HTML.
+Wilderness Labs docs engine that converts and hosts Markdown and (soon) XML API docs into HTML. You can read the docs here:  
+https://wildernesslabs.github.io/Chloroplast/
 
 ## Getting Started
 
