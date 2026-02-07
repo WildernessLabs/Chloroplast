@@ -16,7 +16,7 @@ namespace Chloroplast.Tool
         {
             string versionString = typeof (Program).Assembly.GetName ().Version.ToString ();
 
-            Console.WriteLine (Constants.Logo.Replace("0.0.0.0", versionString));
+            Console.WriteLine (Constants.GetFormattedLogo(versionString));
 
             // if the only thing the user wanted to know is the version, leave it at this
             if (args.Length == 1 && args[0].EndsWith ("version", StringComparison.CurrentCultureIgnoreCase))
