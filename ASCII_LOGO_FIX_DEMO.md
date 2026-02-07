@@ -61,12 +61,12 @@ Implemented adaptive padding that centers the version text within a fixed-width 
    - To `Constants.GetFormattedLogo(versionString)`
 
 3. **LogoFormattingTests.cs** - Added comprehensive unit tests
-   - 6 new tests covering various version string lengths
+   - 8 new tests covering various version string lengths and edge cases
    - Tests verify proper alignment and consistent line widths
 
 ### Test Results
 
-✅ **All 146 tests pass** (including 6 new logo formatting tests)
+✅ **All 148 tests pass** (including 8 new logo formatting tests)
 
 #### New Tests Added:
 - `GetFormattedLogo_WithDefaultVersion_ReturnsValidLogo`
@@ -75,6 +75,8 @@ Implemented adaptive padding that centers the version text within a fixed-width 
 - `GetFormattedLogo_VersionLineCentered`
 - `GetFormattedLogo_WithVariousVersions_AllHaveSameWidth`
 - `GetFormattedLogo_ContainsExpectedStructure`
+- `GetFormattedLogo_WithEmptyString_HandlesGracefully`
+- `GetFormattedLogo_WithVeryLongVersion_HandlesGracefully`
 
 ### Key Features
 
