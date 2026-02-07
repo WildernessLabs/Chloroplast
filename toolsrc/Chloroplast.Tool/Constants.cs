@@ -43,12 +43,23 @@ namespace Chloroplast.Tool
             
             // Calculate padding needed on each side to center the text within the padding area
             int totalPadding = paddingAreaWidth - textLength;
-            int leftPadding = totalPadding / 2;
-            int rightPadding = totalPadding - leftPadding;
             
-            // Ensure minimum padding of at least 1 space on each side
-            if (leftPadding < 1) leftPadding = 1;
-            if (rightPadding < 1) rightPadding = 1;
+            int leftPadding;
+            int rightPadding;
+            
+            // Handle edge cases where version text is too long
+            if (totalPadding < 2)
+            {
+                // If the text is too long, use minimal padding (1 space on each side)
+                // This will make the line longer than ideal, but preserves readability
+                leftPadding = 1;
+                rightPadding = 1;
+            }
+            else
+            {
+                leftPadding = totalPadding / 2;
+                rightPadding = totalPadding - leftPadding;
+            }
             
             // Build the padded version text that will fit in the 30-char padding area
             string paddedVersion = new string(' ', leftPadding) + versionText + new string(' ', rightPadding);

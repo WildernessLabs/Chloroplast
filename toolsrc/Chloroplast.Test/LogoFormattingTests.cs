@@ -131,5 +131,45 @@ namespace Chloroplast.Test
             var lines = logo.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
             Assert.Equal(19, lines.Length);
         }
+
+        [Fact]
+        public void GetFormattedLogo_WithEmptyString_HandlesGracefully()
+        {
+            // Arrange
+            string version = "";
+
+            // Act
+            string logo = Constants.GetFormattedLogo(version);
+
+            // Assert
+            Assert.NotNull(logo);
+            Assert.Contains("Chloroplast v", logo);
+            
+            // Should still produce a valid logo structure
+            var lines = logo.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            Assert.Equal(19, lines.Length);
+        }
+
+        [Fact]
+        public void GetFormattedLogo_WithVeryLongVersion_HandlesGracefully()
+        {
+            // Arrange
+            string version = "1.2.3.4.5.6.7.8.9.10.11.12.13.14.15"; // Extremely long version
+
+            // Act
+            string logo = Constants.GetFormattedLogo(version);
+
+            // Assert
+            Assert.NotNull(logo);
+            Assert.Contains("Chloroplast v" + version, logo);
+            
+            // Should still produce a valid logo structure
+            var lines = logo.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            Assert.Equal(19, lines.Length);
+            
+            // Verify the version line exists
+            var versionLine = lines.FirstOrDefault(l => l.Contains("Chloroplast"));
+            Assert.NotNull(versionLine);
+        }
     }
 }
