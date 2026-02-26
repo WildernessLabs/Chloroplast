@@ -15,6 +15,7 @@ namespace Chloroplast.Core.Rendering
 
         Dictionary<string, TemplateDescriptor> templates = new Dictionary<string, TemplateDescriptor> ();
         string templatesFolderPath;
+        RazorArtifactManager artifactManager;
         //TemplateEngine engine = new TemplateEngine ();
 
         public async Task AddTemplateAsync (string templatePath, string templatesFolderPath)
@@ -27,7 +28,20 @@ namespace Chloroplast.Core.Rendering
             string relativeKey = relativePath.Replace('\\', '/').Replace(".cshtml", "");
             
             // Store with both the relative path and the filename for backward compatibility
-            var compiledTemplate = Razor.Compile (await File.ReadAllTextAsync (templatePath));
+            var templateContent = await File.ReadAllTextAsync(templatePath);
+            TemplateDescriptor compiledTemplate;
+            
+            if (artifactManager != null)
+            {
+                // Use artifact manager to save generated code and compile
+                var (template, artifactPath) = artifactManager.CompileTemplateWithArtifact(templatePath, templateContent);
+                compiledTemplate = template;
+            }
+            else
+            {
+                // Fallback to direct compilation (for tests or when artifact manager not initialized)
+                compiledTemplate = Razor.Compile(templateContent);
+            }
             
             // Store by relative path (e.g., "template/topNav")
             if (!templates.ContainsKey (relativeKey))
@@ -56,6 +70,11 @@ namespace Chloroplast.Core.Rendering
             templatesFolderPath = rootPath
                 .CombinePath(templateFolderSetting)
                 .NormalizePath();
+
+            // Initialize artifact manager and clean old artifacts
+            artifactManager = new RazorArtifactManager(rootPath);
+            artifactManager.CleanArtifacts();
+            artifactManager.EnsureArtifactsDirectory();
 
             foreach (var razorPath in Directory.EnumerateFiles (templatesFolderPath, "*.cshtml", SearchOption.AllDirectories))
             {
