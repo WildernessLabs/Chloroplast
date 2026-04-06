@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Chloroplast.Core.Extensions;
-//using Choroplast.Core.Loaders.EcmaXml;
 using Microsoft.Extensions.Configuration;
-using MiniRazor;
+using RazorLight;
 
 namespace Chloroplast.Core.Rendering
 {
@@ -13,9 +12,9 @@ namespace Chloroplast.Core.Rendering
     {
         public static RazorRenderer Instance;
 
-        Dictionary<string, TemplateDescriptor> templates = new Dictionary<string, TemplateDescriptor> ();
+        IRazorLightEngine engine;
+        Dictionary<string, string> templateSources = new Dictionary<string, string> ();
         string templatesFolderPath;
-        //TemplateEngine engine = new TemplateEngine ();
 
         public async Task AddTemplateAsync (string templatePath, string templatesFolderPath)
         {
@@ -27,21 +26,21 @@ namespace Chloroplast.Core.Rendering
             string relativeKey = relativePath.Replace('\\', '/').Replace(".cshtml", "");
             
             // Store with both the relative path and the filename for backward compatibility
-            var compiledTemplate = Razor.Compile (await File.ReadAllTextAsync (templatePath));
+            string source = await File.ReadAllTextAsync (templatePath);
             
             // Store by relative path (e.g., "template/topNav")
-            if (!templates.ContainsKey (relativeKey))
+            if (!templateSources.ContainsKey (relativeKey))
             {
                 Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
                 Console.WriteLine (ns.ToString ());
-                templates[relativeKey] = compiledTemplate;
+                templateSources[relativeKey] = source;
             }
             
             // Also store by filename only for backward compatibility (e.g., "topNav")
             // But only if there's no conflict
-            if (!templates.ContainsKey (fileName))
+            if (!templateSources.ContainsKey (fileName))
             {
-                templates[fileName] = compiledTemplate;
+                templateSources[fileName] = source;
             }
         }
 
@@ -56,6 +55,11 @@ namespace Chloroplast.Core.Rendering
             templatesFolderPath = rootPath
                 .CombinePath(templateFolderSetting)
                 .NormalizePath();
+
+            engine = new RazorLightEngineBuilder ()
+                .UseMemoryCachingProvider ()
+                .SetOperatingAssembly (typeof (RazorRenderer).Assembly)
+                .Build ();
 
             foreach (var razorPath in Directory.EnumerateFiles (templatesFolderPath, "*.cshtml", SearchOption.AllDirectories))
             {
@@ -79,9 +83,9 @@ namespace Chloroplast.Core.Rendering
                 }
 
                 // Try to find the frame template
-                var frame = FindTemplate(frameName);
+                string key = FindKey(frameName);
                 
-                if (frame == null)
+                if (key == null)
                 {
                     // Log error and return null to signal the file should be skipped
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -90,7 +94,7 @@ namespace Chloroplast.Core.Rendering
                     return null;
                 }
 
-                var result = await frame.RenderAsync (parsed);
+                var result = await engine.CompileRenderStringAsync<FrameRenderedContent> (key, templateSources[key], parsed);
                 return result;
             }
             catch (Exception ex)
@@ -104,8 +108,8 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
         {
-            var template = FindTemplate(templateName);
-            if (template == null)
+            string key = FindKey(templateName);
+            if (key == null)
             {
                 // Template not found - log warning and return empty string instead of throwing
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -113,31 +117,32 @@ namespace Chloroplast.Core.Rendering
                 Console.ResetColor();
                 return new RawString(string.Empty);
             }
-            return new RawString (await template.RenderAsync (model));
+            return new RawString (await engine.CompileRenderStringAsync<T> (key, templateSources[key], model));
         }
 
         public bool TemplateExists(string templateName)
         {
-            return FindTemplate(templateName) != null;
+            return FindKey(templateName) != null;
         }
 
-        private TemplateDescriptor FindTemplate(string templateName)
+        private string FindKey(string templateName)
         {
             // Try multiple lookup strategies to find the template
             
             // 1. Try exact match (could be relative path like "template/topNav")
-            if (templates.TryGetValue(templateName, out var template))
+            if (templateSources.ContainsKey(templateName))
             {
-                return template;
+                return templateName;
             }
 
             // 2. Try with .cshtml extension if not already present
             if (!templateName.EndsWith(".cshtml"))
             {
                 string withExtension = templateName + ".cshtml";
-                if (templates.TryGetValue(withExtension.Replace('\\', '/').Replace(".cshtml", ""), out template))
+                string normalized = withExtension.Replace('\\', '/').Replace(".cshtml", "");
+                if (templateSources.ContainsKey(normalized))
                 {
-                    return template;
+                    return normalized;
                 }
             }
 
@@ -145,17 +150,18 @@ namespace Chloroplast.Core.Rendering
             if (templateName.EndsWith(".cshtml"))
             {
                 string withoutExtension = templateName.Substring(0, templateName.Length - 7);
-                if (templates.TryGetValue(withoutExtension.Replace('\\', '/'), out template))
+                string normalized = withoutExtension.Replace('\\', '/');
+                if (templateSources.ContainsKey(normalized))
                 {
-                    return template;
+                    return normalized;
                 }
             }
 
             // 4. Normalize path separators and try again
             string normalizedName = templateName.Replace('\\', '/');
-            if (templates.TryGetValue(normalizedName, out template))
+            if (templateSources.ContainsKey(normalizedName))
             {
-                return template;
+                return normalizedName;
             }
 
             // 5. Last resort: if path starts with "templates/", strip it and try all lookups again
@@ -163,11 +169,13 @@ namespace Chloroplast.Core.Rendering
             if (normalizedName.StartsWith("templates/", StringComparison.OrdinalIgnoreCase))
             {
                 string withoutTemplatesPrefix = normalizedName.Substring("templates/".Length);
-                return FindTemplate(withoutTemplatesPrefix); // Recursive call with stripped path
+                return FindKey(withoutTemplatesPrefix); // Recursive call with stripped path
             }
 
             return null;
         }
+
+        private string FindTemplate(string templateName) => FindKey(templateName);
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
         {
@@ -182,13 +190,13 @@ namespace Chloroplast.Core.Rendering
                 if (parsed.Metadata.ContainsKey ("layout"))
                     templateName = parsed.Metadata["layout"];
 
-                TemplateDescriptor template = FindTemplate(templateName);
+                string key = FindKey(templateName);
 
-                if (template == null)
-                    template = FindTemplate(defaultTemplateName);
+                if (key == null)
+                    key = FindKey(defaultTemplateName);
 
                 // Render template
-                var result = await template.RenderAsync (parsed);
+                var result = await engine.CompileRenderStringAsync<RenderedContent> (key, templateSources[key], parsed);
 
                 return result;
 
@@ -208,13 +216,10 @@ namespace Chloroplast.Core.Rendering
             {
                 string templateName = "Namespace";
 
-                TemplateDescriptor template;
-
-                if (!templates.TryGetValue (templateName, out template))
-                    template = templates[templateName];
+                string key = FindKey(templateName) ?? templateName;
 
                 // Render template
-                var result = await template.RenderAsync (parsed);
+                var result = await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.Namespace>> (key, templateSources[key], parsed);
 
                 return result;
 
@@ -234,13 +239,10 @@ namespace Chloroplast.Core.Rendering
             {
                 string templateName = "Type";
 
-                TemplateDescriptor template;
-
-                if (!templates.TryGetValue (templateName, out template))
-                    template = templates[templateName];
+                string key = FindKey(templateName) ?? templateName;
 
                 // Render template
-                var result = await template.RenderAsync (parsed);
+                var result = await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.XType>> (key, templateSources[key], parsed);
 
                 return result;
 
