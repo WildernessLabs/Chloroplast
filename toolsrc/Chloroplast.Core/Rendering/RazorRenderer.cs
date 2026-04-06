@@ -31,8 +31,6 @@ namespace Chloroplast.Core.Rendering
             // Store by relative path (e.g., "template/topNav")
             if (!templateSources.ContainsKey (relativeKey))
             {
-                Chloroplast.Core.Loaders.EcmaXml.Namespace ns = new Chloroplast.Core.Loaders.EcmaXml.Namespace ();
-                Console.WriteLine (ns.ToString ());
                 templateSources[relativeKey] = source;
             }
             
@@ -174,8 +172,6 @@ namespace Chloroplast.Core.Rendering
 
             return null;
         }
-
-        private string FindTemplate(string templateName) => FindKey(templateName);
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
         {
