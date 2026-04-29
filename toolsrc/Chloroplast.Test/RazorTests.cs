@@ -46,7 +46,7 @@ namespace Chloroplast.Test
             Directory.CreateDirectory(subDir);
             
             // Create a template in subdirectory
-            var templateContent = "@inherits MiniRazor.TemplateBase<string>\n@Model";
+            var templateContent = "@inherits RazorLight.TemplatePage<string>\n@Model";
             var templatePath = Path.Combine(subDir, "TestTemplate.cshtml");
             await File.WriteAllTextAsync(templatePath, templateContent);
             
@@ -99,7 +99,7 @@ namespace Chloroplast.Test
             Directory.CreateDirectory(templatesDir);
             
             // Create a template at root level
-            var templateContent = "@inherits MiniRazor.TemplateBase<string>\nRoot: @Model";
+            var templateContent = "@inherits RazorLight.TemplatePage<string>\nRoot: @Model";
             var templatePath = Path.Combine(templatesDir, "MyTemplate.cshtml");
             await File.WriteAllTextAsync(templatePath, templateContent);
             
@@ -152,7 +152,7 @@ namespace Chloroplast.Test
             
             Directory.CreateDirectory(subDir);
             
-            var templateContent = "@inherits MiniRazor.TemplateBase<string>\nPartial: @Model";
+            var templateContent = "@inherits RazorLight.TemplatePage<string>\nPartial: @Model";
             var templatePath = Path.Combine(subDir, "Header.cshtml");
             await File.WriteAllTextAsync(templatePath, templateContent);
             
@@ -204,7 +204,7 @@ namespace Chloroplast.Test
             
             Directory.CreateDirectory(subDir);
             
-            var templateContent = "@inherits MiniRazor.TemplateBase<string>\nComponent: @Model";
+            var templateContent = "@inherits RazorLight.TemplatePage<string>\nComponent: @Model";
             var templatePath = Path.Combine(subDir, "Nav.cshtml");
             await File.WriteAllTextAsync(templatePath, templateContent);
             
@@ -256,7 +256,7 @@ namespace Chloroplast.Test
             
             Directory.CreateDirectory(templatesDir);
             
-            var templateContent = "@inherits MiniRazor.TemplateBase<string>\nTemplate: @Model";
+            var templateContent = "@inherits RazorLight.TemplatePage<string>\nTemplate: @Model";
             var templatePath = Path.Combine(templatesDir, "MyTemplate.cshtml");
             await File.WriteAllTextAsync(templatePath, templateContent);
             
