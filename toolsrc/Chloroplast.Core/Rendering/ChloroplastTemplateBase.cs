@@ -2,32 +2,14 @@
 using System.Threading.Tasks;
 using Chloroplast.Core.Content;
 using Chloroplast.Core.Extensions;
-using RazorLight;
+using MiniRazor;
 
 namespace Chloroplast.Core.Rendering
 {
-    public abstract class ChloroplastTemplateBase<T> : TemplatePage<T> where T : RenderedContent
+    public abstract class ChloroplastTemplateBase<T> : TemplateBase<T> where T : RenderedContent
     {
         public ChloroplastTemplateBase ()
         {
-        }
-
-        /// <summary>
-        /// Returns a <see cref="RawString"/> that is written to the output without HTML encoding.
-        /// Use in templates as <c>@Raw(someHtmlString)</c>.
-        /// </summary>
-        protected new RawString Raw (string value) => new RawString (value);
-
-        /// <summary>
-        /// Overrides the base Write method to emit <see cref="RawString"/> values without encoding.
-        /// All other values are HTML-encoded by the base implementation.
-        /// </summary>
-        public new void Write (object value)
-        {
-            if (value is RawString raw)
-                WriteLiteral (raw.ToString ());
-            else
-                base.Write (value);
         }
 
         /// <summary>
