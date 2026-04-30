@@ -15,9 +15,9 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 8.0.x
     - name: Calculate version
@@ -40,7 +40,7 @@ jobs:
         dotnet ../toolsrc/Chloroplast.Tool/bin/Release/net8.0/Chloroplast.Tool.dll build
         echo "Documentation build completed successfully"
     - name: Upload Documentation Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: documentation
         path: docs/out
