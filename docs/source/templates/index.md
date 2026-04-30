@@ -5,6 +5,16 @@ title: Templating
 
 Chloroplast templates are built using ASP.NET's Razor templates.
 
+## Authoring Guidance
+
+New templates should use **standard Razor / RazorLight syntax**.
+
+- Prefer normal Razor constructs such as `@functions`, `@if`, `@foreach`, and helper methods that return strings or `RawString`.
+- Import Chloroplast types from `Chloroplast.Core.Rendering` when you need them.
+- Use `@Raw(...)` when you intentionally want to write HTML without encoding.
+
+Legacy templates that still include `@using MiniRazor` remain supported for backward compatibility, especially for older `RawString` usage. However, new templates should avoid MiniRazor-specific patterns and be written as native RazorLight templates.
+
 # Configuration
 
 The `SiteConfig.yml` file lets you configure the location of templates and the folders to find content files to process.
@@ -71,8 +81,9 @@ If a specified frame template is not found:
 - The affected content file is skipped (no incomplete page is rendered)
 - The build continues processing other files
 - The error is included in the build error summary
+- The overall `chloroplast build` command exits non-zero at the end
 
-This ensures the build process doesn't stop completely due to a missing frame, but you'll be notified of the issue.
+Template compilation/rendering failures are also reported in the build error summary and now cause the build command to fail. This keeps site generation backward compatible for existing content while preventing broken template output from silently shipping.
 
 # Customizing Templates
 

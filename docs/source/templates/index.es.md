@@ -6,6 +6,16 @@ machineTranslated: true
 
 Las plantillas de Chloroplast están construidas usando las plantillas Razor de ASP.NET.
 
+## Guía de Autoría
+
+Las plantillas nuevas deben usar **sintaxis estándar de Razor / RazorLight**.
+
+- Prefiere construcciones normales de Razor como `@functions`, `@if`, `@foreach` y métodos helper que devuelvan cadenas o `RawString`.
+- Importa tipos de Chloroplast desde `Chloroplast.Core.Rendering` cuando los necesites.
+- Usa `@Raw(...)` cuando realmente quieras escribir HTML sin codificar.
+
+Las plantillas heredadas que todavía incluyen `@using MiniRazor` siguen siendo compatibles por retrocompatibilidad, especialmente para usos antiguos de `RawString`. Sin embargo, las plantillas nuevas deben evitar patrones específicos de MiniRazor y escribirse como plantillas nativas de RazorLight.
+
 # Configuración
 
 El archivo `SiteConfig.yml` te permite configurar la ubicación de las plantillas y las carpetas para encontrar archivos de contenido para procesar.
@@ -72,8 +82,9 @@ Si no se encuentra una plantilla de marco especificada:
 - El archivo de contenido afectado se omite (no se renderiza una página incompleta)
 - La compilación continúa procesando otros archivos
 - El error se incluye en el resumen de errores de compilación
+- El comando `chloroplast build` termina con un código distinto de cero al final
 
-Esto asegura que el proceso de compilación no se detenga completamente debido a un marco faltante, pero serás notificado del problema.
+Los errores de compilación o renderizado de plantillas también se incluyen en el resumen de errores y ahora hacen fallar el comando de compilación. Esto mantiene la compatibilidad hacia atrás para el contenido existente, pero evita que se publiquen salidas rotas de plantillas en silencio.
 
 # Personalizando Plantillas
 
