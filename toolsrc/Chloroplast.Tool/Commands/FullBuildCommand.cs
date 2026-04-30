@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 using Chloroplast.Core;
 using Chloroplast.Core.Content;
@@ -57,18 +56,18 @@ namespace Chloroplast.Tool.Commands
                         Console.Error.WriteLine($"Failed to write error log: {logEx.Message}");
                     }
                 }
-                
-                return new Task[0];
+
+                throw new ChloroplastException ("Failed to initialize content renderer.", ex);
             }
 
-            List<Task<Task<RenderedContent>>> tasks= new List<Task<Task<RenderedContent>>>();
+            List<Task<RenderedContent>> tasks = new List<Task<RenderedContent>> ();
 
             // Start iterating over content
             foreach (var area in ContentArea.LoadContentAreas (config))
             {
                 Console.WriteLine ($"Processing area: {area.SourcePath}");
 
-                List<Task<Task<RenderedContent>>> firsttasks = new List<Task<Task<RenderedContent>>> ();
+                List<Task<RenderedContent>> firsttasks = new List<Task<RenderedContent>> ();
                 foreach (var item in area.ContentNodes)
                 {
                     if (config["force"] == string.Empty &&
@@ -77,47 +76,10 @@ namespace Chloroplast.Tool.Commands
                         continue;
                     }
 
-                    // TODO: refactor this out to a build queue
-                    firsttasks.Add(Task.Factory.StartNew(async () =>
-                    {
-                        try
-                        {
-                            Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
-
-                            if (item.Source.RootRelativePath.EndsWith(".md"))
-                            {
-                                var r = await ContentRenderer.FromMarkdownAsync(item);
-                                r = await ContentRenderer.ToRazorAsync(r);
-                                //await item.Target.WriteContentAsync(r.Body);
-
-                                return r;
-                            }
-                            else if (item.Source.RootRelativePath.EndsWith(".xml"))
-                            {
-                                var r = await ContentRenderer.FromEcmaXmlAsync (item, config);
-                                //r = await ContentRenderer.ToRazorAsync (r);
-
-                                return r;
-                            }
-                            else
-                            {
-                                item.Source.CopyTo(item.Target);
-                                return null;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _buildErrors.AddError(item.Source.RootRelativePath, 
-                                $"Failed to process content file", ex);
-                            Console.WriteLine($"\tERROR processing: {item.Source.RootRelativePath}");
-                            return null;
-                        }
-                    }));
+                    firsttasks.Add (ProcessContentItemAsync (item, config));
                 }
 
-                Task.WaitAll (firsttasks.ToArray ());
-                var rendered = firsttasks
-                    .Select (t => t.Result.Result)
+                var rendered = (await Task.WhenAll (firsttasks))
                     .Where(r => r != null);
 
                 IEnumerable<ContentNode> menutree;
@@ -183,39 +145,10 @@ namespace Chloroplast.Tool.Commands
 
                 foreach (var item in rendered.Select(r => new FrameRenderedContent(r, menutree)))
                 {
-                    tasks.Add (Task.Factory.StartNew (async () =>
-                    {
-                        try
-                        {
-                            Console.WriteLine ($"\tframe rendering: {item.Node.Title}");
-
-                            var result = await ContentRenderer.ToRazorAsync (item);
-                            
-                            // If result.Body is null, the frame was missing - skip writing the file
-                            if (result.Body == null)
-                            {
-                                _buildErrors.AddError(item.Node.Source.RootRelativePath,
-                                    $"Frame template not found. File skipped.", null);
-                                Console.WriteLine($"\tSKIPPED (missing frame): {item.Node.Title}");
-                                return null;
-                            }
-                            
-                            await item.Node.Target.WriteContentAsync (result.Body);
-
-                            return result;
-                        }
-                        catch (Exception ex)
-                        {
-                            _buildErrors.AddError(item.Node.Source.RootRelativePath, 
-                                $"Failed to render frame for content", ex);
-                            Console.WriteLine($"\tERROR frame rendering: {item.Node.Title}");
-                            return null;
-                        }
-                            
-                    }));
+                    tasks.Add (RenderFrameAsync (item));
                 }
 
-                Task.WaitAll (tasks.ToArray ());
+                await Task.WhenAll (tasks);
                 
                 // Generate sitemap files after all content is processed
                 await GenerateSitemapsAsync(area, config);
@@ -240,6 +173,8 @@ namespace Chloroplast.Tool.Commands
                         Console.Error.WriteLine($"Failed to write error log: {ex.Message}");
                     }
                 }
+
+                throw new ChloroplastException ($"Build failed with {_buildErrors.ErrorCount} error(s).");
             }
 
             // Run validation after build completes
@@ -253,7 +188,56 @@ namespace Chloroplast.Tool.Commands
                 validator.WriteIssuesToConsole();
             }
 
-            return tasks;
+            return tasks.Cast<Task> ();
+        }
+
+        private async Task<RenderedContent> ProcessContentItemAsync (ContentNode item, IConfigurationRoot config)
+        {
+            try
+            {
+                Console.WriteLine ($"\tdoc: {item.Source.RootRelativePath}");
+
+                if (item.Source.RootRelativePath.EndsWith (".md"))
+                {
+                    var rendered = await ContentRenderer.FromMarkdownAsync (item);
+                    return await ContentRenderer.ToRazorAsync (rendered);
+                }
+
+                if (item.Source.RootRelativePath.EndsWith (".xml"))
+                {
+                    return await ContentRenderer.FromEcmaXmlAsync (item, config);
+                }
+
+                item.Source.CopyTo (item.Target);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _buildErrors.AddError (item.Source.RootRelativePath,
+                    "Failed to process content file", ex);
+                Console.WriteLine ($"\tERROR processing: {item.Source.RootRelativePath}");
+                return null;
+            }
+        }
+
+        private async Task<RenderedContent> RenderFrameAsync (FrameRenderedContent item)
+        {
+            try
+            {
+                Console.WriteLine ($"\tframe rendering: {item.Node.Title}");
+
+                var result = await ContentRenderer.ToRazorAsync (item);
+                await item.Node.Target.WriteContentAsync (result.Body);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _buildErrors.AddError (item.Node.Source.RootRelativePath,
+                    "Failed to render frame for content", ex);
+                Console.WriteLine ($"\tERROR frame rendering: {item.Node.Title}");
+                return null;
+            }
         }
 
         private void ClearOutputDirectory(IConfigurationRoot config)

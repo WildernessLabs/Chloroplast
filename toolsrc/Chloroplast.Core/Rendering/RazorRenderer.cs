@@ -71,37 +71,23 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<string> RenderContentAsync (FrameRenderedContent parsed)
         {
-            try
+            // Check for custom frame in metadata, default to "SiteFrame"
+            string frameName = parsed.Metadata?["frame"] ?? "SiteFrame";
+            if (string.IsNullOrEmpty(frameName))
             {
-                // Check for custom frame in metadata, default to "SiteFrame"
-                string frameName = parsed.Metadata?["frame"] ?? "SiteFrame";
-                if (string.IsNullOrEmpty(frameName))
-                {
-                    frameName = "SiteFrame";
-                }
-
-                // Try to find the frame template
-                string key = FindKey(frameName);
-                
-                if (key == null)
-                {
-                    // Log error and return null to signal the file should be skipped
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"ERROR: Frame template '{frameName}' not found for content '{parsed.Node?.Title ?? "unknown"}'. Skipping this file.");
-                    Console.ResetColor();
-                    return null;
-                }
-
-                var result = await engine.CompileRenderStringAsync<FrameRenderedContent> (key, templateSources[key], parsed);
-                return result;
+                frameName = "SiteFrame";
             }
-            catch (Exception ex)
+
+            string key = FindKey(frameName);
+            if (key == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine (ex.ToString ());
-                Console.ResetColor ();
-                return ex.ToString ();
+                Console.WriteLine($"ERROR: Frame template '{frameName}' not found for content '{parsed.Node?.Title ?? "unknown"}'. Skipping this file.");
+                Console.ResetColor();
+                return null;
             }
+
+            return await engine.CompileRenderStringAsync<FrameRenderedContent> (key, templateSources[key], parsed);
         }
 
         public async Task<RawString> RenderTemplateContent<T> (string templateName, T model)
@@ -175,81 +161,51 @@ namespace Chloroplast.Core.Rendering
 
         public async Task<string> RenderContentAsync (RenderedContent parsed)
         {
-            try
+            string defaultTemplateName = "Default";
+            string templateName = defaultTemplateName;
+
+            if (parsed.Metadata.ContainsKey ("template"))
+                templateName = parsed.Metadata["template"];
+
+            if (parsed.Metadata.ContainsKey ("layout"))
+                templateName = parsed.Metadata["layout"];
+
+            string key = FindKey(templateName);
+
+            if (key == null)
+                key = FindKey(defaultTemplateName);
+
+            if (key == null)
             {
-                string defaultTemplateName = "Default";
-                string templateName = defaultTemplateName;
-
-                if (parsed.Metadata.ContainsKey ("template"))
-                    templateName = parsed.Metadata["template"];
-
-                if (parsed.Metadata.ContainsKey ("layout"))
-                    templateName = parsed.Metadata["layout"];
-
-                string key = FindKey(templateName);
-
-                if (key == null)
-                    key = FindKey(defaultTemplateName);
-
-                // Render template
-                var result = await engine.CompileRenderStringAsync<RenderedContent> (key, templateSources[key], parsed);
-
-                return result;
-
+                throw new ApplicationException (
+                    $"Template '{templateName}' could not be resolved and default template '{defaultTemplateName}' was not found.");
             }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine (ex.ToString ());
-                Console.ResetColor ();
-                return ex.ToString ();
-            }
+
+            return await engine.CompileRenderStringAsync<RenderedContent> (key, templateSources[key], parsed);
         }
 
         public async Task<string> RenderContentAsync (EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.Namespace> parsed)
         {
-            try
+            string templateName = "Namespace";
+            string key = FindKey(templateName);
+            if (key == null)
             {
-                string templateName = "Namespace";
-
-                string key = FindKey(templateName) ?? templateName;
-
-                // Render template
-                var result = await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.Namespace>> (key, templateSources[key], parsed);
-
-                return result;
-
+                throw new ApplicationException ($"Template '{templateName}' was not found.");
             }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine (ex.ToString ());
-                Console.ResetColor ();
-                return ex.ToString ();
-            }
+
+            return await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.Namespace>> (key, templateSources[key], parsed);
         }
 
         public async Task<string> RenderContentAsync (EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.XType> parsed)
         {
-            try
+            string templateName = "Type";
+            string key = FindKey(templateName);
+            if (key == null)
             {
-                string templateName = "Type";
-
-                string key = FindKey(templateName) ?? templateName;
-
-                // Render template
-                var result = await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.XType>> (key, templateSources[key], parsed);
-
-                return result;
-
+                throw new ApplicationException ($"Template '{templateName}' was not found.");
             }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine (ex.ToString ());
-                Console.ResetColor ();
-                return ex.ToString ();
-            }
+
+            return await engine.CompileRenderStringAsync<EcmaXmlContent<Chloroplast.Core.Loaders.EcmaXml.XType>> (key, templateSources[key], parsed);
         }
     }
 }

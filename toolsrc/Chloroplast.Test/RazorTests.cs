@@ -295,6 +295,57 @@ namespace Chloroplast.Test
             }
         }
 
+        [Fact]
+        public async Task LegacyMiniRazorUsing_AllowsRawStringRendering()
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var templatesDir = Path.Combine(tempDir, "templates");
+
+            Directory.CreateDirectory(templatesDir);
+
+            var templateContent =
+                "@using MiniRazor;\n" +
+                "@inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>\n" +
+                "@{ var html = new RawString(\"<strong>\" + Model.Body + \"</strong>\"); }\n" +
+                "@html";
+            var templatePath = Path.Combine(templatesDir, "LegacyTemplate.cshtml");
+            await File.WriteAllTextAsync(templatePath, templateContent);
+
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    { "root", tempDir },
+                    { "templates_folder", "templates" }
+                })
+                .Build();
+
+            var renderer = new RazorRenderer();
+
+            try
+            {
+                var originalOut = Console.Out;
+                using var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                await renderer.InitializeAsync(config);
+
+                var model = new RenderedContent { Body = "Hello" };
+                var result = await renderer.RenderTemplateContent("LegacyTemplate", model);
+
+                Console.SetOut(originalOut);
+
+                Assert.Contains("<strong>Hello</strong>", result.ToString());
+                Assert.DoesNotContain("&lt;strong&gt;", result.ToString());
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+        }
+
         //[Fact]
         public async Task SimpleRender()
         {
