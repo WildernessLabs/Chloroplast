@@ -40,6 +40,7 @@ namespace Chloroplast.Tool
                 else
                 {
                     Console.Error.WriteLine ("config not found");
+                    Environment.ExitCode = 1;
                     return;
                 }
             }
@@ -77,13 +78,14 @@ namespace Chloroplast.Tool
                 stopwatch.Start ();
 
                 Console.WriteLine ($"Running {command.Name} command");
-                var childTasks = await command.RunAsync (config);
-                Task.WaitAll(childTasks.ToArray());
+                var childTasks = (await command.RunAsync (config)).ToArray ();
+                await Task.WhenAll (childTasks);
                 
                 // Check for any unhandled faulted tasks (but be less verbose since we now collect errors)
                 var faultedTasks = childTasks.Where(t => t.Status == TaskStatus.Faulted).ToArray();
                 if (faultedTasks.Any())
                 {
+                    Environment.ExitCode = 1;
                     Console.Error.WriteLine($"Build completed with {faultedTasks.Length} task failure(s).");
                     
                     // Only show detailed task exceptions if it's not a build command (which handles its own errors)
@@ -101,11 +103,13 @@ namespace Chloroplast.Tool
             }
             catch (ChloroplastException cex)
             {
+                Environment.ExitCode = 1;
                 Console.Error.WriteLine ($"Unable to complete {command.Name}");
                 Console.Error.WriteLine (cex.Message);
             }
             catch (Exception ex)
             {
+                Environment.ExitCode = 1;
                 Console.Error.WriteLine ($"Oops, this was unexpected :(");
                 Console.Error.WriteLine (ex.ToString());
                 if (ex.InnerException != null)

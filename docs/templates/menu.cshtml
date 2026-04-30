@@ -1,32 +1,63 @@
 @inherits Chloroplast.Core.Rendering.ChloroplastTemplateBase<Chloroplast.Core.Rendering.RenderedContent>
 @using Chloroplast.Core
-@using System.Linq;
-@using System.Collections.Generic;
-@using Microsoft.Extensions.Configuration;
-@using Chloroplast.Core.Extensions;
-@using MiniRazor;
-@{
-    RawString RenderNodes(IConfigurationSection section)
+@using Chloroplast.Core.Extensions
+@using Chloroplast.Core.Rendering
+@using Microsoft.Extensions.Configuration
+@using System.Collections.Generic
+@using System.Linq
+@using System.Net
+@using System.Text
+@functions {
+    private RawString RenderNodes(IConfigurationSection section)
     {
-        var children = section.GetChildren();
-        if (children.Any())
+        if (section == null)
         {
-        <ul class="nav">
-            @foreach(var item in children)
-            {
-                var localizedPath = BuildMenuItemHref(item["path"]);
-                if (string.IsNullOrEmpty(localizedPath)) { continue; }
-                <li class="nav-item">
-                    <a href="@localizedPath" class="nav-link">@item["title"]</a>
-                    @if (item.ContainsKey("items"))
-                    {
-                        @RenderNodes(item.GetSection("items"))
-                    }
-                </li>
-            }
-        </ul>
+            return new RawString(string.Empty);
         }
-        return new RawString("");
+
+        var children = section.GetChildren().ToArray();
+        if (children.Length == 0)
+        {
+            return new RawString(string.Empty);
+        }
+
+        var builder = new StringBuilder();
+        AppendNodes(builder, children);
+        return new RawString(builder.ToString());
+    }
+
+    private void AppendNodes(StringBuilder builder, IEnumerable<IConfigurationSection> nodes)
+    {
+        builder.Append("<ul class=\"nav\">");
+
+        foreach (var item in nodes)
+        {
+            var localizedPath = BuildMenuItemHref(item["path"]);
+            if (string.IsNullOrEmpty(localizedPath))
+            {
+                continue;
+            }
+
+            builder.Append("<li class=\"nav-item\">");
+            builder.Append("<a href=\"");
+            builder.Append(WebUtility.HtmlEncode(localizedPath));
+            builder.Append("\" class=\"nav-link\">");
+            builder.Append(WebUtility.HtmlEncode(item["title"]));
+            builder.Append("</a>");
+
+            if (item.ContainsKey("items"))
+            {
+                var childItems = item.GetSection("items").GetChildren().ToArray();
+                if (childItems.Length > 0)
+                {
+                    AppendNodes(builder, childItems);
+                }
+            }
+
+            builder.Append("</li>");
+        }
+
+        builder.Append("</ul>");
     }
 }
 
