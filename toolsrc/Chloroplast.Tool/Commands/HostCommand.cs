@@ -14,6 +14,7 @@ using Microsoft.Extensions.Primitives;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Chloroplast.Tool.Commands
 {
@@ -181,8 +182,7 @@ namespace Chloroplast.Tool.Commands
                             Console.WriteLine("no source areas to watch for changes in SiteConfig.yml");
                         }
 
-                        Console.WriteLine("Press Enter to Quit Host");
-                        Console.ReadLine();
+                        WaitForExitKey();
                         // TODO: need a better story for disposing this in case of an error
                         foreach(var w in watchers)
                         {
@@ -199,6 +199,31 @@ namespace Chloroplast.Tool.Commands
                 Console.Error.WriteLine($"Failed to start host: {ex.Message}");
                 host?.Dispose();
                 return new Task[0];
+            }
+        }
+
+        private static void WaitForExitKey()
+        {
+            using var exitRequested = new ManualResetEventSlim(false);
+
+            ConsoleCancelEventHandler cancelHandler = (_, args) =>
+            {
+                args.Cancel = true;
+                exitRequested.Set();
+            };
+
+            Console.CancelKeyPress += cancelHandler;
+            try
+            {
+                Console.WriteLine("Press Enter or Ctrl+C to Quit Host");
+                var enterTask = Task.Run(() => Console.ReadLine());
+                while (!exitRequested.IsSet && !enterTask.Wait(100))
+                {
+                }
+            }
+            finally
+            {
+                Console.CancelKeyPress -= cancelHandler;
             }
         }
 
