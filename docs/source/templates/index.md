@@ -13,7 +13,7 @@ New templates should use **standard Razor / RazorLight syntax**.
 - Import Chloroplast types from `Chloroplast.Core.Rendering` when you need them.
 - Use `@Raw(...)` when you intentionally want to write HTML without encoding.
 
-Legacy templates that still include `@using MiniRazor` remain supported for backward compatibility, especially for older `RawString` usage. However, new templates should avoid MiniRazor-specific patterns and be written as native RazorLight templates.
+Legacy templates that still include `@using MiniRazor` are partly supported for backward compatibility, especially for older `RawString` usage — but helper methods declared in `@{ }` blocks with markup in their bodies no longer compile. If a build fails with template compilation errors, see [Migrating Templates from MiniRazor](migrating-from-minirazor.md). New templates should avoid MiniRazor-specific patterns and be written as native RazorLight templates.
 
 # Configuration
 
